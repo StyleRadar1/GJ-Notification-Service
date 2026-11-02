@@ -50,7 +50,7 @@
           <mxGeometry y="32" width="310" height="133" as="geometry" />
         </mxCell>
 
-        <!-- Composición BusquedaGuardadaCopia *-- CriterioBusquedaSnapshot -->
+        <!-- Composicion BusquedaGuardadaCopia hacia CriterioBusquedaSnapshot -->
         <mxCell id="edge_comp_criterios" value="/criterios&lt;br&gt;1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=diamondThin;startFill=1;startSize=12;endArrow=none;strokeColor=#b45309;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_busqueda" target="vo_criterios">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -83,7 +83,7 @@
           <mxGeometry y="32" width="345" height="108" as="geometry" />
         </mxCell>
 
-        <!-- Composición Notificacion *-- ClaveIdempotenciaCiclo -->
+        <!-- Composicion Notificacion hacia ClaveIdempotenciaCiclo -->
         <mxCell id="edge_comp_idempotencia" value="/idempotencia&lt;br&gt;1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=diamondThin;startFill=1;startSize=12;endArrow=none;strokeColor=#b45309;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_notificacion" target="vo_idempotencia">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -188,3 +188,4 @@
     </mxGraphModel>
   </diagram>
 </mxfile>
+
