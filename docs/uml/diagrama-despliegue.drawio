@@ -1,0 +1,237 @@
+<mxfile host="app.diagrams.net" modified="2026-11-02T16:40:00.000Z" agent="Antigravity" version="24.7.17" type="device">
+  <diagram id="despliegue-ms-notificaciones" name="Diagrama de Despliegue - ms-notificaciones">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1450" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ================================================================= -->
+        <!-- 1. DISPOSITIVO DESARROLLADOR (Texto Negro)                        -->
+        <!-- ================================================================= -->
+        <mxCell id="node_dev" value="&lt;b&gt;«device»&lt;/b&gt;&lt;br&gt;&lt;b&gt;Dispositivo Desarrollador&lt;/b&gt;" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.06;darkOpacity2=0.12;size=14;fillColor=#e8eef5;fontColor=#000000;strokeColor=#4b6584;verticalAlign=top;spacingTop=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="90" y="30" width="310" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="art_dev" value="&lt;b&gt;Código Fuente &amp;amp; Tests&lt;/b&gt;&lt;br&gt;(IntelliJ / VS Code / Maven 3.9)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=14;fillColor=#ffffff;strokeColor=#4b6584;fontColor=#000000;fontSize=12;" vertex="1" parent="node_dev">
+          <mxGeometry x="35" y="65" width="250" height="58" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- 2. REPOSITORIO GITHUB (Texto Negro)                               -->
+        <!-- ================================================================= -->
+        <mxCell id="node_github" value="&lt;b&gt;«vcs system»&lt;/b&gt;&lt;br&gt;&lt;b&gt;Repositorio GitHub&lt;/b&gt;" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.06;darkOpacity2=0.12;size=14;fillColor=#e1d5e7;strokeColor=#7e57c2;fontColor=#000000;verticalAlign=top;spacingTop=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="90" y="225" width="310" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="art_github" value="&lt;b&gt;GJ-Notification-Service&lt;/b&gt;&lt;br&gt;Ramas: feature/*, develop &amp;amp; main" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=14;fillColor=#ffffff;strokeColor=#7e57c2;fontColor=#000000;fontSize=12;" vertex="1" parent="node_github">
+          <mxGeometry x="35" y="65" width="250" height="58" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- 3. GITHUB ACTIONS RUNNER (Texto Negro)                            -->
+        <!-- ================================================================= -->
+        <mxCell id="node_runner" value="&lt;b&gt;«execution environment»&lt;/b&gt;&lt;br&gt;&lt;b&gt;GitHub Actions Runner&lt;/b&gt;" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.06;darkOpacity2=0.12;size=14;fillColor=#fff2cc;strokeColor=#b78103;fontColor=#000000;verticalAlign=top;spacingTop=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="80" y="420" width="330" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="art_runner" value="&lt;b&gt;ci-qa.yml &amp;amp; cd-prod.yml&lt;/b&gt;&lt;br&gt;(mvn clean verify + JaCoCo &amp;ge; 85%)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=14;fillColor=#ffffff;strokeColor=#b78103;fontColor=#000000;fontSize=12;" vertex="1" parent="node_runner">
+          <mxGeometry x="35" y="70" width="270" height="62" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- 4. DISPOSITIVO CLIENTE / API GATEWAY (Texto Negro)                -->
+        <!-- ================================================================= -->
+        <mxCell id="node_client" value="&lt;b&gt;«device»&lt;/b&gt;&lt;br&gt;&lt;b&gt;Dispositivo Cliente / API Gateway&lt;/b&gt;" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.06;darkOpacity2=0.12;size=14;fillColor=#f8cecc;strokeColor=#b85450;fontColor=#000000;verticalAlign=top;spacingTop=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="680" y="190" width="360" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="art_client" value="&lt;b&gt;Consumidor HTTP / REST &amp;amp; SSE&lt;/b&gt;&lt;br&gt;(sr-api-gateway / SPA / Swagger UI / Postman)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=14;fillColor=#ffffff;strokeColor=#b85450;fontColor=#000000;fontSize=12;" vertex="1" parent="node_client">
+          <mxGeometry x="30" y="70" width="305" height="62" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- 5. MICROSOFT AZURE - AMBIENTE QA (Texto Negro Adentro)            -->
+        <!-- ================================================================= -->
+        <mxCell id="env_qa" value="Microsoft Azure — Ambiente QA" style="swimlane;whiteSpace=wrap;html=1;startSize=32;fillColor=#dae8fc;strokeColor=#4a69bd;fontColor=#000000;fontStyle=1;fontSize=13;swimlaneFillColor=#e8f1fc;" vertex="1" parent="1">
+          <mxGeometry x="30" y="660" width="580" height="520" as="geometry" />
+        </mxCell>
+
+        <mxCell id="node_app_qa" value="&lt;b&gt;«execution environment»&lt;/b&gt;&lt;br&gt;&lt;b&gt;Azure App Service QA&lt;/b&gt;" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.06;darkOpacity2=0.12;size=14;fillColor=#a9c4eb;strokeColor=#3c6382;fontColor=#000000;verticalAlign=top;spacingTop=8;fontSize=12;" vertex="1" parent="env_qa">
+          <mxGeometry x="25" y="50" width="355" height="240" as="geometry" />
+        </mxCell>
+
+        <mxCell id="node_docker_qa" value="&lt;b&gt;Contenedor Docker QA&lt;/b&gt;&lt;br&gt;&lt;b&gt;(Puerto 8088)&lt;/b&gt;" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.06;darkOpacity2=0.12;size=12;fillColor=#d9e8fb;strokeColor=#3c6382;fontColor=#000000;verticalAlign=top;spacingTop=6;fontSize=12;" vertex="1" parent="node_app_qa">
+          <mxGeometry x="25" y="60" width="305" height="158" as="geometry" />
+        </mxCell>
+
+        <mxCell id="art_jar_qa" value="&lt;b&gt;ms-notificaciones.jar&lt;/b&gt;&lt;br&gt;(Java 21 LTS / Spring Boot 3.2.5)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=14;fillColor=#ffffff;strokeColor=#3c6382;fontColor=#000000;fontSize=11;" vertex="1" parent="node_docker_qa">
+          <mxGeometry x="25" y="65" width="255" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ext_catalogo_qa" value="&lt;b&gt;«external service»&lt;/b&gt;&lt;br&gt;&lt;b&gt;ms-item-catalogo QA&lt;/b&gt;&lt;br&gt;(Puerto 8082)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#3c6382;fontColor=#000000;dashed=1;strokeWidth=1.5;fontSize=11;" vertex="1" parent="env_qa">
+          <mxGeometry x="415" y="120" width="145" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db_qa" value="&lt;b&gt;PostgreSQL 16 QA&lt;/b&gt;&lt;br&gt;Azure Flexible Server&lt;br&gt;BD: notificaciones_db" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#ffe6cc;strokeColor=#b78103;fontColor=#000000;fontSize=11;" vertex="1" parent="env_qa">
+          <mxGeometry x="25" y="375" width="230" height="115" as="geometry" />
+        </mxCell>
+
+        <mxCell id="mq_qa" value="&lt;b&gt;«message broker»&lt;/b&gt;&lt;br&gt;&lt;b&gt;RabbitMQ 3.13 QA&lt;/b&gt;&lt;br&gt;Exchange: styleradar.domain.events&lt;br&gt;Cola + Dead Letter Queue (.dlq)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#ffe6cc;strokeColor=#b78103;fontColor=#000000;fontSize=11;" vertex="1" parent="env_qa">
+          <mxGeometry x="295" y="375" width="260" height="115" as="geometry" />
+        </mxCell>
+
+        <!-- Conexiones internas QA (Texto Negro sobre etiqueta blanca dentro del contenedor) -->
+        <mxCell id="edge_qa_db" value="JDBC / TCP&lt;br&gt;Puerto 5432 (Flyway)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.32;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;strokeColor=#1e293b;fontColor=#000000;labelBackgroundColor=#ffffff;fontSize=10;fontStyle=1;" edge="1" parent="env_qa" source="node_app_qa" target="db_qa">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_qa_mq" value="AMQP 0-9-1&lt;br&gt;Puerto 5672" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.78;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;strokeColor=#1e293b;fontColor=#000000;labelBackgroundColor=#ffffff;fontSize=10;fontStyle=1;" edge="1" parent="env_qa" source="node_app_qa" target="mq_qa">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_qa_feign" value="OpenFeign&lt;br&gt;REST" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;strokeColor=#1e293b;fontColor=#000000;labelBackgroundColor=#ffffff;fontSize=10;fontStyle=1;" edge="1" parent="env_qa" source="node_app_qa" target="ext_catalogo_qa">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- 6. MICROSOFT AZURE - AMBIENTE PROD (Texto Negro Adentro)          -->
+        <!-- ================================================================= -->
+        <mxCell id="env_prod" value="Microsoft Azure — Ambiente PROD" style="swimlane;whiteSpace=wrap;html=1;startSize=32;fillColor=#d5e8d4;strokeColor=#4d7c0f;fontColor=#000000;fontStyle=1;fontSize=13;swimlaneFillColor=#eaf4e8;" vertex="1" parent="1">
+          <mxGeometry x="950" y="660" width="580" height="520" as="geometry" />
+        </mxCell>
+
+        <mxCell id="node_app_prod" value="&lt;b&gt;«execution environment»&lt;/b&gt;&lt;br&gt;&lt;b&gt;Azure App Service PROD&lt;/b&gt;" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.06;darkOpacity2=0.12;size=14;fillColor=#b9e0a5;strokeColor=#4d7c0f;fontColor=#000000;verticalAlign=top;spacingTop=8;fontSize=12;" vertex="1" parent="env_prod">
+          <mxGeometry x="25" y="50" width="355" height="240" as="geometry" />
+        </mxCell>
+
+        <mxCell id="node_docker_prod" value="&lt;b&gt;Contenedor Docker PROD&lt;/b&gt;&lt;br&gt;&lt;b&gt;(Puerto 8088)&lt;/b&gt;" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.06;darkOpacity2=0.12;size=12;fillColor=#dff0d8;strokeColor=#4d7c0f;fontColor=#000000;verticalAlign=top;spacingTop=6;fontSize=12;" vertex="1" parent="node_app_prod">
+          <mxGeometry x="25" y="60" width="305" height="158" as="geometry" />
+        </mxCell>
+
+        <mxCell id="art_jar_prod" value="&lt;b&gt;ms-notificaciones.jar&lt;/b&gt;&lt;br&gt;(Java 21 LTS / Spring Boot 3.2.5)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=14;fillColor=#ffffff;strokeColor=#4d7c0f;fontColor=#000000;fontSize=11;" vertex="1" parent="node_docker_prod">
+          <mxGeometry x="25" y="65" width="255" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ext_catalogo_prod" value="&lt;b&gt;«external service»&lt;/b&gt;&lt;br&gt;&lt;b&gt;ms-item-catalogo PROD&lt;/b&gt;&lt;br&gt;(Puerto 8082)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#4d7c0f;fontColor=#000000;dashed=1;strokeWidth=1.5;fontSize=11;" vertex="1" parent="env_prod">
+          <mxGeometry x="415" y="120" width="145" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db_prod" value="&lt;b&gt;PostgreSQL 16 PROD&lt;/b&gt;&lt;br&gt;Clúster HA con TLS&lt;br&gt;BD: notificaciones_db" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#ffe6cc;strokeColor=#b78103;fontColor=#000000;fontSize=11;" vertex="1" parent="env_prod">
+          <mxGeometry x="25" y="375" width="230" height="115" as="geometry" />
+        </mxCell>
+
+        <mxCell id="mq_prod" value="&lt;b&gt;«message broker»&lt;/b&gt;&lt;br&gt;&lt;b&gt;RabbitMQ 3.13 PROD&lt;/b&gt;&lt;br&gt;Clúster con TLS (AMQPS)&lt;br&gt;Cola + Dead Letter Queue (.dlq)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#ffe6cc;strokeColor=#b78103;fontColor=#000000;fontSize=11;" vertex="1" parent="env_prod">
+          <mxGeometry x="295" y="375" width="260" height="115" as="geometry" />
+        </mxCell>
+
+        <!-- Conexiones internas PROD (Texto Negro sobre etiqueta blanca dentro del contenedor) -->
+        <mxCell id="edge_prod_db" value="JDBC / TLS&lt;br&gt;Puerto 5432 (Flyway)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.32;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;strokeColor=#1e293b;fontColor=#000000;labelBackgroundColor=#ffffff;fontSize=10;fontStyle=1;" edge="1" parent="env_prod" source="node_app_prod" target="db_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_prod_mq" value="AMQPS / TLS&lt;br&gt;Puerto 5671" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.78;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;strokeColor=#1e293b;fontColor=#000000;labelBackgroundColor=#ffffff;fontSize=10;fontStyle=1;" edge="1" parent="env_prod" source="node_app_prod" target="mq_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_prod_feign" value="OpenFeign&lt;br&gt;HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;strokeColor=#1e293b;fontColor=#000000;labelBackgroundColor=#ffffff;fontSize=10;fontStyle=1;" edge="1" parent="env_prod" source="node_app_prod" target="ext_catalogo_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- 7. DOCKER HUB REGISTRY (Texto Negro Adentro)                      -->
+        <!-- ================================================================= -->
+        <mxCell id="node_dockerhub" value="&lt;b&gt;«artifact registry»&lt;/b&gt;&lt;br&gt;&lt;b&gt;Docker Hub Registry&lt;/b&gt;" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.06;darkOpacity2=0.12;size=14;fillColor=#dae8fc;strokeColor=#4a69bd;fontColor=#000000;verticalAlign=top;spacingTop=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="580" y="1250" width="390" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="art_dockerhub" value="&lt;b&gt;Imagen Docker Multi-Stage (:qa / :latest)&lt;/b&gt;&lt;br&gt;(styleradar/ms-notificaciones)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=14;fillColor=#ffffff;strokeColor=#4a69bd;fontColor=#000000;fontSize=12;" vertex="1" parent="node_dockerhub">
+          <mxGeometry x="35" y="65" width="325" height="62" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- 8. CONEXIONES EXTERNAS (Texto Blanco sobre Fondo Oscuro)          -->
+        <!-- ================================================================= -->
+        <!-- Desarrollador -> GitHub -->
+        <mxCell id="edge_git_push" value="git push" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFFFFF;fontColor=#FFFFFF;labelBackgroundColor=#18181b;strokeWidth=1.5;fontSize=11;fontStyle=1;" edge="1" parent="1" source="art_dev" target="node_github">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- GitHub -> GitHub Actions Runner -->
+        <mxCell id="edge_webhook" value="webhook trigger CI/CD" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFFFFF;fontColor=#FFFFFF;labelBackgroundColor=#18181b;strokeWidth=1.5;fontSize=11;fontStyle=1;" edge="1" parent="1" source="art_github" target="node_runner">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- GitHub Actions Runner -> Azure App Service QA -->
+        <mxCell id="edge_deploy_qa" value="deploy automático QA&lt;br&gt;(azure/webapps-deploy)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#FFFFFF;fontColor=#FFFFFF;labelBackgroundColor=#18181b;strokeWidth=1.5;fontSize=11;fontStyle=1;" edge="1" parent="1" source="art_runner" target="node_app_qa">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="220" y="610" />
+              <mxPoint x="220" y="710" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- GitHub Actions Runner -> Azure App Service PROD -->
+        <mxCell id="edge_deploy_prod" value="deploy / aprobación PROD&lt;br&gt;(azure/webapps-deploy)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#FFFFFF;fontColor=#FFFFFF;labelBackgroundColor=#18181b;strokeWidth=1.5;fontSize=11;fontStyle=1;" edge="1" parent="1" source="art_runner" target="node_app_prod">
+          <mxGeometry x="-0.1" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1115" y="510" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- GitHub Actions Runner -> Docker Hub Registry -->
+        <mxCell id="edge_docker_push" value="docker build &amp;amp; push&lt;br&gt;(HTTPS / Token)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFFFFF;fontColor=#FFFFFF;labelBackgroundColor=#18181b;strokeWidth=1.5;fontSize=11;fontStyle=1;" edge="1" parent="1" source="art_runner" target="node_dockerhub">
+          <mxGeometry x="-0.15" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="775" y="535" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Contenedor QA -> Docker Hub (docker pull :qa) -->
+        <mxCell id="edge_pull_qa" value="docker pull :qa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#FFFFFF;fontColor=#FFFFFF;labelBackgroundColor=#18181b;strokeWidth=1.5;fontSize=11;fontStyle=1;" edge="1" parent="1" source="node_docker_qa" target="node_dockerhub">
+          <mxGeometry x="0.35" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="930" />
+              <mxPoint x="680" y="930" />
+              <mxPoint x="680" y="1250" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Contenedor PROD -> Docker Hub (docker pull :latest) -->
+        <mxCell id="edge_pull_prod" value="docker pull :latest" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#FFFFFF;fontColor=#FFFFFF;labelBackgroundColor=#18181b;strokeWidth=1.5;fontSize=11;fontStyle=1;" edge="1" parent="1" source="node_docker_prod" target="node_dockerhub">
+          <mxGeometry x="0.35" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1150" y="930" />
+              <mxPoint x="870" y="930" />
+              <mxPoint x="870" y="1250" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Cliente -> Contenedor QA -->
+        <mxCell id="edge_client_qa" value="HTTPS / REST &amp;amp; SSE&lt;br&gt;Puerto 443 -&amp;gt; 8088" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFFFFF;fontColor=#FFFFFF;labelBackgroundColor=#18181b;strokeWidth=1.5;fontSize=11;fontStyle=1;" edge="1" parent="1" source="art_client" target="art_jar_qa">
+          <mxGeometry x="-0.35" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="605" />
+              <mxPoint x="320" y="605" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Cliente -> Contenedor PROD -->
+        <mxCell id="edge_client_prod" value="HTTPS / REST &amp;amp; SSE&lt;br&gt;Puerto 443 -&amp;gt; 8088" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFFFFF;fontColor=#FFFFFF;labelBackgroundColor=#18181b;strokeWidth=1.5;fontSize=11;fontStyle=1;" edge="1" parent="1" source="art_client" target="art_jar_prod">
+          <mxGeometry x="-0.25" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1245" y="290" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,152 @@
+{
+  "info": {
+    "name": "StyleRadar - ms-notificaciones API (NOT-19)",
+    "_postman_id": "e7f5a301-8891-4b21-9c12-styleradar8088",
+    "description": "Coleccion oficial de pruebas de endpoints para ms-notificaciones bajo /api/v1/usuarios/me",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8088",
+      "type": "string"
+    },
+    {
+      "key": "jwtToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "alertaId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "notificacionId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Crear Alerta de Item Agotado",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipoAlerta\": \"ITEM_AGOTADO\",\n  \"itemId\": 1045,\n  \"tallaObjetivo\": \"M\",\n  \"canal\": \"IN_APP\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/usuarios/me/alertas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "usuarios", "me", "alertas"]
+        }
+      }
+    },
+    {
+      "name": "2. Listar Mis Alertas",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/usuarios/me/alertas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "usuarios", "me", "alertas"]
+        }
+      }
+    },
+    {
+      "name": "3. Desactivar Alerta",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/usuarios/me/alertas/{{alertaId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "usuarios", "me", "alertas", "{{alertaId}}"]
+        }
+      }
+    },
+    {
+      "name": "4. Listar Mis Notificaciones",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones?soloNoLeidas=false",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "usuarios", "me", "notificaciones"],
+          "query": [{ "key": "soloNoLeidas", "value": "false" }]
+        }
+      }
+    },
+    {
+      "name": "5. Contador de Notificaciones No Leidas",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/no-leidas/contador",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "usuarios", "me", "notificaciones", "no-leidas", "contador"]
+        }
+      }
+    },
+    {
+      "name": "6. Marcar Notificacion Como Leida",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/{{notificacionId}}/leer",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "usuarios", "me", "notificaciones", "{{notificacionId}}", "leer"]
+        }
+      }
+    },
+    {
+      "name": "7. Marcar Todas Como Leidas",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/leer-todas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "usuarios", "me", "notificaciones", "leer-todas"]
+        }
+      }
+    },
+    {
+      "name": "8. Suscripcion Campana Tiempo Real (SSE)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" },
+          { "key": "Accept", "value": "text/event-stream" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/stream",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "usuarios", "me", "notificaciones", "stream"]
+        }
+      }
+    }
+  ]
+}
+
