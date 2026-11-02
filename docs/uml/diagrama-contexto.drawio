@@ -1,0 +1,109 @@
+<mxfile host="app.diagrams.net" modified="2026-11-02T18:44:00.000Z" agent="Antigravity" version="24.7.17" type="device">
+  <diagram id="contexto-gj-notificaciones" name="Diagrama de Contexto - GJ-Notification-Service">
+    <mxGraphModel dx="1500" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1540" pageHeight="960" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="bg_canvas" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;" vertex="1" parent="1">
+          <mxGeometry x="10" y="10" width="1510" height="930" as="geometry" />
+        </mxCell>
+
+        <mxCell id="title_main" value="&lt;b style=&quot;font-size: 16px;&quot;&gt;DIAGRAMA DE CONTEXTO DEL SISTEMA (NIVEL C4 - L1)&lt;/b&gt;&lt;br&gt;Sistema: &lt;b&gt;GJ-Notification-Service (ms-notificaciones :8088)&lt;/b&gt; — Equipo: Guatoque Jiraguas (GJ)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#94a3b8;fontColor=#000000;fontSize=13;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="210" y="25" width="1120" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="actor_comprador" value="&lt;b&gt;«person / actor»&lt;/b&gt;&lt;br&gt;&lt;b&gt;Usuario Comprador / Donatario&lt;/b&gt;&lt;br&gt;────────────────────&lt;br&gt;Crea alertas de prendas agotadas o&lt;br&gt;búsquedas guardadas y recibe&lt;br&gt;notificaciones en su campana en vivo." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b365d;strokeColor=#1b365d;fontColor=#ffffff;fontSize=11.5;" vertex="1" parent="1">
+          <mxGeometry x="80" y="140" width="280" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sys_gateway" value="&lt;b&gt;«external system»&lt;/b&gt;&lt;br&gt;&lt;b&gt;StyleRadar Frontend SPA &amp;amp; API Gateway&lt;/b&gt;&lt;br&gt;(sr-api-gateway :8080)&lt;br&gt;────────────────────&lt;br&gt;Enruta peticiones REST con JWT y mantiene&lt;br&gt;la suscripción SSE de la campana." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0f2fe;strokeColor=#0284c7;fontColor=#000000;fontSize=11.5;" vertex="1" parent="1">
+          <mxGeometry x="80" y="380" width="280" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sys_core" value="&lt;b style=&quot;font-size: 14px;&quot;&gt;«system in scope»&lt;/b&gt;&lt;br&gt;&lt;b style=&quot;font-size: 15px;&quot;&gt;GJ-Notification-Service&lt;/b&gt;&lt;br&gt;&lt;b&gt;(ms-notificaciones :8088)&lt;/b&gt;&lt;br&gt;───────────────────────────&lt;br&gt;Gestiona alertas de disponibilidad, evalúa criterios&lt;br&gt;de búsqueda en memoria sin SQL sobre ítems,&lt;br&gt;garantiza idempotencia por ciclo de reposición y&lt;br&gt;entrega notificaciones en tiempo real vía SSE." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5600EF;strokeColor=#3b00a6;fontColor=#ffffff;fontSize=12;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="560" y="340" width="380" height="200" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sys_db" value="&lt;b&gt;«database»&lt;/b&gt;&lt;br&gt;&lt;b&gt;PostgreSQL 16 (notificaciones_db)&lt;/b&gt;&lt;br&gt;────────────────────&lt;br&gt;Almacena alertas, notificaciones y copias&lt;br&gt;locales (búsquedas y estado de cuenta)&lt;br&gt;sin llaves foráneas externas." style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="610" y="670" width="280" height="135" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sys_catalogo" value="&lt;b&gt;«external system»&lt;/b&gt;&lt;br&gt;&lt;b&gt;Microservicio de Catálogo e Inventario&lt;/b&gt;&lt;br&gt;(ms-item-catalogo :8082)&lt;br&gt;────────────────────&lt;br&gt;1. Responde consulta síncrona de stock (Feign)&lt;br&gt;2. Publica eventos InventarioActualizado,&lt;br&gt;PrendaPublicada y ModeracionPrenda." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#000000;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="120" width="310" height="135" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sys_identidad" value="&lt;b&gt;«external system»&lt;/b&gt;&lt;br&gt;&lt;b&gt;Microservicio de Identidad y Búsquedas&lt;/b&gt;&lt;br&gt;(ms-identidad :8081)&lt;br&gt;────────────────────&lt;br&gt;Emite tokens JWT y publica eventos&lt;br&gt;UsuarioEstadoCambiado y&lt;br&gt;BusquedaGuardadaSincronizada." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#000000;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="310" width="310" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sys_mensajes" value="&lt;b&gt;«external system»&lt;/b&gt;&lt;br&gt;&lt;b&gt;Microservicios de Mensajes y Donaciones&lt;/b&gt;&lt;br&gt;(ms-mensajes / ms-donaciones)&lt;br&gt;────────────────────&lt;br&gt;Publican eventos MensajeEnviado y&lt;br&gt;DonacionEstadoCambiado hacia el broker." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#000000;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="490" width="310" height="125" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sys_estadisticas" value="&lt;b&gt;«external system»&lt;/b&gt;&lt;br&gt;&lt;b&gt;Microservicio de Estadísticas&lt;/b&gt;&lt;br&gt;(ms-estadisticas)&lt;br&gt;────────────────────&lt;br&gt;Consume el evento AlertaCreada emitido&lt;br&gt;por GJ-Notification-Service." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#000000;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="665" width="310" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_user_gw" value="Interactúa con UI / Campana&lt;br&gt;(HTTPS)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1b365d;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=10.5;" edge="1" parent="1" source="actor_comprador" target="sys_gateway">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_gw_core" value="REST API + Stream SSE&lt;br&gt;(/api/v1/usuarios/me/** + JWT)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284c7;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=10.5;" edge="1" parent="1" source="sys_gateway" target="sys_core">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_core_db" value="Lee y persiste alertas,&lt;br&gt;notificaciones y copias (JDBC :5432)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=10.5;" edge="1" parent="1" source="sys_core" target="sys_db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_core_cat" value="Valida stock agotado (OpenFeign)&lt;br&gt;y consume eventos (AMQP RabbitMQ)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=10.5;" edge="1" parent="1" source="sys_catalogo" target="sys_core">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="188" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="edge_id_core" value="Eventos UsuarioEstadoCambiado y&lt;br&gt;BusquedaSincronizada (AMQP)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=10.5;" edge="1" parent="1" source="sys_identidad" target="sys_core">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="edge_msg_core" value="Eventos MensajeEnviado y&lt;br&gt;DonacionEstadoCambiado (AMQP)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=10.5;" edge="1" parent="1" source="sys_mensajes" target="sys_core">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1040" y="552" />
+              <mxPoint x="1040" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="edge_core_stat" value="Publica evento AlertaCreada&lt;br&gt;(AMQP Routing: alerta.creada)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5600EF;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=10.5;" edge="1" parent="1" source="sys_core" target="sys_estadisticas">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="980" y="510" />
+              <mxPoint x="980" y="725" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="legend_box" value="Leyenda de Contexto C4 — GJ-Notification-Service" style="swimlane;whiteSpace=wrap;html=1;startSize=26;fillColor=#f8fafc;strokeColor=#94a3b8;fontColor=#000000;fontStyle=1;fontSize=11;swimlaneFillColor=#ffffff;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="80" y="835" width="1370" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_1" value="Actor / Usuario Final" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b365d;strokeColor=#1b365d;fontColor=#ffffff;fontStyle=1;fontSize=11;" vertex="1" parent="legend_box">
+          <mxGeometry x="35" y="36" width="280" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_2" value="Sistema en Alcance (GJ-Notification-Service)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5600EF;strokeColor=#3b00a6;fontColor=#ffffff;fontStyle=1;fontSize=11;" vertex="1" parent="legend_box">
+          <mxGeometry x="365" y="36" width="320" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_3" value="Sistemas Externos (Microservicios StyleRadar)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#000000;fontStyle=1;fontSize=11;" vertex="1" parent="legend_box">
+          <mxGeometry x="735" y="36" width="310" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_4" value="Almacenamiento Propio (PostgreSQL 16)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontStyle=1;fontSize=11;" vertex="1" parent="legend_box">
+          <mxGeometry x="1095" y="36" width="245" height="32" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
