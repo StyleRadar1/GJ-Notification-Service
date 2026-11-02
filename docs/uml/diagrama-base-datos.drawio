@@ -1,0 +1,190 @@
+<mxfile host="app.diagrams.net" modified="2026-11-02T17:16:00.000Z" agent="Antigravity" version="24.7.17" type="device">
+  <diagram id="bd-ms-notificaciones" name="Diagrama de Base de Datos - notificaciones_db">
+    <mxGraphModel dx="1650" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="1080" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ================================================================= -->
+        <!-- TÍTULO PRINCIPAL DEL DIAGRAMA                                     -->
+        <!-- ================================================================= -->
+        <mxCell id="title_main" value="&lt;b style=&quot;font-size: 16px;&quot;&gt;METAMODELO CONCEPTUAL Y FÍSICO DE BASE DE DATOS RELACIONAL (POSTGRESQL 16 — notificaciones_db)&lt;/b&gt;&lt;br&gt;&lt;b style=&quot;font-size: 13px;&quot;&gt;Caso de Estudio: StyleRadar (ms-notificaciones) — Database-per-Service con Copias Locales sin FK Externas (NOT-04 / NOT-20)&lt;/b&gt;" style="text;html=1;strokeColor=#cbd5e1;fillColor=#f8fafc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontColor=#000000;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="220" y="15" width="1220" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- CONTENEDOR SUPERIOR: MODELO CONCEPTUAL Y LÓGICO                   -->
+        <!-- ================================================================= -->
+        <mxCell id="pkg_conceptual_tab" value="Modelo Conceptual y Reglas de Persistencia (Esquema public)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#94a3b8;fontColor=#000000;fontStyle=1;fontSize=12;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="85" width="430" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_conceptual_body" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#94a3b8;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="115" width="1590" height="635" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- ENTIDAD 1: EstadoCuentaCopia                                      -->
+        <!-- ================================================================= -->
+        <mxCell id="ent_cuenta" value="EstadoCuentaCopia" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#bae6fd;strokeColor=#0284c7;fontColor=#000000;fontSize=13;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="70" y="210" width="290" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_cuenta_attrs" value="&lt;b&gt;PK&lt;/b&gt; usuario_id : UUID&lt;br&gt;estado : VARCHAR(25) [ACTIVA | INACTIVA]&lt;br&gt;fecha_actualizacion : TIMESTAMP&lt;hr size=&quot;1&quot;&gt;&lt;i&gt;Sincronizada por evento:&lt;br&gt;UsuarioEstadoCambiado (NOT-09)&lt;/i&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=10;spacingRight=8;spacingTop=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;fontColor=#000000;fontSize=11;" vertex="1" parent="ent_cuenta">
+          <mxGeometry y="34" width="290" height="116" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- ENTIDAD 2: BusquedaGuardadaCopia                                  -->
+        <!-- ================================================================= -->
+        <mxCell id="ent_busqueda" value="BusquedaGuardadaCopia" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#bae6fd;strokeColor=#0284c7;fontColor=#000000;fontSize=13;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="430" y="210" width="310" height="175" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_busqueda_attrs" value="&lt;b&gt;PK&lt;/b&gt; busqueda_id : UUID&lt;br&gt;&lt;b&gt;IDX&lt;/b&gt; usuario_id : UUID (Sin FK externa)&lt;br&gt;activa : BOOLEAN DEFAULT TRUE&lt;br&gt;fecha_sincronizacion : TIMESTAMP&lt;hr size=&quot;1&quot;&gt;&lt;i&gt;Sincronizada por evento:&lt;br&gt;BusquedaGuardadaSincronizada (NOT-08)&lt;/i&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=10;spacingRight=8;spacingTop=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;fontColor=#000000;fontSize=11;" vertex="1" parent="ent_busqueda">
+          <mxGeometry y="34" width="310" height="141" as="geometry" />
+        </mxCell>
+
+        <!-- BLOQUE AMARILLO 1: CriterioBusqueda Embebido (Columnas en memoria) -->
+        <mxCell id="vo_criterios" value="CriterioBusquedaSnapshot" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#fef08a;strokeColor=#ca8a04;fontColor=#000000;fontSize=12;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="430" y="490" width="310" height="165" as="geometry" />
+        </mxCell>
+        <mxCell id="vo_criterios_attrs" value="categoria : VARCHAR(80) NULL&lt;br&gt;talla : VARCHAR(30) NULL&lt;br&gt;color : VARCHAR(50) NULL&lt;br&gt;marca : VARCHAR(80) NULL&lt;br&gt;precio_maximo : NUMERIC(12,2) NULL&lt;br&gt;condicion : VARCHAR(40) NULL&lt;br&gt;solo_donacion : BOOLEAN NULL" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=10;spacingRight=8;spacingTop=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;fontColor=#000000;fontSize=11;" vertex="1" parent="vo_criterios">
+          <mxGeometry y="32" width="310" height="133" as="geometry" />
+        </mxCell>
+
+        <!-- Composición BusquedaGuardadaCopia *-- CriterioBusquedaSnapshot -->
+        <mxCell id="edge_comp_criterios" value="/criterios&lt;br&gt;1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=diamondThin;startFill=1;startSize=12;endArrow=none;strokeColor=#b45309;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_busqueda" target="vo_criterios">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- ENTIDAD 3: Alerta                                                 -->
+        <!-- ================================================================= -->
+        <mxCell id="ent_alerta" value="Alerta" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#bae6fd;strokeColor=#0284c7;fontColor=#000000;fontSize=13;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="830" y="210" width="330" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_alerta_attrs" value="&lt;b&gt;PK&lt;/b&gt; id : UUID&lt;br&gt;&lt;b&gt;IDX&lt;/b&gt; usuario_id : UUID (Sin FK a ms-identidad)&lt;br&gt;tipo_alerta : VARCHAR(30) [ITEM | BUSQUEDA]&lt;br&gt;&lt;b&gt;IDX&lt;/b&gt; item_id : UUID NULL (Sin FK a ms-catalogo)&lt;br&gt;&lt;b&gt;IDX&lt;/b&gt; busqueda_guardada_id : UUID NULL&lt;br&gt;canal : VARCHAR(20) [IN_APP | EMAIL]&lt;br&gt;&lt;b&gt;IDX&lt;/b&gt; estado : VARCHAR(20) [ACTIVA | INACTIVA]&lt;br&gt;ciclo_reposicion_actual : INT DEFAULT 0&lt;br&gt;fecha_creacion : TIMESTAMP&lt;br&gt;fecha_actualizacion : TIMESTAMP" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=10;spacingRight=8;spacingTop=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;fontColor=#000000;fontSize=11;" vertex="1" parent="ent_alerta">
+          <mxGeometry y="34" width="330" height="196" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- ENTIDAD 4: Notificacion                                           -->
+        <!-- ================================================================= -->
+        <mxCell id="ent_notificacion" value="Notificacion" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#bae6fd;strokeColor=#0284c7;fontColor=#000000;fontSize=13;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="210" width="345" height="235" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_notificacion_attrs" value="&lt;b&gt;PK&lt;/b&gt; id : UUID&lt;br&gt;&lt;b&gt;IDX&lt;/b&gt; usuario_id : UUID (Sin FK a ms-identidad)&lt;br&gt;&lt;b&gt;REF&lt;/b&gt; alerta_id : UUID NULL&lt;br&gt;&lt;b&gt;REF&lt;/b&gt; item_id : UUID NULL&lt;br&gt;tipo : VARCHAR(40) [STOCK | BUSQUEDA | MSJ...]&lt;br&gt;titulo : VARCHAR(160)&lt;br&gt;mensaje : VARCHAR(600)&lt;br&gt;enlace : VARCHAR(300) NULL&lt;br&gt;&lt;b&gt;IDX&lt;/b&gt; leida : BOOLEAN DEFAULT FALSE&lt;br&gt;ciclo_reposicion : INT DEFAULT 0&lt;br&gt;fecha_creacion : TIMESTAMP" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=10;spacingRight=8;spacingTop=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;fontColor=#000000;fontSize=11;" vertex="1" parent="ent_notificacion">
+          <mxGeometry y="34" width="345" height="201" as="geometry" />
+        </mxCell>
+
+        <!-- BLOQUE AMARILLO 2: Restricción Única de Idempotencia (NOT-04 / NOT-11) -->
+        <mxCell id="vo_idempotencia" value="ClaveIdempotenciaCiclo" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#fef08a;strokeColor=#ca8a04;fontColor=#000000;fontSize=12;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="515" width="345" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="vo_idempotencia_attrs" value="&lt;b&gt;CONSTRAINT&lt;/b&gt; uk_notificacion_alerta_item_ciclo&lt;br&gt;&lt;b&gt;UNIQUE&lt;/b&gt; (alerta_id, item_id, ciclo_reposicion)&lt;hr size=&quot;1&quot;&gt;&lt;i&gt;Garantiza idempotencia ante eventos repetidos&lt;br&gt;de RabbitMQ en el mismo ciclo de stock (NOT-11)&lt;/i&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=10;spacingRight=8;spacingTop=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;fontColor=#000000;fontSize=11;" vertex="1" parent="vo_idempotencia">
+          <mxGeometry y="32" width="345" height="108" as="geometry" />
+        </mxCell>
+
+        <!-- Composición Notificacion *-- ClaveIdempotenciaCiclo -->
+        <mxCell id="edge_comp_idempotencia" value="/idempotencia&lt;br&gt;1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=diamondThin;startFill=1;startSize=12;endArrow=none;strokeColor=#b45309;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_notificacion" target="vo_idempotencia">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- RELACIONES DE REFERENCIA ENTRE ENTIDADES (AZULES)                 -->
+        <!-- ================================================================= -->
+        <!-- Alerta -> EstadoCuentaCopia (/usuario) -->
+        <mxCell id="edge_alerta_cuenta" value="/usuario (usuario_id)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=open;endFill=0;strokeColor=#0284c7;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_alerta" target="ent_cuenta">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="913" y="160" />
+              <mxPoint x="215" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Notificacion -> EstadoCuentaCopia (/destinatario) -->
+        <mxCell id="edge_notif_cuenta" value="/destinatario (usuario_id)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;endArrow=open;endFill=0;strokeColor=#0284c7;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_notificacion" target="ent_cuenta">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1422" y="135" />
+              <mxPoint x="142" y="135" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Alerta -> BusquedaGuardadaCopia (/busquedaGuardada 0..1) -->
+        <mxCell id="edge_alerta_busqueda" value="/busquedaGuardada&lt;br&gt;0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.35;exitDx=0;exitDy=0;entryX=1;entryY=0.45;entryDx=0;entryDy=0;endArrow=open;endFill=0;strokeColor=#0284c7;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_alerta" target="ent_busqueda">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Notificacion -> Alerta (/alerta 0..1) -->
+        <mxCell id="edge_notif_alerta" value="/alerta&lt;br&gt;0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.35;exitDx=0;exitDy=0;entryX=1;entryY=0.35;entryDx=0;entryDy=0;endArrow=open;endFill=0;strokeColor=#0284c7;strokeWidth=1.8;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_notificacion" target="ent_alerta">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- CONTENEDOR INFERIOR: TABLAS FÍSICAS POSTGRESQL (FLYWAY V1 & V2)   -->
+        <!-- ================================================================= -->
+        <mxCell id="pkg_sql_tab" value="PostgreSQL Table (Flyway V1__init_schema.sql &amp; V2__add_indexes.sql)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;dashed=1;fontColor=#000000;fontStyle=1;fontSize=12;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="810" width="520" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_sql_body" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#22c55e;dashed=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="840" width="1590" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- Tabla Física 1: estado_cuenta_copia -->
+        <mxCell id="tbl_cuenta" value="PostgreSQL Table&lt;br&gt;&lt;b style=&quot;font-size: 13px;&quot;&gt;estado_cuenta_copia&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;PK: usuario_id&lt;/span&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=16;fillColor=#dcfce7;strokeColor=#16a34a;fontColor=#000000;align=left;spacingLeft=12;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="885" width="270" height="105" as="geometry" />
+        </mxCell>
+
+        <!-- Tabla Física 2: busquedas_guardadas_copia -->
+        <mxCell id="tbl_busqueda" value="PostgreSQL Table&lt;br&gt;&lt;b style=&quot;font-size: 13px;&quot;&gt;busquedas_guardadas_copia&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;PK: busqueda_id | IDX: idx_busquedas_copia_usuario_activa&lt;/span&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=16;fillColor=#dcfce7;strokeColor=#16a34a;fontColor=#000000;align=left;spacingLeft=12;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="885" width="290" height="105" as="geometry" />
+        </mxCell>
+
+        <!-- Tabla Física 3: alertas -->
+        <mxCell id="tbl_alertas" value="PostgreSQL Table&lt;br&gt;&lt;b style=&quot;font-size: 13px;&quot;&gt;alertas&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;PK: id | IDX: usuario_estado, item_estado, busqueda_estado&lt;/span&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=16;fillColor=#dcfce7;strokeColor=#16a34a;fontColor=#000000;align=left;spacingLeft=12;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="845" y="885" width="300" height="105" as="geometry" />
+        </mxCell>
+
+        <!-- Tabla Física 4: notificaciones -->
+        <mxCell id="tbl_notificaciones" value="PostgreSQL Table&lt;br&gt;&lt;b style=&quot;font-size: 13px;&quot;&gt;notificaciones&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;PK: id | UQ: uk_notificacion_alerta_item_ciclo | IDX: usuario_leida&lt;/span&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=16;fillColor=#dcfce7;strokeColor=#16a34a;fontColor=#000000;align=left;spacingLeft=12;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="885" width="325" height="105" as="geometry" />
+        </mxCell>
+
+        <!-- ================================================================= -->
+        <!-- FLECHAS DE MAPEO FÍSICO -> CONCEPTUAL (VERDES PUNTEADAS)          -->
+        <!-- ================================================================= -->
+        <mxCell id="map_cuenta" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;endArrow=block;endFill=0;endSize=10;strokeColor=#16a34a;strokeWidth=2;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="tbl_cuenta" target="ent_cuenta">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="map_busqueda" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;endArrow=block;endFill=0;endSize=10;strokeColor=#16a34a;strokeWidth=2;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.18;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="tbl_busqueda" target="ent_busqueda">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="585" y="700" />
+              <mxPoint x="395" y="700" />
+              <mxPoint x="395" y="420" />
+              <mxPoint x="486" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="map_alertas" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;endArrow=block;endFill=0;endSize=10;strokeColor=#16a34a;strokeWidth=2;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="tbl_alertas" target="ent_alerta">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="map_notificaciones" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;endArrow=block;endFill=0;endSize=10;strokeColor=#16a34a;strokeWidth=2;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.15;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="tbl_notificaciones" target="ent_notificacion">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1422" y="700" />
+              <mxPoint x="1210" y="700" />
+              <mxPoint x="1210" y="480" />
+              <mxPoint x="1302" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
