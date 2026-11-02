@@ -1,0 +1,15 @@
+target/
+!target/*.jar
+.git
+.gitignore
+.idea
+.vscode
+*.iml
+*.log
+logs/
+README.md
+docs/
+postman/
+.env
+.env.*
+docker-compose.yml
