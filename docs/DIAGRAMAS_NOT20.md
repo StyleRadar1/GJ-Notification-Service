@@ -6,6 +6,12 @@
 - **Ubicación de archivos fuente Draw.io:** [`docs/uml/`](./uml/)
 
 > **Regla de Oro de Ingeniería StyleRadar:** Todo diagrama arquitectónico está acompañado de su **Explicación Técnica** (qué representa y cómo fluye la información) y su **Justificación Arquitectónica** (por qué se tomaron esas decisiones de diseño frente a otras alternativas).
+>
+> **Diagramas Oficiales Solicitados para el Microservicio:**
+> 1. **Diagrama de Componentes con Arquitectura Hexagonal:** [`docs/uml/diagrama-componentes-especifico.drawio`](./uml/diagrama-componentes-especifico.drawio)
+> 2. **Diagrama de Clases (Modelo de Dominio):** [`docs/uml/diagrama-clases.drawio`](./uml/diagrama-clases.drawio)
+> 3. **Diagrama de Base de Datos (Modelo Relacional / ER):** [`docs/uml/diagrama-base-datos.drawio`](./uml/diagrama-base-datos.drawio)
+> *(Diagramas complementarios de apoyo para el curso: Despliegue en `docs/uml/diagrama-despliegue.drawio` y Contexto C4 en `docs/uml/diagrama-contexto.drawio`)*
 
 ---
 
