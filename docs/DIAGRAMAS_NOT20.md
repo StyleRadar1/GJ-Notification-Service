@@ -19,6 +19,12 @@
 
 - **Archivo versionado en Draw.io:** [`docs/uml/diagrama-contexto.drawio`](./uml/diagrama-contexto.drawio)
 
+<p align="center">
+  <a href="./images/diagrama-contexto.png" target="_blank">
+    <img src="./images/diagrama-contexto.png" alt="Diagrama de Contexto del Sistema" width="95%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
 ### 1.1. Explicación Técnica
 El Diagrama de Contexto delimita la frontera del microservicio **`GJ-Notification-Service` (`:8088`)** dentro del ecosistema distribuido de StyleRadar e identifica los actores y sistemas externos con los que intercambia información:
 1. **Usuario Comprador / Donatario y API Gateway (`sr-api-gateway :8080`):** El usuario autenticado interactúa desde la SPA de StyleRadar a través del API Gateway mediante peticiones HTTPS REST (`/api/v1/usuarios/me/alertas` y `/api/v1/usuarios/me/notificaciones`) portando su token Bearer JWT, y mantiene una conexión abierta **Server-Sent Events (`SSE`)** en `/api/v1/usuarios/me/notificaciones/stream` para recibir notificaciones en la campana sin recargar la página.
@@ -39,6 +45,12 @@ El Diagrama de Contexto delimita la frontera del microservicio **`GJ-Notificatio
 ## 2. Diagrama de Componentes Específico (Arquitectura Hexagonal)
 
 - **Archivo versionado en Draw.io:** [`docs/uml/diagrama-componentes-especifico.drawio`](./uml/diagrama-componentes-especifico.drawio)
+
+<p align="center">
+  <a href="./images/diagrama-componentes-especifico.png" target="_blank">
+    <img src="./images/diagrama-componentes-especifico.png" alt="Diagrama de Componentes Hexagonal" width="95%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+  </a>
+</p>
 
 ### 2.1. Explicación Técnica
 Representa la estructura interna de **`GJ-Notification-Service`** siguiendo estrictamente el patrón **Arquitectura Hexagonal (Puertos y Adaptadores)** dividido en tres anillos concéntricos con inversión de dependencias hacia el núcleo:
@@ -66,6 +78,12 @@ Representa la estructura interna de **`GJ-Notification-Service`** siguiendo estr
 
 - **Archivo versionado en Draw.io:** [`docs/uml/diagrama-clases.drawio`](./uml/diagrama-clases.drawio)
 
+<p align="center">
+  <a href="./images/diagrama-clases.png" target="_blank">
+    <img src="./images/diagrama-clases.png" alt="Diagrama de Clases - Modelo de Dominio" width="95%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
 ### 3.1. Explicación Técnica
 Modela las clases del dominio de notificaciones, sus objetos de valor, enumeraciones y los tres patrones de diseño aplicados en el servicio:
 1. **Entidades de Dominio (`Alerta`, `Notificacion`, `BusquedaGuardadaCopia`, `EstadoCuentaCopia`, `AlertaCreadaDomainEvent`):**
@@ -87,6 +105,12 @@ Modela las clases del dominio de notificaciones, sus objetos de valor, enumeraci
 ## 4. Diagrama de Base de Datos (Metamodelo Conceptual y Físico)
 
 - **Archivo versionado en Draw.io:** [`docs/uml/diagrama-base-datos.drawio`](./uml/diagrama-base-datos.drawio)
+
+<p align="center">
+  <a href="./images/diagrama-base-datos.png" target="_blank">
+    <img src="./images/diagrama-base-datos.png" alt="Diagrama de Base de Datos - Modelo Relacional" width="95%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+  </a>
+</p>
 
 ### 4.1. Explicación Técnica
 Representa el metamodelo de persistencia relacional en **PostgreSQL 16 (`notificaciones_db`)** gestionado mediante migraciones **Flyway (`V1__init_schema.sql` y `V2__add_indexes.sql`)**:

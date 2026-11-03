@@ -212,32 +212,66 @@ flowchart LR
     class DOMAIN,ENTITIES,RULES dom;
 ```
 
-<div align="center">
-  <table width="100%" style="margin: 18px 0; border: 2px solid #5600EF; border-radius: 8px; background-color: #FBFBFE;">
-    <tr>
-      <td align="left" style="padding: 24px;">
-        <p align="center">
-          <img src="https://img.shields.io/badge/DIAGRAMAS_OFICIALES-DRAW.IO_UML-5600EF?style=for-the-badge" alt="Diagramas Draw.io" /><br />
-          <strong><font color="#5600EF" size="4">DIAGRAMAS OFICIALES DEL MICROSERVICIO (DRAW.IO & REGLA DE ORO)</font></strong><br />
-          <em>Todos los diagramas cuentan con su Explicación Técnica y Justificación Arquitectónica en <a href="docs/DIAGRAMAS_NOT20.md">docs/DIAGRAMAS_NOT20.md</a></em>
-        </p>
-        <hr style="border: 1px solid #E2E8F0;" />
-        <h4>Diagramas Específicos Solicitados para el Microservicio:</h4>
-        <ul>
-          <li><strong>Diagrama de Componentes con Arquitectura Hexagonal:
-          </strong> <a href="docs/uml/diagrama-componentes-especifico.drawio"><code>docs/uml/diagrama-componentes-especifico.drawio</code></a> — Modela adaptadores in/out, puertos, casos de uso, servicios de aplicación y dominio puro.</li>
-          <li><strong>Diagrama de Clases (Modelo de Dominio):</strong> <a href="docs/uml/diagrama-clases.drawio"><code>docs/uml/diagrama-clases.drawio</code></a> — Modela entidades referenciadas por UUID, Value Objects, Enumeraciones y patrones (Cadena de validación, Strategy y Factory).</li>
-          <li><strong>Diagrama de Base de Datos (Modelo Relacional / ER):</strong> <a href="docs/uml/diagrama-base-datos.drawio"><code>docs/uml/diagrama-base-datos.drawio</code></a> — Metamodelo conceptual referenciado y mapeo a las 4 tablas PostgreSQL (Flyway V1 y V2).</li>
-        </ul>
-        <h4>Diagramas Complementarios de Apoyo:</h4>
-        <ul>
-          <li><strong>Diagrama de Despliegue:</strong> <a href="docs/uml/diagrama-despliegue.drawio"><code>docs/uml/diagrama-despliegue.drawio</code></a> — Topología de ejecución en Azure App Service (QA/PROD), Docker Hub y GitHub Actions.</li>
-          <li><strong>Diagrama de Contexto del Sistema (C4 L1):</strong> <a href="docs/uml/diagrama-contexto.drawio"><code>docs/uml/diagrama-contexto.drawio</code></a> — Interacción con API Gateway, frontend, RabbitMQ y microservicios externos.</li>
-        </ul>
-      </td>
-    </tr>
-  </table>
-</div>
+### Diagramas Oficiales del Microservicio (Draw.io & UML)
+
+> **Regla de Oro de Ingenieria StyleRadar:** Todo diagrama arquitectonico esta respaldado por su archivo fuente editable `.drawio`, su imagen de alta resolucion y su justificacion tecnica documentada en [docs/DIAGRAMAS_NOT20.md](docs/DIAGRAMAS_NOT20.md).
+
+#### 1. Diagrama de Componentes con Arquitectura Hexagonal (Especifico)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-componentes-especifico.drawio`](docs/uml/diagrama-componentes-especifico.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 2)](docs/DIAGRAMAS_NOT20.md#2-diagrama-de-componentes-específico-arquitectura-hexagonal)
+* **Descripcion:** Modela adaptadores de entrada (Driving: REST Controller, RabbitMQ Listener), la capa de aplicacion (Input Ports, Use Cases, Application Services, DTOs, Mappers), el nucleo de dominio puro (Modelos, Value Objects, Domain Events, Validadores) y adaptadores de salida (Driven: JPA Repositories, Feign Client, Event Publisher, SSE Adapter).
+
+<p align="center">
+  <a href="docs/images/diagrama-componentes-especifico.png" target="_blank">
+    <img src="docs/images/diagrama-componentes-especifico.png" alt="Diagrama de Componentes con Arquitectura Hexagonal" width="100%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
+---
+
+#### 2. Diagrama de Clases (Modelo de Dominio y Patrones de Diseno)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-clases.drawio`](docs/uml/diagrama-clases.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 3)](docs/DIAGRAMAS_NOT20.md#3-diagrama-de-clases-modelo-de-dominio)
+* **Descripcion:** Modela las entidades de dominio (`Alerta`, `Notificacion`, `BusquedaGuardadaCopia`, `EstadoCuentaCopia`), Value Objects (`CriterioBusquedaVO`, `DatosPrendaVO`), Enumeraciones (`TipoAlerta`, `TipoNotificacion`, `CanalNotificacion`, `EstadoAlerta`, `EstadoNotificacion`) y los 3 patrones de diseno implementados (Cadena de Responsabilidad para validaciones, Strategy para matching de criterios y Factory para creacion de notificaciones).
+
+<p align="center">
+  <a href="docs/images/diagrama-clases.png" target="_blank">
+    <img src="docs/images/diagrama-clases.png" alt="Diagrama de Clases - Modelo de Dominio" width="100%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
+---
+
+#### 3. Diagrama de Base de Datos (Modelo Relacional / ER - PostgreSQL 16)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-base-datos.drawio`](docs/uml/diagrama-base-datos.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 4)](docs/DIAGRAMAS_NOT20.md#4-diagrama-de-base-de-datos-metamodelo-conceptual-y-físico)
+* **Descripcion:** Modela el metamodelo conceptual hibrido (entidades de dominio frente a Value Objects embebidos vs referenciados por UUID) y el esquema relacional fisico de PostgreSQL 16 gestionado por Flyway (`alertas`, `notificaciones`, `busquedas_guardadas_copia`, `estados_cuenta_copia`, indices B-Tree y restricciones FK/Unique).
+
+<p align="center">
+  <a href="docs/images/diagrama-base-datos.png" target="_blank">
+    <img src="docs/images/diagrama-base-datos.png" alt="Diagrama de Base de Datos - Modelo Relacional" width="100%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
+---
+
+#### 4. Diagrama de Contexto del Sistema (C4 L1)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-contexto.drawio`](docs/uml/diagrama-contexto.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 1)](docs/DIAGRAMAS_NOT20.md#1-diagrama-de-contexto-del-sistema-nivel-c4---l1)
+* **Descripcion:** Delimita la frontera del microservicio y sus interacciones con API Gateway, frontend SPA, broker RabbitMQ (`styleradar.domain.events`), microservicio de catalogo (via OpenFeign), microservicio de identidad, donaciones, mensajes y microservicio de estadisticas.
+
+<p align="center">
+  <a href="docs/images/diagrama-contexto.png" target="_blank">
+    <img src="docs/images/diagrama-contexto.png" alt="Diagrama de Contexto del Sistema" width="100%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
+---
+
+#### 5. Diagrama de Despliegue (Topologia Azure & Docker Hub)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-despliegue.drawio`](docs/uml/diagrama-despliegue.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 5)](docs/DIAGRAMAS_NOT20.md#5-diagrama-de-despliegue)
+* **Descripcion:** Modela la topologia de ejecucion y despliegue continuo: estacion de desarrollo, pipeline de CI/CD en GitHub Actions, repositorio de imagenes en Docker Hub (`styleradar/ms-notificaciones`), y ambientes de ejecucion en Azure App Service (QA en Linux B1ms y Produccion en cluster P1v3 con autoscaling y replicas PostgreSQL).
 
 ### Estructura Oficial de Paquetes en `src/main/java/`
 

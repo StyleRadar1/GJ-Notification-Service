@@ -1,128 +1,104 @@
-<mxfile host="app.diagrams.net" modified="2026-11-02T17:38:00.000Z" agent="Antigravity" version="24.7.17" type="device">
-  <diagram id="bd-ms-notificaciones" name="Diagrama de Base de Datos - notificaciones_db">
-    <mxGraphModel background="#FFFFFF" dx="1420" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="760" math="0" shadow="0">
-      <root>
-        <mxCell id="0" />
-        <mxCell id="1" parent="0" />
-        <!-- Fondo Blanco General para garantizar colores en tema oscuro -->
-        <mxCell id="bg_canvas" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=none;" vertex="1" parent="1">
-            <mxGeometry x="0" y="0" width="1320" height="760" as="geometry" />
-        </mxCell>
-
-        <mxCell id="title_main" value="&lt;b&gt;METAMODELO CONCEPTUAL DE BASES DE DATOS (POSTGRESQL — notificaciones_db)&lt;/b&gt;&lt;br&gt;Caso de Estudio: StyleRadar (ms-notificaciones) - Modelo Híbrido (Embebido vs Referenciado)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;fontColor=#000000;fontSize=13;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="250" y="10" width="820" height="45" as="geometry" />
-        </mxCell>
-
-        <mxCell id="pkg_top_tab" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;" vertex="1" parent="1">
-          <mxGeometry x="30" y="65" width="360" height="28" as="geometry" />
-        </mxCell>
-        <mxCell id="pkg_top_body" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;" vertex="1" parent="1">
-          <mxGeometry x="30" y="93" width="1240" height="430" as="geometry" />
-        </mxCell>
-
-        <mxCell id="ent_cuenta" value="EstadoCuentaCopia" style="swimlane;whiteSpace=wrap;html=1;startSize=36;fillColor=#b3e5fc;strokeColor=#0284c7;fontColor=#000000;fontStyle=1;fontSize=12;swimlaneFillColor=#ffffff;collapsible=0;" vertex="1" parent="1">
-          <mxGeometry x="70" y="185" width="190" height="60" as="geometry" />
-        </mxCell>
-
-        <mxCell id="ent_busqueda" value="BusquedaGuardadaCopia" style="swimlane;whiteSpace=wrap;html=1;startSize=36;fillColor=#b3e5fc;strokeColor=#0284c7;fontColor=#000000;fontStyle=1;fontSize=12;swimlaneFillColor=#ffffff;collapsible=0;" vertex="1" parent="1">
-          <mxGeometry x="340" y="185" width="200" height="60" as="geometry" />
-        </mxCell>
-
-        <mxCell id="ent_alerta" value="Alerta" style="swimlane;whiteSpace=wrap;html=1;startSize=36;fillColor=#b3e5fc;strokeColor=#0284c7;fontColor=#000000;fontStyle=1;fontSize=12;swimlaneFillColor=#ffffff;collapsible=0;" vertex="1" parent="1">
-          <mxGeometry x="650" y="210" width="190" height="65" as="geometry" />
-        </mxCell>
-
-        <mxCell id="ent_notificacion" value="Notificacion" style="swimlane;whiteSpace=wrap;html=1;startSize=36;fillColor=#b3e5fc;strokeColor=#0284c7;fontColor=#000000;fontStyle=1;fontSize=12;swimlaneFillColor=#ffffff;collapsible=0;" vertex="1" parent="1">
-          <mxGeometry x="960" y="185" width="210" height="60" as="geometry" />
-        </mxCell>
-
-        <mxCell id="vo_criterios" value="CriterioBusqueda" style="swimlane;whiteSpace=wrap;html=1;startSize=34;fillColor=#fde68a;strokeColor=#d97706;fontColor=#000000;fontStyle=1;fontSize=12;swimlaneFillColor=#ffffff;collapsible=0;" vertex="1" parent="1">
-          <mxGeometry x="345" y="365" width="190" height="56" as="geometry" />
-        </mxCell>
-
-        <mxCell id="vo_idempotencia" value="CicloReposicionSnapshot" style="swimlane;whiteSpace=wrap;html=1;startSize=34;fillColor=#fde68a;strokeColor=#d97706;fontColor=#000000;fontStyle=1;fontSize=12;swimlaneFillColor=#ffffff;collapsible=0;" vertex="1" parent="1">
-          <mxGeometry x="965" y="365" width="200" height="56" as="geometry" />
-        </mxCell>
-
-        <mxCell id="edge_comp_criterios" value="/criterios&lt;br&gt;1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=diamondThin;startFill=1;startSize=12;endArrow=none;strokeColor=#b45309;strokeWidth=1.5;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_busqueda" target="vo_criterios">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="edge_comp_idempotencia" value="/ciclo&lt;br&gt;1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=diamondThin;startFill=1;startSize=12;endArrow=none;strokeColor=#b45309;strokeWidth=1.5;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_notificacion" target="vo_idempotencia">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="edge_notif_usuario" value="/usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=open;endFill=0;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#000000;labelBackgroundColor=#f8fafc;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_notificacion" target="ent_cuenta">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1065" y="130" />
-              <mxPoint x="165" y="130" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="edge_alerta_busqueda" value="/busqueda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=open;endFill=0;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#000000;labelBackgroundColor=#f8fafc;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_alerta" target="ent_busqueda">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="edge_notif_alerta" value="/alerta" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=open;endFill=0;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#000000;labelBackgroundColor=#f8fafc;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_notificacion" target="ent_alerta">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="pkg_sql_tab" value="SQL Table" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#4ade80;dashed=1;fontColor=#000000;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
-          <mxGeometry x="20" y="565" width="460" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="pkg_sql_body" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#4ade80;dashed=1;" vertex="1" parent="1">
-          <mxGeometry x="20" y="591" width="1250" height="115" as="geometry" />
-        </mxCell>
-
-        <mxCell id="tbl_cuenta" value="SQL Table&lt;br&gt;&lt;b&gt;estado_cuenta_copia&lt;/b&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=15;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#000000;align=left;spacingLeft=12;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="70" y="615" width="190" height="65" as="geometry" />
-        </mxCell>
-
-        <mxCell id="tbl_busqueda" value="SQL Table&lt;br&gt;&lt;b&gt;busquedas_guardadas_copia&lt;/b&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=15;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#000000;align=left;spacingLeft=12;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="340" y="615" width="200" height="65" as="geometry" />
-        </mxCell>
-
-        <mxCell id="tbl_alertas" value="SQL Table&lt;br&gt;&lt;b&gt;alertas&lt;/b&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=15;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#000000;align=left;spacingLeft=12;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="650" y="615" width="190" height="65" as="geometry" />
-        </mxCell>
-
-        <mxCell id="tbl_notificaciones" value="SQL Table&lt;br&gt;&lt;b&gt;notificaciones&lt;/b&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=15;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#000000;align=left;spacingLeft=12;fontSize=11;" vertex="1" parent="1">
-          <mxGeometry x="960" y="615" width="210" height="65" as="geometry" />
-        </mxCell>
-
-        <mxCell id="map_cuenta" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;endArrow=block;endFill=0;endSize=10;strokeColor=#16a34a;strokeWidth=1.8;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="tbl_cuenta" target="ent_cuenta">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="map_busqueda" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;endArrow=block;endFill=0;endSize=10;strokeColor=#16a34a;strokeWidth=1.8;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.2;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="tbl_busqueda" target="ent_busqueda">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="440" y="470" />
-              <mxPoint x="300" y="470" />
-              <mxPoint x="300" y="280" />
-              <mxPoint x="380" y="280" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="map_alertas" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;endArrow=block;endFill=0;endSize=10;strokeColor=#16a34a;strokeWidth=1.8;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="tbl_alertas" target="ent_alerta">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="map_notificaciones" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;endArrow=block;endFill=0;endSize=10;strokeColor=#16a34a;strokeWidth=1.8;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.2;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="tbl_notificaciones" target="ent_notificacion">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1065" y="470" />
-              <mxPoint x="920" y="470" />
-              <mxPoint x="920" y="280" />
-              <mxPoint x="1002" y="280" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-      </root>
-    </mxGraphModel>
-  </diagram>
+<mxfile host="65bd71144e">
+    <diagram id="bd-ms-notificaciones" name="Diagrama de Base de Datos - notificaciones_db">
+        <mxGraphModel dx="540" dy="491" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="760" background="#FFFFFF" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="bg_canvas" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=none;" vertex="1" parent="1">
+                    <mxGeometry width="1320" height="760" as="geometry"/>
+                </mxCell>
+                <mxCell id="title_main" value="&lt;b&gt;METAMODELO CONCEPTUAL DE BASES DE DATOS (POSTGRESQL — notificaciones_db)&lt;/b&gt;&lt;br&gt;Caso de Estudio: StyleRadar (ms-notificaciones) - Modelo Híbrido (Embebido vs Referenciado)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;fontColor=#000000;fontSize=13;align=center;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="250" y="10" width="820" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="pkg_top_tab" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;" vertex="1" parent="1">
+                    <mxGeometry x="30" y="65" width="360" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="pkg_top_body" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;" vertex="1" parent="1">
+                    <mxGeometry x="30" y="93" width="1240" height="430" as="geometry"/>
+                </mxCell>
+                <mxCell id="ent_cuenta" value="EstadoCuentaCopia" style="swimlane;whiteSpace=wrap;html=1;startSize=36;fillColor=#b3e5fc;strokeColor=#0284c7;fontColor=#000000;fontStyle=1;fontSize=12;swimlaneFillColor=#ffffff;collapsible=0;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="185" width="190" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="ent_busqueda" value="BusquedaGuardadaCopia" style="swimlane;whiteSpace=wrap;html=1;startSize=36;fillColor=#b3e5fc;strokeColor=#0284c7;fontColor=#000000;fontStyle=1;fontSize=12;swimlaneFillColor=#ffffff;collapsible=0;" parent="1" vertex="1">
+                    <mxGeometry x="340" y="185" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="ent_alerta" value="Alerta" style="swimlane;whiteSpace=wrap;html=1;startSize=36;fillColor=#b3e5fc;strokeColor=#0284c7;fontColor=#000000;fontStyle=1;fontSize=12;swimlaneFillColor=#ffffff;collapsible=0;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="210" width="190" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="ent_notificacion" value="Notificacion" style="swimlane;whiteSpace=wrap;html=1;startSize=36;fillColor=#b3e5fc;strokeColor=#0284c7;fontColor=#000000;fontStyle=1;fontSize=12;swimlaneFillColor=#ffffff;collapsible=0;" parent="1" vertex="1">
+                    <mxGeometry x="960" y="185" width="210" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="vo_criterios" value="CriterioBusqueda" style="swimlane;whiteSpace=wrap;html=1;startSize=34;fillColor=#fde68a;strokeColor=#d97706;fontColor=#000000;fontStyle=1;fontSize=12;swimlaneFillColor=#ffffff;collapsible=0;" parent="1" vertex="1">
+                    <mxGeometry x="345" y="365" width="190" height="56" as="geometry"/>
+                </mxCell>
+                <mxCell id="vo_idempotencia" value="CicloReposicionSnapshot" style="swimlane;whiteSpace=wrap;html=1;startSize=34;fillColor=#fde68a;strokeColor=#d97706;fontColor=#000000;fontStyle=1;fontSize=12;swimlaneFillColor=#ffffff;collapsible=0;" parent="1" vertex="1">
+                    <mxGeometry x="965" y="365" width="200" height="56" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge_comp_criterios" value="/criterios&lt;br&gt;1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=diamondThin;startFill=1;startSize=12;endArrow=none;strokeColor=#b45309;strokeWidth=1.5;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" parent="1" source="ent_busqueda" target="vo_criterios" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge_comp_idempotencia" value="/ciclo&lt;br&gt;1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=diamondThin;startFill=1;startSize=12;endArrow=none;strokeColor=#b45309;strokeWidth=1.5;fontColor=#000000;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" parent="1" source="ent_notificacion" target="vo_idempotencia" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge_notif_usuario" value="/usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=open;endFill=0;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#000000;labelBackgroundColor=#f8fafc;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ent_notificacion" target="ent_cuenta">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1065" y="130"/>
+                            <mxPoint x="165" y="130"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge_alerta_busqueda" value="/busqueda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=open;endFill=0;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#000000;labelBackgroundColor=#f8fafc;fontStyle=1;fontSize=11;" parent="1" source="ent_alerta" target="ent_busqueda" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge_notif_alerta" value="/alerta" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=open;endFill=0;strokeColor=#0284c7;strokeWidth=1.5;fontColor=#000000;labelBackgroundColor=#f8fafc;fontStyle=1;fontSize=11;" parent="1" source="ent_notificacion" target="ent_alerta" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="pkg_sql_tab" value="SQL Table" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#4ade80;dashed=1;fontColor=#000000;fontSize=11;align=left;spacingLeft=10;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="565" width="460" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="pkg_sql_body" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#4ade80;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="591" width="1250" height="115" as="geometry"/>
+                </mxCell>
+                <mxCell id="tbl_cuenta" value="SQL Table&lt;br&gt;&lt;b&gt;estado_cuenta_copia&lt;/b&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=15;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#000000;align=left;spacingLeft=12;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="615" width="190" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="tbl_busqueda" value="SQL Table&lt;br&gt;&lt;b&gt;busquedas_guardadas_copia&lt;/b&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=15;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#000000;align=left;spacingLeft=12;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="340" y="615" width="200" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="tbl_alertas" value="SQL Table&lt;br&gt;&lt;b&gt;alertas&lt;/b&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=15;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#000000;align=left;spacingLeft=12;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="615" width="190" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="tbl_notificaciones" value="SQL Table&lt;br&gt;&lt;b&gt;notificaciones&lt;/b&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;size=15;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#000000;align=left;spacingLeft=12;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="960" y="615" width="210" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="map_cuenta" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;endArrow=block;endFill=0;endSize=10;strokeColor=#16a34a;strokeWidth=1.8;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="tbl_cuenta" target="ent_cuenta" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="map_busqueda" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;endArrow=block;endFill=0;endSize=10;strokeColor=#16a34a;strokeWidth=1.8;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.2;entryY=1;entryDx=0;entryDy=0;" parent="1" source="tbl_busqueda" target="ent_busqueda" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="440" y="470"/>
+                            <mxPoint x="300" y="470"/>
+                            <mxPoint x="300" y="280"/>
+                            <mxPoint x="380" y="280"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="map_alertas" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;endArrow=block;endFill=0;endSize=10;strokeColor=#16a34a;strokeWidth=1.8;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="tbl_alertas" target="ent_alerta" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="map_notificaciones" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;endArrow=block;endFill=0;endSize=10;strokeColor=#16a34a;strokeWidth=1.8;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.2;entryY=1;entryDx=0;entryDy=0;" parent="1" source="tbl_notificaciones" target="ent_notificacion" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1065" y="470"/>
+                            <mxPoint x="920" y="470"/>
+                            <mxPoint x="920" y="280"/>
+                            <mxPoint x="1002" y="280"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
 </mxfile>
