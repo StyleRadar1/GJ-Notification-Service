@@ -2,9 +2,9 @@ name: CI / QA Pipeline - ms-notificaciones
 
 on:
   push:
-    branches: [ "develop", "feature/**" ]
+    branches: [ "develop", "Scaffolding", "feature/**" ]
   pull_request:
-    branches: [ "develop", "main" ]
+    branches: [ "develop", "main", "Scaffolding" ]
 
 jobs:
   build-and-verify:
