@@ -46,17 +46,6 @@ jobs:
       - name: Build OCI Docker image for QA
         run: docker build -t styleradar/ms-notificaciones:qa .
 
-      - name: Log in to Docker Hub
-        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Publish image to Docker Hub (QA)
-        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
-        run: docker push styleradar/ms-notificaciones:qa
-
       - name: Verify Docker Compose stack startup (NOT-18 Evidence)
         run: |
           sudo systemctl stop postgresql redis || true
