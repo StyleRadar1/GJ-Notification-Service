@@ -184,3 +184,4 @@ La arquitectura tecnológica adoptada para el **Microservicio de Notificaciones 
 
 *Documento versionado oficialmente en el repositorio del proyecto: `docs/ANALISIS_DECISIONES_TECNOLOGICAS.md`.*
 *Equipo Guatoque Jiraguas (GJ) · Asignatura DOSW 2026.*
+
