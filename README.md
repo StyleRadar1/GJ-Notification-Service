@@ -110,13 +110,13 @@ Desarrollado y mantenido por el **Squad `Paquete 3 · Notificaciones y Chat`** p
 
 <div align="center">
 
-| Rol | Nombre Completo | Usuario GitHub |
-| :---: | :---: | :---: |
-| **Líder de Squad & Backend** | `Paula` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
-| **Desarrollo Microservicio Notificaciones** | `Oscar Lasso` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
-| **Integración Identidad & Búsquedas** | `Equipo Identidad` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
-| **Integración Catálogo e Inventario** | `Equipo Catálogo` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
-| **Integración Chat & Donaciones** | `Equipo Mensajería` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
+| Rol | Nombre Completo |
+| :---: | :---: |
+| **Líder de Squad & Backend** | `Paula` |
+| **Desarrollo Microservicio Notificaciones** | `Oscar Lasso` |
+| **Integración Identidad & Búsquedas** | `Equipo Identidad` |
+| **Integración Catálogo e Inventario** | `Equipo Catálogo` |
+| **Integración Chat & Donaciones** | `Equipo Mensajería` |
 
 </div>
 
