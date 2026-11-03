@@ -54,6 +54,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: styleradar/ms-notificaciones:qa
     container_name: styleradar-ms-notificaciones
     ports:
       - "${PORT:-8088}:8088"
