@@ -4,7 +4,12 @@
     <img src="https://raw.githubusercontent.com/JUANNICOLASA/Frontend-Style-Radar/main/styleradar-frontend-v3/assets/logo/styleradar-logo.svg" width="340" alt="StyleRadar Logo Oficial" />
   </a>
 
-  <h1>STYLE<font color="#5600EF">RADAR</font> &nbsp;·&nbsp; <code>ms-notificaciones</code></h1>
+  <h1>STYLE<font color="#5600EF">RADAR</font> &nbsp;·&nbsp; <code>GJ-Notification-Service</code></h1>
+
+  <p align="center">
+    <img src="https://img.shields.io/badge/EQUIPO-Guatoque_Jiraguas_(GJ)-12063A?style=for-the-badge" alt="Equipo" />
+    <img src="https://img.shields.io/badge/SERVICIO-ms--notificaciones-5600EF?style=for-the-badge" alt="Servicio" />
+  </p>
 
   <p align="center">
     <img src="https://img.shields.io/badge/BOUNDED_CONTEXT-Notificaciones_y_Alertas-12063A?style=for-the-badge" alt="Context" />
@@ -107,11 +112,11 @@ Desarrollado y mantenido por el **Squad `Paquete 3 · Notificaciones y Chat`** p
 
 | Rol | Nombre Completo | Usuario GitHub |
 | :---: | :---: | :---: |
-| **Backend Lead (`ms-notificaciones`)** | `Oscar Lasso` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
-| **Integración Identidad (`ms-usuarios`)** | `Equipo Identidad` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
-| **Integración Catálogo (`ms-inventario` / `ms-item-catalogo`)** | `Equipo Catálogo` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
-| **Integración Mensajes (`ms-chat`)** | `Equipo Mensajería` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
-| **QA / DevOps & Gateway** | `Equipo Infraestructura` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
+| **Líder de Squad & Backend** | `Paula` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
+| **Desarrollo Microservicio Notificaciones** | `Oscar Lasso` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
+| **Integración Identidad & Búsquedas** | `Equipo Identidad` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
+| **Integración Catálogo e Inventario** | `Equipo Catálogo` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
+| **Integración Chat & Donaciones** | `Equipo Mensajería` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
 
 </div>
 
@@ -183,8 +188,15 @@ flowchart TD
           <sub>Si tu squad cuenta con un diagrama gráfico exportado de Draw.io, Miro o PlantUML, pégalo en este contenedor como alternativa visual.</sub>
         </p>
         <p>
-<!-- <img src="docs/evidencias/diagrama-hexagonal.png" width="90%" alt="Diagrama Hexagonal" /><br /> -->
-          <code>[ Espacio opcional para diagrama exportado · docs/evidencias/diagrama-hexagonal.png ]</code>
+<p>
+  <strong>Diagramas UML Oficiales en Draw.io (con Explicación Técnica y Justificación):</strong><br />
+  • <a href="docs/uml/diagrama-componentes-especifico.drawio"><strong>Diagrama de Componentes Específico (Hexagonal)</strong></a><br />
+  • <a href="docs/uml/diagrama-contexto.drawio"><strong>Diagrama de Contexto del Sistema (C4 Nivel 1)</strong></a><br />
+  • <a href="docs/uml/diagrama-clases.drawio"><strong>Diagrama de Clases (Modelos de Dominio y Patrones)</strong></a><br />
+  • <a href="docs/uml/diagrama-base-datos.drawio"><strong>Diagrama de Base de Datos (Metamodelo Conceptual y Físico)</strong></a><br />
+  • <a href="docs/uml/diagrama-despliegue.drawio"><strong>Diagrama de Despliegue (Azure QA/PROD, Docker Hub y CI/CD)</strong></a>
+</p>
+<p><em>Documentación detallada según la Regla de Oro en: <a href="docs/DIAGRAMAS_NOT20.md">docs/DIAGRAMAS_NOT20.md</a></em></p>
         </p>
       </td>
     </tr>
@@ -653,15 +665,10 @@ El equipo sigue el modelo de trabajo **GitFlow adaptado para microservicios**. L
 ### Estructura de Ramas Oficial
 
 ```text
-main                    <-- Código en producción (Desplegado en Azure PROD)
-└── develop             <-- Rama de integración continua (Staging / QA)
-    ├── feature/not-01-setup-hexagonal          <-- Estructura hexagonal base
-    ├── feature/not-02-domain-model-and-contracts <-- Dominio y contratos de eventos
-    ├── feature/not-03-ports-and-usecases       <-- Puertos y casos de uso
-    ├── feature/not-04-persistence-and-flyway   <-- Persistencia JPA y Flyway
-    ├── feature/not-05-rest-and-jwt-security    <-- Endpoints REST, SSE y seguridad JWT
-    ├── feature/not-06-events-consumers-and-dlq <-- Consumidores RabbitMQ y DLQ
-    └── feature/not-17-tests-and-coverage       <-- Pruebas >= 85%, diagramas y pipelines
+main (default / protegida)    <-- Código validado en producción
+└── develop                   <-- Rama de integración para QA / Staging
+    └── Scaffolding           <-- Rama de trabajo que concentra el desarrollo del microservicio
+        (feature/scaffolding y features integrados con commits atómicos)
 ```
 
 ### Convención de Commits (*Conventional Commits*)
@@ -703,7 +710,8 @@ El seguimiento de requerimientos, evidencias y artefactos de entrega se centrali
 * **API Swagger en Calidad (QA):** [https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html)
 * **Colección de Pruebas Postman:** [postman/styleradar-notificaciones.postman_collection.json](postman/styleradar-notificaciones.postman_collection.json)
 * **Contratos de Eventos Asíncronos (NOT-21):** [docs/CONTRATOS_EVENTOS_NOT21.md](docs/CONTRATOS_EVENTOS_NOT21.md)
-* **Diagramas de Clases, BD y Secuencia 7.8 (NOT-20):** [docs/DIAGRAMAS_NOT20.md](docs/DIAGRAMAS_NOT20.md)
+* **Diagramas UML Oficiales en Draw.io:** [docs/uml/](docs/uml/)
+* **Documentación Arquitectónica y Justificaciones (NOT-20):** [docs/DIAGRAMAS_NOT20.md](docs/DIAGRAMAS_NOT20.md)
 
 
 <div align="center">
