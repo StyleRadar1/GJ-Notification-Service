@@ -114,11 +114,9 @@ Desarrollado y mantenido por el **Squad `Paquete 3 · Notificaciones y Chat`** p
 
 | Rol | Nombre Completo |
 | :---: | :---: |
-| **Líder de Squad & Backend** | `Paula` |
+| **Líder de Squad** | `Paula Diaz` |
+| **Líder de Backend** | `Jose Martinez` |
 | **Desarrollo Microservicio Notificaciones** | `Oscar Lasso` |
-| **Integración Identidad & Búsquedas** | `Equipo Identidad` |
-| **Integración Catálogo e Inventario** | `Equipo Catálogo` |
-| **Integración Chat & Donaciones** | `Equipo Mensajería` |
 
 </div>
 
