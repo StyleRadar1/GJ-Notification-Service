@@ -11,3 +11,4 @@ public interface AlertaApplicationService {
 
     Alerta desactivarAlerta(Long alertaId, Long usuarioId);
 }
+

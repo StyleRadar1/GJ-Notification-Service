@@ -13,3 +13,4 @@ public interface NotificacionApplicationService {
 
     int marcarTodasComoLeidas(Long usuarioId);
 }
+

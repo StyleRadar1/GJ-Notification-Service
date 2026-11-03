@@ -41,3 +41,4 @@ public class NotificacionApplicationServiceImpl implements NotificacionApplicati
         return notificacionRepositoryPort.marcarTodasComoLeidasPorUsuario(usuarioId);
     }
 }
+

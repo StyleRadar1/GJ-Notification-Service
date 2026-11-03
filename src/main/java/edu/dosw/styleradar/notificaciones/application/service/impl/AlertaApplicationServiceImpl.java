@@ -95,3 +95,4 @@ public class AlertaApplicationServiceImpl implements AlertaApplicationService {
         return alertaRepositoryPort.guardar(alerta);
     }
 }
+
