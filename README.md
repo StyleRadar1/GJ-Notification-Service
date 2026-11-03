@@ -131,49 +131,85 @@ El microservicio implementa **Arquitectura Hexagonal (Puertos y Adaptadores)** c
 ### Diagrama Interactivo de Capas (Mermaid)
 
 ```mermaid
-flowchart TD
-    subgraph INFRA_IN["Infraestructura de Entrada (Driving Adapters)"]
-        REST["AlertaController & AlertaApi<br>(Spring Web / OpenAPI 3 / SSE)"]
-        AMQP_IN["NotificacionesEventsListener<br>(RabbitMQ Consumer + DLQ)"]
+flowchart LR
+    %% Clientes y Actores Externos
+    subgraph EXT_IN["Entrada Externa"]
+        CLIENT["Cliente / SPA<br>REST + JWT"]
+        BROKER_IN["RabbitMQ Broker<br>Eventos Externos"]
     end
 
-    subgraph APP["Capa de Aplicación (Application Layer)"]
-        IN_PORT["Input Ports (Use Cases)<br>CrearAlerta, ListarAlertas, DesactivarAlerta,<br>ListarNotificaciones, MarcarLeida, ProcesarEventos"]
-        USE_CASES["Use Cases Implementation<br>(Orquestación y Reglas de Aplicación)"]
-        OUT_PORT["Output Ports (SPI)<br>AlertaRepositoryPort, NotificacionRepositoryPort,<br>CatalogoClientPort, EventPublisherPort, RealTimeNotificationPort"]
+    %% Capa de Infraestructura - Adaptadores de Entrada
+    subgraph ADAPTERS_IN["Infraestructura: Entrada"]
+        REST_CTRL["AlertaController<br>& AlertaApi"]
+        AMQP_LISTENER["NotificacionesEventsListener<br>(Consumer + DLQ)"]
     end
 
-    subgraph DOMAIN["Núcleo de Dominio (Domain Core - Java Puro)"]
-        ENTITIES["Modelos de Dominio<br>(Alerta, Notificacion, BusquedaGuardadaCopia, EstadoCuentaCopia)"]
-        VO["Value Objects & Validadores<br>(CriterioBusquedaVO, DatosPrendaVO, AlertaValidator, EvaluadorCriteriosMatcher)"]
-        EVENTS["Domain Events<br>(AlertaCreadaDomainEvent)"]
-        EXCEPTIONS["Domain Exceptions<br>(ReglaDeNegocio, Conflicto, RecursoNoEncontrado, AccesoDenegado)"]
+    %% Capa de Aplicacion
+    subgraph APPLICATION["Capa de Aplicación"]
+        USE_CASES["Casos de Uso (Puertos In)<br>• CrearAlertaUseCase<br>• ListarAlertasUseCase<br>• DesactivarAlertaUseCase<br>• ListarNotificacionesUseCase<br>• MarcarNotificacionLeidaUseCase<br>• ProcesarEventosExternosUseCase"]
+        APP_SERVICES["Servicios de Aplicación<br>• AlertaApplicationService<br>• NotificacionApplicationService"]
     end
 
-    subgraph INFRA_OUT["Infraestructura de Salida (Driven Adapters)"]
-        JPA_REPO["JPA Persistence Adapters<br>(PostgreSQL 16 + Flyway V1/V2)"]
-        FEIGN_CAT["CatalogoClientAdapter<br>(OpenFeign -> ms-item-catalogo)"]
-        RABBIT_PUB["RabbitMqEventPublisherAdapter<br>(Publicador AlertaCreada -> ms-estadisticas)"]
-        SSE_OUT["SseRealTimeNotificationAdapter<br>(Campana en Tiempo Real SSE)"]
+    %% Núcleo de Dominio Puro
+    subgraph DOMAIN["Núcleo de Dominio (Puro)"]
+        ENTITIES["Entidades de Dominio<br>• Alerta<br>• Notificacion<br>• BusquedaGuardadaCopia<br>• EstadoCuentaCopia"]
+        RULES["Reglas y Matcher en Memoria<br>• AlertaValidator<br>• EvaluadorCriteriosMatcher<br>• AlertaCreadaDomainEvent"]
     end
 
-    REST --> IN_PORT
-    AMQP_IN --> IN_PORT
-    IN_PORT --> USE_CASES
-    USE_CASES --> DOMAIN
-    USE_CASES --> OUT_PORT
-    OUT_PORT --> JPA_REPO
-    OUT_PORT --> FEIGN_CAT
-    OUT_PORT --> RABBIT_PUB
-    OUT_PORT --> SSE_OUT
+    %% Puertos de Salida
+    subgraph PORTS_OUT["Puertos de Salida (SPI)"]
+        P_REPOS["Repository Ports<br>• AlertaRepositoryPort<br>• NotificacionRepositoryPort<br>• BusquedaGuardadaPort<br>• EstadoCuentaPort"]
+        P_EXT["Integration Ports<br>• CatalogoClientPort<br>• EventPublisherPort<br>• RealTimeNotificationPort"]
+    end
 
-    classDef domain fill:#EDE7FF,stroke:#5600EF,stroke-width:2px,color:#0C0C12;
-    classDef app fill:#F8FAFC,stroke:#C4B5FD,stroke-width:2px,color:#0C0C12;
-    classDef infra fill:#12063A,stroke:#5600EF,stroke-width:1.5px,color:#FFFFFF;
+    %% Adaptadores de Salida
+    subgraph ADAPTERS_OUT["Infraestructura: Salida"]
+        JPA_ADAPTER["Adaptadores JPA<br>PostgreSQL 16 (Flyway)"]
+        FEIGN_ADAPTER["CatalogoClientAdapter<br>OpenFeign (:8082)"]
+        AMQP_ADAPTER["RabbitMqEventPublisher<br>(Exchange Topic)"]
+        SSE_ADAPTER["SseNotificationAdapter<br>(Campana Tiempo Real)"]
+    end
 
-    class DOMAIN,ENTITIES,VO,EVENTS,EXCEPTIONS domain;
-    class APP,IN_PORT,USE_CASES,OUT_PORT app;
-    class INFRA_IN,INFRA_OUT,REST,AMQP_IN,JPA_REPO,FEIGN_CAT,RABBIT_PUB,SSE_OUT infra;
+    %% Destinos Externos
+    subgraph EXT_OUT["Destinos Externos"]
+        DB[(PostgreSQL 16<br>notificaciones_db)]
+        CATALOGO["ms-item-catalogo<br>(Validación Stock)"]
+        ESTADISTICAS["ms-estadisticas<br>(AlertaCreada)"]
+        SSE_CLIENT["Campana Frontend<br>(text/event-stream)"]
+    end
+
+    %% Flujo de Invocación
+    CLIENT --> REST_CTRL
+    BROKER_IN --> AMQP_LISTENER
+
+    REST_CTRL --> USE_CASES
+    AMQP_LISTENER --> USE_CASES
+
+    USE_CASES --> APP_SERVICES
+    APP_SERVICES --> DOMAIN
+    APP_SERVICES --> P_REPOS
+    APP_SERVICES --> P_EXT
+
+    P_REPOS -.-> JPA_ADAPTER
+    P_EXT -.-> FEIGN_ADAPTER
+    P_EXT -.-> AMQP_ADAPTER
+    P_EXT -.-> SSE_ADAPTER
+
+    JPA_ADAPTER --> DB
+    FEIGN_ADAPTER --> CATALOGO
+    AMQP_ADAPTER --> ESTADISTICAS
+    SSE_ADAPTER --> SSE_CLIENT
+
+    %% Estilos de Alta Claridad y Contraste
+    classDef ext fill:#F1F5F9,stroke:#64748B,stroke-width:1.5px,color:#0F172A;
+    classDef infra fill:#E0F2FE,stroke:#0284C7,stroke-width:2px,color:#0369A1;
+    classDef app fill:#F3E8FF,stroke:#7C3AED,stroke-width:2px,color:#5B21B6;
+    classDef dom fill:#FEF3C7,stroke:#D97706,stroke-width:2px,color:#92400E;
+
+    class EXT_IN,EXT_OUT,CLIENT,BROKER_IN,DB,CATALOGO,ESTADISTICAS,SSE_CLIENT ext;
+    class ADAPTERS_IN,ADAPTERS_OUT,REST_CTRL,AMQP_LISTENER,JPA_ADAPTER,FEIGN_ADAPTER,AMQP_ADAPTER,SSE_ADAPTER infra;
+    class APPLICATION,PORTS_OUT,USE_CASES,APP_SERVICES,P_REPOS,P_EXT app;
+    class DOMAIN,ENTITIES,RULES dom;
 ```
 
 <div align="center">
@@ -188,7 +224,8 @@ flowchart TD
         <hr style="border: 1px solid #E2E8F0;" />
         <h4>Diagramas Específicos Solicitados para el Microservicio:</h4>
         <ul>
-          <li><strong>Diagrama de Componentes con Arquitectura Hexagonal:</strong> <a href="docs/uml/diagrama-componentes-especifico.drawio"><code>docs/uml/diagrama-componentes-especifico.drawio</code></a> — Modela adaptadores in/out, puertos, casos de uso, servicios de aplicación y dominio puro.</li>
+          <li><strong>Diagrama de Componentes con Arquitectura Hexagonal:
+          </strong> <a href="docs/uml/diagrama-componentes-especifico.drawio"><code>docs/uml/diagrama-componentes-especifico.drawio</code></a> — Modela adaptadores in/out, puertos, casos de uso, servicios de aplicación y dominio puro.</li>
           <li><strong>Diagrama de Clases (Modelo de Dominio):</strong> <a href="docs/uml/diagrama-clases.drawio"><code>docs/uml/diagrama-clases.drawio</code></a> — Modela entidades referenciadas por UUID, Value Objects, Enumeraciones y patrones (Cadena de validación, Strategy y Factory).</li>
           <li><strong>Diagrama de Base de Datos (Modelo Relacional / ER):</strong> <a href="docs/uml/diagrama-base-datos.drawio"><code>docs/uml/diagrama-base-datos.drawio</code></a> — Metamodelo conceptual referenciado y mapeo a las 4 tablas PostgreSQL (Flyway V1 y V2).</li>
         </ul>
