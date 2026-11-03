@@ -459,6 +459,12 @@ La comunicación asíncrona entre microservicios se orquesta a través de **Rabb
 
 ## <img src="https://img.shields.io/badge/06-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 6. TECNOLOGÍAS Y DEPENDENCIAS
 
+
+
+> [!NOTE]
+> **Documento Oficial de Análisis y Justificación Tecnológica:** Para consultar el análisis comparativo formal de alternativas evaluadas y descartadas (PostgreSQL vs NoSQL, RabbitMQ vs Kafka, Java/Spring vs Node/Python, SSE vs WebSockets, JavaMailSender vs SDKs propietarios), visita:
+> **[docs/ANALISIS_DECISIONES_TECNOLOGICAS.md](docs/ANALISIS_DECISIONES_TECNOLOGICAS.md)**.
+
 El stack del microservicio cumple con el estándar unificado de arquitectura de StyleRadar:
 
 | Capa / Componente | Tecnología | Versión | Justificación Técnica |
@@ -787,7 +793,9 @@ El seguimiento de requerimientos, evidencias y artefactos de entrega se centrali
 * **Colección de Pruebas Postman:** [postman/styleradar-notificaciones.postman_collection.json](postman/styleradar-notificaciones.postman_collection.json)
 * **Contratos de Eventos Asíncronos (NOT-21):** [docs/CONTRATOS_EVENTOS_NOT21.md](docs/CONTRATOS_EVENTOS_NOT21.md)
 * **Diagramas UML Oficiales en Draw.io:** [docs/uml/](docs/uml/)
-* **Documentación Arquitectónica y Justificaciones (NOT-20):** [docs/DIAGRAMAS_NOT20.md](docs/DIAGRAMAS_NOT20.md)
+* **Documento de Análisis y Justificación de Decisiones Tecnológicas:** [docs/ANALISIS_DECISIONES_TECNOLOGICAS.md](docs/ANALISIS_DECISIONES_TECNOLOGICAS.md)
+* **Documentación Arquitectónica y Justificaciones (NOT-20):** [docs/DIAGRAMAS_NOT20.md](docs/DIAGRAMAS_NOT20.md)
+* **Contratos y Especificación de Eventos Asíncronos (NOT-21):** [docs/CONTRATOS_EVENTOS_NOT21.md](docs/CONTRATOS_EVENTOS_NOT21.md)
 
 
 <div align="center">
