@@ -177,27 +177,26 @@ flowchart TD
 ```
 
 <div align="center">
-  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
+  <table width="100%" style="margin: 18px 0; border: 2px solid #5600EF; border-radius: 8px; background-color: #FBFBFE;">
     <tr>
-      <td align="center" style="padding: 20px;">
-        <p>
-          <img src="https://img.shields.io/badge/ESPACIO_DE_DIAGRAMA-DRAW.IO_/_PLANTUML-12063A?style=for-the-badge" alt="Diagrama Opcional" /><br />
-          <strong><font color="#5600EF" size="3">DIAGRAMA DE ARQUITECTURA HEXAGONAL EXPORTADO (OPCIONAL)</font></strong>
+      <td align="left" style="padding: 24px;">
+        <p align="center">
+          <img src="https://img.shields.io/badge/DIAGRAMAS_OFICIALES-DRAW.IO_UML-5600EF?style=for-the-badge" alt="Diagramas Draw.io" /><br />
+          <strong><font color="#5600EF" size="4">DIAGRAMAS OFICIALES DEL MICROSERVICIO (DRAW.IO & REGLA DE ORO)</font></strong><br />
+          <em>Todos los diagramas cuentan con su Explicación Técnica y Justificación Arquitectónica en <a href="docs/DIAGRAMAS_NOT20.md">docs/DIAGRAMAS_NOT20.md</a></em>
         </p>
-        <p>
-          <sub>Si tu squad cuenta con un diagrama gráfico exportado de Draw.io, Miro o PlantUML, pégalo en este contenedor como alternativa visual.</sub>
-        </p>
-        <p>
-<p>
-  <strong>Diagramas UML Oficiales en Draw.io (con Explicación Técnica y Justificación):</strong><br />
-  • <a href="docs/uml/diagrama-componentes-especifico.drawio"><strong>Diagrama de Componentes Específico (Hexagonal)</strong></a><br />
-  • <a href="docs/uml/diagrama-contexto.drawio"><strong>Diagrama de Contexto del Sistema (C4 Nivel 1)</strong></a><br />
-  • <a href="docs/uml/diagrama-clases.drawio"><strong>Diagrama de Clases (Modelos de Dominio y Patrones)</strong></a><br />
-  • <a href="docs/uml/diagrama-base-datos.drawio"><strong>Diagrama de Base de Datos (Metamodelo Conceptual y Físico)</strong></a><br />
-  • <a href="docs/uml/diagrama-despliegue.drawio"><strong>Diagrama de Despliegue (Azure QA/PROD, Docker Hub y CI/CD)</strong></a>
-</p>
-<p><em>Documentación detallada según la Regla de Oro en: <a href="docs/DIAGRAMAS_NOT20.md">docs/DIAGRAMAS_NOT20.md</a></em></p>
-        </p>
+        <hr style="border: 1px solid #E2E8F0;" />
+        <h4>Diagramas Específicos Solicitados para el Microservicio:</h4>
+        <ul>
+          <li><strong>Diagrama de Componentes con Arquitectura Hexagonal:</strong> <a href="docs/uml/diagrama-componentes-especifico.drawio"><code>docs/uml/diagrama-componentes-especifico.drawio</code></a> — Modela adaptadores in/out, puertos, casos de uso, servicios de aplicación y dominio puro.</li>
+          <li><strong>Diagrama de Clases (Modelo de Dominio):</strong> <a href="docs/uml/diagrama-clases.drawio"><code>docs/uml/diagrama-clases.drawio</code></a> — Modela entidades referenciadas por UUID, Value Objects, Enumeraciones y patrones (Cadena de validación, Strategy y Factory).</li>
+          <li><strong>Diagrama de Base de Datos (Modelo Relacional / ER):</strong> <a href="docs/uml/diagrama-base-datos.drawio"><code>docs/uml/diagrama-base-datos.drawio</code></a> — Metamodelo conceptual referenciado y mapeo a las 4 tablas PostgreSQL (Flyway V1 y V2).</li>
+        </ul>
+        <h4>Diagramas Complementarios de Apoyo:</h4>
+        <ul>
+          <li><strong>Diagrama de Despliegue:</strong> <a href="docs/uml/diagrama-despliegue.drawio"><code>docs/uml/diagrama-despliegue.drawio</code></a> — Topología de ejecución en Azure App Service (QA/PROD), Docker Hub y GitHub Actions.</li>
+          <li><strong>Diagrama de Contexto del Sistema (C4 L1):</strong> <a href="docs/uml/diagrama-contexto.drawio"><code>docs/uml/diagrama-contexto.drawio</code></a> — Interacción con API Gateway, frontend, RabbitMQ y microservicios externos.</li>
+        </ul>
       </td>
     </tr>
   </table>
