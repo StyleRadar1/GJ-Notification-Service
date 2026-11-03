@@ -31,7 +31,7 @@ jobs:
 
   docker-publish-qa:
     needs: build-and-verify
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/Scaffolding') && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
