@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "develop", "main", "Scaffolding" ]
 
+env:
+  ACTIONS_SILENCE_NODE20_DEPRECATION_WARNING: 'true'
+
 jobs:
   build-and-verify:
     runs-on: ubuntu-latest
