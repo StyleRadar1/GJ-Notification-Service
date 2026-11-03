@@ -1,5 +1,9 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.config;
 
+import edu.dosw.styleradar.notificaciones.application.service.AlertaApplicationService;
+import edu.dosw.styleradar.notificaciones.application.service.NotificacionApplicationService;
+import edu.dosw.styleradar.notificaciones.application.service.impl.AlertaApplicationServiceImpl;
+import edu.dosw.styleradar.notificaciones.application.service.impl.NotificacionApplicationServiceImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.CrearAlertaUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.DesactivarAlertaUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.ListarAlertasUseCaseImpl;
@@ -38,7 +42,7 @@ public class BeanConfig {
     }
 
     @Bean
-    public CrearAlertaUseCase crearAlertaUseCase(
+    public AlertaApplicationService alertaApplicationService(
             AlertaRepositoryPort alertaRepositoryPort,
             BusquedaGuardadaCopiaRepositoryPort busquedaGuardadaCopiaRepositoryPort,
             EstadoCuentaCopiaRepositoryPort estadoCuentaCopiaRepositoryPort,
@@ -46,7 +50,7 @@ public class BeanConfig {
             EventPublisherPort eventPublisherPort,
             AlertaValidator alertaValidator
     ) {
-        return new CrearAlertaUseCaseImpl(
+        return new AlertaApplicationServiceImpl(
                 alertaRepositoryPort,
                 busquedaGuardadaCopiaRepositoryPort,
                 estadoCuentaCopiaRepositoryPort,
@@ -57,30 +61,39 @@ public class BeanConfig {
     }
 
     @Bean
-    public ListarAlertasUseCase listarAlertasUseCase(AlertaRepositoryPort alertaRepositoryPort) {
-        return new ListarAlertasUseCaseImpl(alertaRepositoryPort);
+    public NotificacionApplicationService notificacionApplicationService(
+            NotificacionRepositoryPort notificacionRepositoryPort
+    ) {
+        return new NotificacionApplicationServiceImpl(notificacionRepositoryPort);
     }
 
     @Bean
-    public DesactivarAlertaUseCase desactivarAlertaUseCase(
-            AlertaRepositoryPort alertaRepositoryPort,
-            AlertaValidator alertaValidator
-    ) {
-        return new DesactivarAlertaUseCaseImpl(alertaRepositoryPort, alertaValidator);
+    public CrearAlertaUseCase crearAlertaUseCase(AlertaApplicationService alertaApplicationService) {
+        return new CrearAlertaUseCaseImpl(alertaApplicationService);
+    }
+
+    @Bean
+    public ListarAlertasUseCase listarAlertasUseCase(AlertaApplicationService alertaApplicationService) {
+        return new ListarAlertasUseCaseImpl(alertaApplicationService);
+    }
+
+    @Bean
+    public DesactivarAlertaUseCase desactivarAlertaUseCase(AlertaApplicationService alertaApplicationService) {
+        return new DesactivarAlertaUseCaseImpl(alertaApplicationService);
     }
 
     @Bean
     public ListarNotificacionesUseCase listarNotificacionesUseCase(
-            NotificacionRepositoryPort notificacionRepositoryPort
+            NotificacionApplicationService notificacionApplicationService
     ) {
-        return new ListarNotificacionesUseCaseImpl(notificacionRepositoryPort);
+        return new ListarNotificacionesUseCaseImpl(notificacionApplicationService);
     }
 
     @Bean
     public MarcarNotificacionLeidaUseCase marcarNotificacionLeidaUseCase(
-            NotificacionRepositoryPort notificacionRepositoryPort
+            NotificacionApplicationService notificacionApplicationService
     ) {
-        return new MarcarNotificacionLeidaUseCaseImpl(notificacionRepositoryPort);
+        return new MarcarNotificacionLeidaUseCaseImpl(notificacionApplicationService);
     }
 
     @Bean
