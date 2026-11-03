@@ -90,7 +90,9 @@ Este microservicio encapsula exclusivamente la lógica de negocio correspondient
 | • Entrega notificaciones generalizadas (stock, mensajes, donaciones, moderación) y emite actualizaciones en tiempo real mediante Server-Sent Events (SSE). | • NO accede directamente a tablas ni bases de datos de otros microservicios (cero llaves foráneas externas). |
 | • Garantiza persistencia ACID e idempotencia mediante la restricción única `(alerta_id, item_id, ciclo_reposicion)` y desvío de fallos a Dead Letter Queue (`SR-RNF-15`). | • NO modifica el inventario ni el catálogo maestro de prendas. |
 
-### Arquetipos de Moda y Personajes de StyleRadar
+### Arquetipos de Moda y Personajes de StyleRadar (Pendiente actualizaciones de front)
+
+> *(Pendiente actualizaciones de front — El equipo de frontend se encuentra modificando los arquetipos y componentes visuales)*
 
 <div align="center">
 
