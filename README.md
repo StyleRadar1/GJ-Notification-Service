@@ -26,11 +26,11 @@
     <a href="https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml">
       <img src="https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml/badge.svg?branch=develop" alt="CI / QA Pipeline Status" />
     </a>
-    <a href="https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html">
-      <img src="https://img.shields.io/badge/PROD-Active-16A34A?style=for-the-badge&logo=azure-app-services&logoColor=white" alt="PROD Deployment" />
+    <a href="#4-endpoints-y-enlace-a-swagger">
+      <img src="https://img.shields.io/badge/Swagger_UI-ms--notificaciones_(:8088)-5600EF?style=for-the-badge&logo=swagger&logoColor=white" alt="Swagger UI ms-notificaciones" />
     </a>
-    <a href="https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html">
-      <img src="https://img.shields.io/badge/QA-Active-5600EF?style=for-the-badge&logo=azure-app-services&logoColor=white" alt="QA Deployment" />
+    <a href="#4-endpoints-y-enlace-a-swagger">
+      <img src="https://img.shields.io/badge/OpenAPI_3.0-Contract_Active-16A34A?style=for-the-badge&logo=openapi-initiative&logoColor=white" alt="OpenAPI 3.0" />
     </a>
     <a href="https://sonarcloud.io/organizations/styleradar">
       <img src="https://img.shields.io/badge/SonarQube-Quality_Gate_Passed-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white" alt="Quality Gate" />
@@ -320,15 +320,18 @@ src/main/java/edu/dosw/styleradar/notificaciones/
 
 La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encuentran desplegados y clasificados por entorno:
 
-### Matriz Oficial de Enlaces por Entorno (PROD, QA, LOCAL)
+> [!IMPORTANT]
+> **Alcance Exclusivo del Microservicio:** Esta documentación Swagger y especificación OpenAPI 3.0 pertenece **única y exclusivamente al Microservicio de Notificaciones y Alertas (`ms-notificaciones` / Puerto 8088)** del equipo **Guatoque Jiraguas (GJ)**. No contiene ni mezcla endpoints de otros microservicios del ecosistema (como autenticación, usuarios, tiendas o catálogo), garantizando el desacoplamiento estricto por servicio (Database-per-Service & API Isolation).
+
+### Matriz Oficial de Enlaces de Swagger para `ms-notificaciones`
 
 | Entorno | Estado | Propósito | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **Producción (PROD)** | Active | Despliegue productivo de StyleRadar | `https://styleradar-backend-prod.azurewebsites.net` | [Swagger UI PROD](https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-backend-prod.azurewebsites.net/actuator/health) |
-| **Calidad / Pruebas (QA)** | Active | Pruebas integradas de Sprint y QA | `https://styleradar-backend-qa.azurewebsites.net` | [Swagger UI QA](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-backend-qa.azurewebsites.net/actuator/health) |
-| **Desarrollo Local (DEV)** | Local | Entorno de desarrollo local en máquina | `http://localhost:8088` | [Swagger UI Local](http://localhost:8088/swagger-ui/index.html) | [`/actuator/health`](http://localhost:8088/actuator/health) |
+| **Desarrollo Local / Docker (DEV)** | Activo | Ejecución local en máquina o Docker Compose | `http://localhost:8088` | [Swagger UI Local](http://localhost:8088/swagger-ui/index.html) | [`/actuator/health`](http://localhost:8088/actuator/health) |
+| **Calidad / Pruebas (QA)** | Configurado | Contenedor en Azure App Service QA | `https://styleradar-notificaciones-qa.azurewebsites.net` | [Swagger UI QA](https://styleradar-notificaciones-qa.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-notificaciones-qa.azurewebsites.net/actuator/health) |
+| **Producción (PROD)** | Configurado | Contenedor en Azure App Service PROD | `https://styleradar-notificaciones-prod.azurewebsites.net` | [Swagger UI PROD](https://styleradar-notificaciones-prod.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-notificaciones-prod.azurewebsites.net/actuator/health) |
 
-* **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8088/v3/api-docs` (o `/v3/api-docs` en los dominios de PROD y QA).
+* **Especificación OpenAPI (Contrato JSON Schema):** [`http://localhost:8088/v3/api-docs`](http://localhost:8088/v3/api-docs) (o `/v3/api-docs` en cada entorno).
 
 
 <div align="center">
@@ -779,8 +782,8 @@ El seguimiento de requerimientos, evidencias y artefactos de entrega se centrali
 
 * **Épica Oficial del Microservicio (Jira):** [https://styleradar.atlassian.net/browse/NOT](https://styleradar.atlassian.net/browse/NOT)
 * **Tablero Scrum del Squad (Jira):** [https://styleradar.atlassian.net/jira/software/projects/SR/boards/1](https://styleradar.atlassian.net/jira/software/projects/SR/boards/1)
-* **API Swagger en Producción (PROD):** [https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html](https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html)
-* **API Swagger en Calidad (QA):** [https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html)
+* **Swagger UI Microservicio Notificaciones (:8088):** [http://localhost:8088/swagger-ui/index.html](http://localhost:8088/swagger-ui/index.html)
+* **Especificación OpenAPI 3.0 JSON Schema:** [http://localhost:8088/v3/api-docs](http://localhost:8088/v3/api-docs)
 * **Colección de Pruebas Postman:** [postman/styleradar-notificaciones.postman_collection.json](postman/styleradar-notificaciones.postman_collection.json)
 * **Contratos de Eventos Asíncronos (NOT-21):** [docs/CONTRATOS_EVENTOS_NOT21.md](docs/CONTRATOS_EVENTOS_NOT21.md)
 * **Diagramas UML Oficiales en Draw.io:** [docs/uml/](docs/uml/)

@@ -80,6 +80,7 @@ public class AlertaController implements AlertaApi {
         return ResponseEntity.ok(alertaDtoMapper.toResponse(desactivada));
     }
 
+    @Override
     @PatchMapping("/alertas/{alertaId}/desactivar")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AlertaResponse> desactivarAlertaPatch(@PathVariable("alertaId") Long alertaId) {
