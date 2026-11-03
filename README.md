@@ -214,7 +214,7 @@ flowchart LR
 
 ### Diagramas Oficiales del Microservicio (Draw.io & UML)
 
-> **Regla de Oro de Ingenieria StyleRadar:** Todo diagrama arquitectonico esta respaldado por su archivo fuente editable `.drawio`, su imagen de alta resolucion y su justificacion tecnica documentada en [docs/DIAGRAMAS_NOT20.md](docs/DIAGRAMAS_NOT20.md).
+> **Regla de Oro de Ingenieria StyleRadar:** Todo diagrama arquitectonico esta respaldado por su archivo fuente editable `.drawio`, su imagen y su justificacion tecnica documentada en [docs/DIAGRAMAS_NOT20.md](docs/DIAGRAMAS_NOT20.md).
 
 #### 1. Diagrama de Componentes con Arquitectura Hexagonal (Especifico)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-componentes-especifico.drawio`](docs/uml/diagrama-componentes-especifico.drawio)
