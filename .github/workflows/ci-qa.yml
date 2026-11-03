@@ -1,0 +1,66 @@
+name: CI / QA Pipeline - ms-notificaciones
+
+on:
+  push:
+    branches: [ "develop", "Scaffolding", "feature/**" ]
+  pull_request:
+    branches: [ "develop", "main", "Scaffolding" ]
+
+env:
+  ACTIONS_SILENCE_NODE20_DEPRECATION_WARNING: 'true'
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Execute Maven Verify and JaCoCo Coverage Gate (>= 85%)
+        run: mvn -B clean verify
+
+      - name: Upload JaCoCo Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+
+  docker-publish-qa:
+    needs: build-and-verify
+    if: (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/Scaffolding') && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build OCI Docker image for QA
+        run: docker build -t styleradar/ms-notificaciones:qa .
+
+      - name: Verify Docker Compose stack startup (NOT-18 Evidence)
+        run: |
+          sudo systemctl stop postgresql redis || true
+          cp .env.example .env
+          docker compose up -d
+          echo 'Esperando que los servicios alcancen estado healthy...'
+          for i in {1..25}; do
+            docker compose ps
+            if docker compose ps | grep 'styleradar-ms-notificaciones' | grep -q 'Up'; then
+              sleep 10
+              break
+            fi
+            sleep 3
+          done
+          docker compose ps
+          docker compose logs --tail=50 ms-notificaciones
+          docker compose down -v
+

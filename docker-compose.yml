@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   notificaciones-db:
     image: postgres:16-alpine
@@ -54,6 +52,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: styleradar/ms-notificaciones:qa
     container_name: styleradar-ms-notificaciones
     ports:
       - "${PORT:-8088}:8088"

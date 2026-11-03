@@ -4,7 +4,12 @@
     <img src="https://raw.githubusercontent.com/JUANNICOLASA/Frontend-Style-Radar/main/styleradar-frontend-v3/assets/logo/styleradar-logo.svg" width="340" alt="StyleRadar Logo Oficial" />
   </a>
 
-  <h1>STYLE<font color="#5600EF">RADAR</font> &nbsp;·&nbsp; <code>ms-notificaciones</code></h1>
+  <h1>STYLE<font color="#5600EF">RADAR</font> &nbsp;·&nbsp; <code>GJ-Notification-Service</code></h1>
+
+  <p align="center">
+    <img src="https://img.shields.io/badge/EQUIPO-Guatoque_Jiraguas_(GJ)-12063A?style=for-the-badge" alt="Equipo" />
+    <img src="https://img.shields.io/badge/SERVICIO-ms--notificaciones-5600EF?style=for-the-badge" alt="Servicio" />
+  </p>
 
   <p align="center">
     <img src="https://img.shields.io/badge/BOUNDED_CONTEXT-Notificaciones_y_Alertas-12063A?style=for-the-badge" alt="Context" />
@@ -18,6 +23,9 @@
   </p>
 
   <p align="center">
+    <a href="https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml">
+      <img src="https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml/badge.svg?branch=develop" alt="CI / QA Pipeline Status" />
+    </a>
     <a href="https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html">
       <img src="https://img.shields.io/badge/PROD-Active-16A34A?style=for-the-badge&logo=azure-app-services&logoColor=white" alt="PROD Deployment" />
     </a>
@@ -85,7 +93,9 @@ Este microservicio encapsula exclusivamente la lógica de negocio correspondient
 | • Entrega notificaciones generalizadas (stock, mensajes, donaciones, moderación) y emite actualizaciones en tiempo real mediante Server-Sent Events (SSE). | • NO accede directamente a tablas ni bases de datos de otros microservicios (cero llaves foráneas externas). |
 | • Garantiza persistencia ACID e idempotencia mediante la restricción única `(alerta_id, item_id, ciclo_reposicion)` y desvío de fallos a Dead Letter Queue (`SR-RNF-15`). | • NO modifica el inventario ni el catálogo maestro de prendas. |
 
-### Arquetipos de Moda y Personajes de StyleRadar
+### Arquetipos de Moda y Personajes de StyleRadar (Pendiente actualizaciones de front)
+
+> *(Pendiente actualizaciones de front — El equipo de frontend se encuentra modificando los arquetipos y componentes visuales)*
 
 <div align="center">
 
@@ -105,13 +115,11 @@ Desarrollado y mantenido por el **Squad `Paquete 3 · Notificaciones y Chat`** p
 
 <div align="center">
 
-| Rol | Nombre Completo | Usuario GitHub |
-| :---: | :---: | :---: |
-| **Backend Lead (`ms-notificaciones`)** | `Oscar Lasso` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
-| **Integración Identidad (`ms-usuarios`)** | `Equipo Identidad` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
-| **Integración Catálogo (`ms-inventario` / `ms-item-catalogo`)** | `Equipo Catálogo` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
-| **Integración Mensajes (`ms-chat`)** | `Equipo Mensajería` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
-| **QA / DevOps & Gateway** | `Equipo Infraestructura` | `[@StyleRadar1](https://github.com/StyleRadar1)` |
+| Rol | Nombre Completo |
+| :---: | :---: |
+| **Líder de Squad** | `Paula Diaz` |
+| **Líder de Backend** | `Jose Martinez` |
+| **Desarrollo Microservicio Notificaciones** | `Oscar Lasso` |
 
 </div>
 
@@ -126,70 +134,147 @@ El microservicio implementa **Arquitectura Hexagonal (Puertos y Adaptadores)** c
 ### Diagrama Interactivo de Capas (Mermaid)
 
 ```mermaid
-flowchart TD
-    subgraph INFRA_IN["Infraestructura de Entrada (Driving Adapters)"]
-        REST["AlertaController & AlertaApi<br>(Spring Web / OpenAPI 3 / SSE)"]
-        AMQP_IN["NotificacionesEventsListener<br>(RabbitMQ Consumer + DLQ)"]
+flowchart LR
+    %% Clientes y Actores Externos
+    subgraph EXT_IN["Entrada Externa"]
+        CLIENT["Cliente / SPA<br>REST + JWT"]
+        BROKER_IN["RabbitMQ Broker<br>Eventos Externos"]
     end
 
-    subgraph APP["Capa de Aplicación (Application Layer)"]
-        IN_PORT["Input Ports (Use Cases)<br>CrearAlerta, ListarAlertas, DesactivarAlerta,<br>ListarNotificaciones, MarcarLeida, ProcesarEventos"]
-        USE_CASES["Use Cases Implementation<br>(Orquestación y Reglas de Aplicación)"]
-        OUT_PORT["Output Ports (SPI)<br>AlertaRepositoryPort, NotificacionRepositoryPort,<br>CatalogoClientPort, EventPublisherPort, RealTimeNotificationPort"]
+    %% Capa de Infraestructura - Adaptadores de Entrada
+    subgraph ADAPTERS_IN["Infraestructura: Entrada"]
+        REST_CTRL["AlertaController<br>& AlertaApi"]
+        AMQP_LISTENER["NotificacionesEventsListener<br>(Consumer + DLQ)"]
     end
 
-    subgraph DOMAIN["Núcleo de Dominio (Domain Core - Java Puro)"]
-        ENTITIES["Modelos de Dominio<br>(Alerta, Notificacion, BusquedaGuardadaCopia, EstadoCuentaCopia)"]
-        VO["Value Objects & Validadores<br>(CriterioBusquedaVO, DatosPrendaVO, AlertaValidator, EvaluadorCriteriosMatcher)"]
-        EVENTS["Domain Events<br>(AlertaCreadaDomainEvent)"]
-        EXCEPTIONS["Domain Exceptions<br>(ReglaDeNegocio, Conflicto, RecursoNoEncontrado, AccesoDenegado)"]
+    %% Capa de Aplicacion
+    subgraph APPLICATION["Capa de Aplicación"]
+        USE_CASES["Casos de Uso (Puertos In)<br>• CrearAlertaUseCase<br>• ListarAlertasUseCase<br>• DesactivarAlertaUseCase<br>• ListarNotificacionesUseCase<br>• MarcarNotificacionLeidaUseCase<br>• ProcesarEventosExternosUseCase"]
+        APP_SERVICES["Servicios de Aplicación<br>• AlertaApplicationService<br>• NotificacionApplicationService"]
     end
 
-    subgraph INFRA_OUT["Infraestructura de Salida (Driven Adapters)"]
-        JPA_REPO["JPA Persistence Adapters<br>(PostgreSQL 16 + Flyway V1/V2)"]
-        FEIGN_CAT["CatalogoClientAdapter<br>(OpenFeign -> ms-item-catalogo)"]
-        RABBIT_PUB["RabbitMqEventPublisherAdapter<br>(Publicador AlertaCreada -> ms-estadisticas)"]
-        SSE_OUT["SseRealTimeNotificationAdapter<br>(Campana en Tiempo Real SSE)"]
+    %% Núcleo de Dominio Puro
+    subgraph DOMAIN["Núcleo de Dominio (Puro)"]
+        ENTITIES["Entidades de Dominio<br>• Alerta<br>• Notificacion<br>• BusquedaGuardadaCopia<br>• EstadoCuentaCopia"]
+        RULES["Reglas y Matcher en Memoria<br>• AlertaValidator<br>• EvaluadorCriteriosMatcher<br>• AlertaCreadaDomainEvent"]
     end
 
-    REST --> IN_PORT
-    AMQP_IN --> IN_PORT
-    IN_PORT --> USE_CASES
-    USE_CASES --> DOMAIN
-    USE_CASES --> OUT_PORT
-    OUT_PORT --> JPA_REPO
-    OUT_PORT --> FEIGN_CAT
-    OUT_PORT --> RABBIT_PUB
-    OUT_PORT --> SSE_OUT
+    %% Puertos de Salida
+    subgraph PORTS_OUT["Puertos de Salida (SPI)"]
+        P_REPOS["Repository Ports<br>• AlertaRepositoryPort<br>• NotificacionRepositoryPort<br>• BusquedaGuardadaPort<br>• EstadoCuentaPort"]
+        P_EXT["Integration Ports<br>• CatalogoClientPort<br>• EventPublisherPort<br>• RealTimeNotificationPort"]
+    end
 
-    classDef domain fill:#EDE7FF,stroke:#5600EF,stroke-width:2px,color:#0C0C12;
-    classDef app fill:#F8FAFC,stroke:#C4B5FD,stroke-width:2px,color:#0C0C12;
-    classDef infra fill:#12063A,stroke:#5600EF,stroke-width:1.5px,color:#FFFFFF;
+    %% Adaptadores de Salida
+    subgraph ADAPTERS_OUT["Infraestructura: Salida"]
+        JPA_ADAPTER["Adaptadores JPA<br>PostgreSQL 16 (Flyway)"]
+        FEIGN_ADAPTER["CatalogoClientAdapter<br>OpenFeign (:8082)"]
+        AMQP_ADAPTER["RabbitMqEventPublisher<br>(Exchange Topic)"]
+        SSE_ADAPTER["SseNotificationAdapter<br>(Campana Tiempo Real)"]
+    end
 
-    class DOMAIN,ENTITIES,VO,EVENTS,EXCEPTIONS domain;
-    class APP,IN_PORT,USE_CASES,OUT_PORT app;
-    class INFRA_IN,INFRA_OUT,REST,AMQP_IN,JPA_REPO,FEIGN_CAT,RABBIT_PUB,SSE_OUT infra;
+    %% Destinos Externos
+    subgraph EXT_OUT["Destinos Externos"]
+        DB[(PostgreSQL 16<br>notificaciones_db)]
+        CATALOGO["ms-item-catalogo<br>(Validación Stock)"]
+        ESTADISTICAS["ms-estadisticas<br>(AlertaCreada)"]
+        SSE_CLIENT["Campana Frontend<br>(text/event-stream)"]
+    end
+
+    %% Flujo de Invocación
+    CLIENT --> REST_CTRL
+    BROKER_IN --> AMQP_LISTENER
+
+    REST_CTRL --> USE_CASES
+    AMQP_LISTENER --> USE_CASES
+
+    USE_CASES --> APP_SERVICES
+    APP_SERVICES --> DOMAIN
+    APP_SERVICES --> P_REPOS
+    APP_SERVICES --> P_EXT
+
+    P_REPOS -.-> JPA_ADAPTER
+    P_EXT -.-> FEIGN_ADAPTER
+    P_EXT -.-> AMQP_ADAPTER
+    P_EXT -.-> SSE_ADAPTER
+
+    JPA_ADAPTER --> DB
+    FEIGN_ADAPTER --> CATALOGO
+    AMQP_ADAPTER --> ESTADISTICAS
+    SSE_ADAPTER --> SSE_CLIENT
+
+    %% Estilos de Alta Claridad y Contraste
+    classDef ext fill:#F1F5F9,stroke:#64748B,stroke-width:1.5px,color:#0F172A;
+    classDef infra fill:#E0F2FE,stroke:#0284C7,stroke-width:2px,color:#0369A1;
+    classDef app fill:#F3E8FF,stroke:#7C3AED,stroke-width:2px,color:#5B21B6;
+    classDef dom fill:#FEF3C7,stroke:#D97706,stroke-width:2px,color:#92400E;
+
+    class EXT_IN,EXT_OUT,CLIENT,BROKER_IN,DB,CATALOGO,ESTADISTICAS,SSE_CLIENT ext;
+    class ADAPTERS_IN,ADAPTERS_OUT,REST_CTRL,AMQP_LISTENER,JPA_ADAPTER,FEIGN_ADAPTER,AMQP_ADAPTER,SSE_ADAPTER infra;
+    class APPLICATION,PORTS_OUT,USE_CASES,APP_SERVICES,P_REPOS,P_EXT app;
+    class DOMAIN,ENTITIES,RULES dom;
 ```
 
-<div align="center">
-  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
-    <tr>
-      <td align="center" style="padding: 20px;">
-        <p>
-          <img src="https://img.shields.io/badge/ESPACIO_DE_DIAGRAMA-DRAW.IO_/_PLANTUML-12063A?style=for-the-badge" alt="Diagrama Opcional" /><br />
-          <strong><font color="#5600EF" size="3">DIAGRAMA DE ARQUITECTURA HEXAGONAL EXPORTADO (OPCIONAL)</font></strong>
-        </p>
-        <p>
-          <sub>Si tu squad cuenta con un diagrama gráfico exportado de Draw.io, Miro o PlantUML, pégalo en este contenedor como alternativa visual.</sub>
-        </p>
-        <p>
-<!-- <img src="docs/evidencias/diagrama-hexagonal.png" width="90%" alt="Diagrama Hexagonal" /><br /> -->
-          <code>[ Espacio opcional para diagrama exportado · docs/evidencias/diagrama-hexagonal.png ]</code>
-        </p>
-      </td>
-    </tr>
-  </table>
-</div>
+### Diagramas Oficiales del Microservicio (Draw.io & UML)
+
+> **Regla de Oro de Ingenieria StyleRadar:** Todo diagrama arquitectonico esta respaldado por su archivo fuente editable `.drawio`, su imagen y su justificacion tecnica documentada en [docs/DIAGRAMAS_NOT20.md](docs/DIAGRAMAS_NOT20.md).
+
+#### 1. Diagrama de Componentes con Arquitectura Hexagonal (Especifico)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-componentes-especifico.drawio`](docs/uml/diagrama-componentes-especifico.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 2)](docs/DIAGRAMAS_NOT20.md#2-diagrama-de-componentes-específico-arquitectura-hexagonal)
+* **Descripcion:** Modela adaptadores de entrada (Driving: REST Controller, RabbitMQ Listener), la capa de aplicacion (Input Ports, Use Cases, Application Services, DTOs, Mappers), el nucleo de dominio puro (Modelos, Value Objects, Domain Events, Validadores) y adaptadores de salida (Driven: JPA Repositories, Feign Client, Event Publisher, SSE Adapter).
+
+<p align="center">
+  <a href="docs/images/diagrama-componentes-especifico.png" target="_blank">
+    <img src="docs/images/diagrama-componentes-especifico.png" alt="Diagrama de Componentes con Arquitectura Hexagonal" width="100%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
+---
+
+#### 2. Diagrama de Clases (Modelo de Dominio y Patrones de Diseno)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-clases.drawio`](docs/uml/diagrama-clases.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 3)](docs/DIAGRAMAS_NOT20.md#3-diagrama-de-clases-modelo-de-dominio)
+* **Descripcion:** Modela las entidades de dominio (`Alerta`, `Notificacion`, `BusquedaGuardadaCopia`, `EstadoCuentaCopia`), Value Objects (`CriterioBusquedaVO`, `DatosPrendaVO`), Enumeraciones (`TipoAlerta`, `TipoNotificacion`, `CanalNotificacion`, `EstadoAlerta`, `EstadoNotificacion`) y los 3 patrones de diseno implementados (Cadena de Responsabilidad para validaciones, Strategy para matching de criterios y Factory para creacion de notificaciones).
+
+<p align="center">
+  <a href="docs/images/diagrama-clases.png" target="_blank">
+    <img src="docs/images/diagrama-clases.png" alt="Diagrama de Clases - Modelo de Dominio" width="100%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
+---
+
+#### 3. Diagrama de Base de Datos (Modelo Relacional / ER - PostgreSQL 16)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-base-datos.drawio`](docs/uml/diagrama-base-datos.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 4)](docs/DIAGRAMAS_NOT20.md#4-diagrama-de-base-de-datos-metamodelo-conceptual-y-físico)
+* **Descripcion:** Modela el metamodelo conceptual hibrido (entidades de dominio frente a Value Objects embebidos vs referenciados por UUID) y el esquema relacional fisico de PostgreSQL 16 gestionado por Flyway (`alertas`, `notificaciones`, `busquedas_guardadas_copia`, `estados_cuenta_copia`, indices B-Tree y restricciones FK/Unique).
+
+<p align="center">
+  <a href="docs/images/diagrama-base-datos.png" target="_blank">
+    <img src="docs/images/diagrama-base-datos.png" alt="Diagrama de Base de Datos - Modelo Relacional" width="100%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
+---
+
+#### 4. Diagrama de Contexto del Sistema (C4 L1)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-contexto.drawio`](docs/uml/diagrama-contexto.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 1)](docs/DIAGRAMAS_NOT20.md#1-diagrama-de-contexto-del-sistema-nivel-c4---l1)
+* **Descripcion:** Delimita la frontera del microservicio y sus interacciones con API Gateway, frontend SPA, broker RabbitMQ (`styleradar.domain.events`), microservicio de catalogo (via OpenFeign), microservicio de identidad, donaciones, mensajes y microservicio de estadisticas.
+
+<p align="center">
+  <a href="docs/images/diagrama-contexto.png" target="_blank">
+    <img src="docs/images/diagrama-contexto.png" alt="Diagrama de Contexto del Sistema" width="100%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
+---
+
+#### 5. Diagrama de Despliegue (Topologia Azure & Docker Hub)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-despliegue.drawio`](docs/uml/diagrama-despliegue.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 5)](docs/DIAGRAMAS_NOT20.md#5-diagrama-de-despliegue)
+* **Descripcion:** Modela la topologia de ejecucion y despliegue continuo: estacion de desarrollo, pipeline de CI/CD en GitHub Actions, repositorio de imagenes en Docker Hub (`styleradar/ms-notificaciones`), y ambientes de ejecucion en Azure App Service (QA en Linux B1ms y Produccion en cluster P1v3 con autoscaling y replicas PostgreSQL).
 
 ### Estructura Oficial de Paquetes en `src/main/java/`
 
@@ -592,8 +677,8 @@ El ciclo de vida del software implementa integración continua y entrega continu
 
 | Pipeline | Entorno Destino | Desencadenador (Trigger) | Quality Gate Exigido | Badge de Estado |
 | :--- | :--- | :--- | :--- | :---: |
-| **CI - Staging / QA** | Calidad (`QA`) | Pull Request o Push a rama `develop` | Build OK + Tests Unitarios/Integración + JaCoCo ≥ 85% + Docker Build | [![QA Pipeline](https://img.shields.io/badge/Pipeline_QA-Passing-5600EF?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/GJ-Notification-Service/actions) |
-| **CD - Producción (PROD)** | Producción (`PROD`) | Merge a rama `main` tras validación QA | Verificación completa + Imagen OCI lista para despliegue | [![PROD Pipeline](https://img.shields.io/badge/Pipeline_PROD-Passing-16A34A?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/StyleRadar1/GJ-Notification-Service/actions) |
+| **CI - Staging / QA** | Calidad (`QA`) | Pull Request o Push a rama `develop` | Build OK + Tests Unitarios/Integración + JaCoCo ≥ 85% + Docker Build | [![CI / QA Pipeline](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml/badge.svg?branch=develop)](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml) |
+| **CD - Producción (PROD)** | Producción (`PROD`) | Merge a rama `main` tras validación QA | Verificación completa + Imagen OCI lista para despliegue | [![CD / PROD Pipeline](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/cd-prod.yml/badge.svg?branch=main)](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/cd-prod.yml) |
 | **Quality Gate SonarQube** | Transversal | Ejecutado en cada build de CI | 0 Vulnerabilidades, 0 Bugs, Deuda Técnica &lt; 5% | [![Quality Gate](https://img.shields.io/badge/SonarQube-Quality_Gate_Passed-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white)](https://sonarcloud.io/organizations/styleradar) |
 
 ### Diagrama del Flujo Automatizado (Pipeline Stages)
@@ -653,15 +738,10 @@ El equipo sigue el modelo de trabajo **GitFlow adaptado para microservicios**. L
 ### Estructura de Ramas Oficial
 
 ```text
-main                    <-- Código en producción (Desplegado en Azure PROD)
-└── develop             <-- Rama de integración continua (Staging / QA)
-    ├── feature/not-01-setup-hexagonal          <-- Estructura hexagonal base
-    ├── feature/not-02-domain-model-and-contracts <-- Dominio y contratos de eventos
-    ├── feature/not-03-ports-and-usecases       <-- Puertos y casos de uso
-    ├── feature/not-04-persistence-and-flyway   <-- Persistencia JPA y Flyway
-    ├── feature/not-05-rest-and-jwt-security    <-- Endpoints REST, SSE y seguridad JWT
-    ├── feature/not-06-events-consumers-and-dlq <-- Consumidores RabbitMQ y DLQ
-    └── feature/not-17-tests-and-coverage       <-- Pruebas >= 85%, diagramas y pipelines
+main (default / protegida)    <-- Código validado en producción
+└── develop                   <-- Rama de integración para QA / Staging
+    └── Scaffolding           <-- Rama de trabajo que concentra el desarrollo del microservicio
+        (feature/scaffolding y features integrados con commits atómicos)
 ```
 
 ### Convención de Commits (*Conventional Commits*)
@@ -703,7 +783,8 @@ El seguimiento de requerimientos, evidencias y artefactos de entrega se centrali
 * **API Swagger en Calidad (QA):** [https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html)
 * **Colección de Pruebas Postman:** [postman/styleradar-notificaciones.postman_collection.json](postman/styleradar-notificaciones.postman_collection.json)
 * **Contratos de Eventos Asíncronos (NOT-21):** [docs/CONTRATOS_EVENTOS_NOT21.md](docs/CONTRATOS_EVENTOS_NOT21.md)
-* **Diagramas de Clases, BD y Secuencia 7.8 (NOT-20):** [docs/DIAGRAMAS_NOT20.md](docs/DIAGRAMAS_NOT20.md)
+* **Diagramas UML Oficiales en Draw.io:** [docs/uml/](docs/uml/)
+* **Documentación Arquitectónica y Justificaciones (NOT-20):** [docs/DIAGRAMAS_NOT20.md](docs/DIAGRAMAS_NOT20.md)
 
 
 <div align="center">
