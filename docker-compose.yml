@@ -1,6 +1,6 @@
 services:
   notificaciones-db:
-    image: postgres:16-alpine
+    image: postgres:16.15-alpine
     container_name: styleradar-notificaciones-db
     environment:
       POSTGRES_DB: ${DB_NAME:-notificaciones_db}
@@ -19,7 +19,7 @@ services:
       - styleradar-net
 
   notificaciones-redis:
-    image: redis:7-alpine
+    image: redis:7.4.12-alpine
     container_name: styleradar-notificaciones-redis
     ports:
       - "${REDIS_PORT:-6379}:6379"
@@ -32,7 +32,7 @@ services:
       - styleradar-net
 
   event-broker:
-    image: rabbitmq:3.13-management-alpine
+    image: rabbitmq:3.13.7-management-alpine
     container_name: styleradar-event-broker
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
