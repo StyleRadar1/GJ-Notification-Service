@@ -16,3 +16,7 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
       - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
 
+application:
+  security:
+    jwt:
+      secret-key: clave_exclusiva_de_pruebas_automatizadas_0123456789

@@ -19,7 +19,7 @@ spring:
 application:
   security:
     jwt:
-      secret-key: ${JWT_SECRET:clave_secreta_minimo_256_bits_para_firmado_seguro_hs256_styleradar_2026}
+      secret-key: ${JWT_SECRET}
       expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   messaging:
     exchange: ${RABBITMQ_EXCHANGE:styleradar.exchange}
