@@ -19,6 +19,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -70,6 +71,19 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         return buildProblemDetail(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ProblemDetail> handleNoResource(
+            NoResourceFoundException ex,
+            HttpServletRequest request
+    ) {
+        return buildProblemDetail(
+                HttpStatus.NOT_FOUND,
+                "Recurso no encontrado",
+                "La ruta solicitada no existe",
+                request
+        );
     }
 
     @ExceptionHandler(ConflictoException.class)
