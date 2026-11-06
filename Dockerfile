@@ -11,5 +11,5 @@ WORKDIR /app
 RUN addgroup -S styleradar && adduser -S appuser -G styleradar
 USER appuser
 COPY --from=build /app/target/*.jar app.jar
-EXPOSE 8088
+EXPOSE 8300
 ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]

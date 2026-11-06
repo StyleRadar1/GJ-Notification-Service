@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:8088}
+  port: ${PORT:8300}
 
 spring:
   application:
@@ -45,7 +45,7 @@ application:
       alert-created: styleradar.notificaciones.alerta.creada
       dlq: styleradar.notificaciones.error
   clients:
-    catalog-url: ${CATALOG_SERVICE_URL:http://localhost:8085}
+    catalog-url: ${CATALOG_SERVICE_URL:http://localhost:8220}
 
 springdoc:
   api-docs:

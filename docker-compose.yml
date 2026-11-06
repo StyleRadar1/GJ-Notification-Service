@@ -55,9 +55,9 @@ services:
     image: styleradar/ms-notificaciones:qa
     container_name: styleradar-ms-notificaciones
     ports:
-      - "${PORT:-8088}:8088"
+      - "${PORT:-8300}:8300"
     environment:
-      PORT: 8088
+      PORT: 8300
       SPRING_PROFILES_ACTIVE: dev
       DB_HOST: notificaciones-db
       DB_PORT: 5432
@@ -70,7 +70,7 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       REDIS_HOST: notificaciones-redis
       REDIS_PORT: 6379
-      CATALOG_SERVICE_URL: ${CATALOG_SERVICE_URL:-http://host.docker.internal:8085}
+      CATALOG_SERVICE_URL: ${CATALOG_SERVICE_URL:-http://host.docker.internal:8220}
       JWT_SECRET: ${JWT_SECRET:-solo_desarrollo_local_no_usar_en_produccion_styleradar_2026}
     depends_on:
       notificaciones-db:
