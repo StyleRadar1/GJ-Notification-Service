@@ -31,6 +31,7 @@ Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archi
 | Clases | [`diagrama-clases.drawio`](./uml/diagrama-clases.drawio) | [`diagrama-clases.png`](./images/diagrama-clases.png) |
 | Base de datos | [`diagrama-base-datos.drawio`](./uml/diagrama-base-datos.drawio) | [`diagrama-base-datos.png`](./images/diagrama-base-datos.png) |
 | Despliegue | [`diagrama-despliegue.drawio`](./uml/diagrama-despliegue.drawio) | [`diagrama-despliegue.png`](./images/diagrama-despliegue.png) |
+| Secuencia 7.8 | [`diagrama-secuencia.drawio`](./uml/diagrama-secuencia.drawio) | [`diagrama-secuencia.png`](./images/diagrama-secuencia.png) |
 
 ---
 
@@ -177,3 +178,34 @@ El diagrama distingue lo que existe hoy de lo planificado (borde punteado).
 - **Imagen multi-etapa:** compila con Maven en una etapa y copia solo el JAR a una imagen de ejecución mínima, con usuario sin privilegios.
 - **Un broker compartido en la nube:** lo definió el profesor como infraestructura compartida, sin repositorio propio.
 - **Credenciales fuera del repositorio:** solo se versiona `.env.example`; cada entorno recibe sus secretos por variables.
+
+---
+
+## 6. Diagrama de secuencia 7.8 (eventos)
+
+<p align="center">
+  <img src="./images/diagrama-secuencia.png" alt="Diagrama de secuencia 7.8 con los eventos de ms-notificaciones" width="95%" />
+</p>
+
+### 6.1. Explicación técnica
+
+El diagrama muestra los dos recorridos principales del servicio.
+
+**Fase 1: crear una alerta (síncrono)**
+1. El frontend envía `POST /api/v1/usuarios/me/alertas` con el JWT al `AlertaController`.
+2. El caso de uso consulta a `ms-item-catalogo` por OpenFeign que el ítem esté agotado. Si Catálogo no responde, la respuesta es `503` y no se crea la alerta.
+3. Se guarda la alerta en PostgreSQL, se publica `AlertaCreada` en el broker (la consume `ms-estadisticas`) y el cliente recibe `201 Created`.
+
+**Fase 2: reposición de stock y notificación (asíncrono)**
+1. `ms-inventario` publica `InventarioActualizado` en RabbitMQ y el broker lo entrega a `NotificacionesEventsListener`.
+2. El listener valida el payload y que sea una reposición (stock de cero a mayor que cero). Un payload inválido va a la cola de errores; un fallo transitorio se reintenta 3 veces.
+3. El caso de uso busca las alertas activas, guarda la notificación y, si la restricción única detecta un duplicado, lo descarta sin fallar.
+4. Por último empuja la notificación por SSE a la campana del usuario conectado.
+
+El mismo mecanismo atiende los demás eventos: prenda publicada, estado de cuenta, búsqueda guardada, mensaje, donación, moderación y prenda retirada.
+
+### 6.2. Justificación arquitectónica
+
+- **Una llamada síncrona y el resto por eventos:** solo crear la alerta necesita una respuesta inmediata; la reposición se procesa sin acoplar a Inventario con Notificaciones.
+- **Reintentos y cola de errores:** un fallo transitorio no pierde el evento y un mensaje inválido no bloquea la cola.
+- **Idempotencia:** como el broker puede entregar un evento más de una vez, la restricción única de la base de datos evita notificaciones repetidas.
