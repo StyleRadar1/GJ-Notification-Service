@@ -26,6 +26,7 @@
         <springdoc.version>2.5.0</springdoc.version>
         <jjwt.version>0.11.5</jjwt.version>
         <jacoco.version>0.8.11</jacoco.version>
+        <wiremock.version>3.5.4</wiremock.version>
     </properties>
 
     <dependencyManagement>
@@ -148,6 +149,12 @@
         <dependency>
             <groupId>org.springframework.amqp</groupId>
             <artifactId>spring-rabbit-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <version>${wiremock.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
