@@ -567,6 +567,9 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 | `RABBITMQ_PORT` | Puerto AMQP de RabbitMQ | `5672` | Sí |
 | `RABBITMQ_USER` | Usuario de conexión a RabbitMQ | `guest` | Sí |
 | `RABBITMQ_PASSWORD` | Contraseña de conexión a RabbitMQ | `guest` | Sí |
+| `RABBITMQ_VHOST` | Virtual host del broker (solo perfil `prod`) | `/` | No |
+| `RABBITMQ_SSL_ENABLED` | Activa TLS hacia el broker; con TLS se usa el puerto `5671` (solo perfil `prod`) | `false` | No |
+| `RABBITMQ_SSL_VERIFY_HOSTNAME` | Verifica que el certificado del broker coincida con el host (solo perfil `prod`) | `true` | No |
 | `REDIS_HOST` | Hostname del servidor de caché Redis | `localhost` | No |
 | `CATALOG_SERVICE_URL` | URL base de `ms-item-catalogo` para OpenFeign | `http://localhost:8220` | Sí |
 | `JWT_SECRET` | Clave secreta HMAC-SHA256 (mínimo 256 bits) para validar JWT | `clave_secreta_minimo_256_bits...` | Sí |
@@ -595,6 +598,9 @@ RABBITMQ_HOST=localhost
 RABBITMQ_PORT=5672
 RABBITMQ_USER=guest
 RABBITMQ_PASSWORD=guest
+RABBITMQ_VHOST=/
+RABBITMQ_SSL_ENABLED=false
+RABBITMQ_SSL_VERIFY_HOSTNAME=true
 RABBITMQ_EXCHANGE=styleradar.exchange
 RABBITMQ_DLX=styleradar.dlx
 
