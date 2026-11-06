@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import edu.dosw.styleradar.notificaciones.application.dto.event.InventarioActualizadoEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaRetiradaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.UsuarioEstadoCambiadoEventPayload;
 import edu.dosw.styleradar.notificaciones.domain.model.DatosPrendaVO;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ProcesarEventosExternosUseCase;
@@ -74,6 +75,25 @@ class NotificacionesEventsListenerTest {
                 "evt-usr-1", 501L, "mateo@styleradar.co", "SUSPENDIDO", LocalDateTime.now());
 
         assertThatThrownBy(() -> listener.onUsuarioEstadoCambiado(payload))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+
+        verifyNoInteractions(useCase);
+    }
+
+    @Test
+    @DisplayName("NOT-08 - Una prenda retirada desactiva las alertas del item")
+    void prendaRetiradaDesactivaLasAlertasDelItem() {
+        listener.onPrendaRetirada(new PrendaRetiradaEventPayload("evt-cat-1", 55L, "Retirada por la tienda", LocalDateTime.now()));
+
+        verify(useCase).desactivarAlertasPorItemEliminado(55L);
+    }
+
+    @Test
+    @DisplayName("NOT-08 - Un evento de prenda retirada sin item es invalido y va directo a la cola de errores")
+    void prendaRetiradaSinItemEsInvalida() {
+        assertThatThrownBy(() -> listener.onPrendaRetirada(new PrendaRetiradaEventPayload("evt-cat-2", null, null, null)))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+        assertThatThrownBy(() -> listener.onPrendaRetirada(null))
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
 
         verifyNoInteractions(useCase);

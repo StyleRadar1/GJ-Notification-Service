@@ -6,6 +6,7 @@ import edu.dosw.styleradar.notificaciones.application.dto.event.InventarioActual
 import edu.dosw.styleradar.notificaciones.application.dto.event.MensajeEnviadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.ModeracionPrendaCambiadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaPublicadaEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaRetiradaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.UsuarioEstadoCambiadoEventPayload;
 import edu.dosw.styleradar.notificaciones.domain.model.BusquedaGuardadaCopia;
 import edu.dosw.styleradar.notificaciones.domain.model.CriterioBusquedaVO;
@@ -186,6 +187,14 @@ public class NotificacionesEventsListener {
                 "/catalogo/mis-prendas/" + payload.itemId(),
                 payload.itemId()
         );
+    }
+
+    @RabbitListener(queues = "${application.messaging.queues.garment-deleted:styleradar.notificaciones.prenda-retirada.q}")
+    public void onPrendaRetirada(PrendaRetiradaEventPayload payload) {
+        if (payload == null || payload.itemId() == null) {
+            throw payloadInvalido("PrendaRetirada", "sin itemId");
+        }
+        procesarEventosExternosUseCase.desactivarAlertasPorItemEliminado(payload.itemId());
     }
 
     private AmqpRejectAndDontRequeueException payloadInvalido(String evento, String detalle) {

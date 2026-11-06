@@ -44,6 +44,7 @@ application:
       message-sent: styleradar.notificaciones.mensaje-enviado.q
       donation-changed: styleradar.notificaciones.donacion-cambiada.q
       moderation-changed: styleradar.notificaciones.moderacion-cambiada.q
+      garment-deleted: styleradar.notificaciones.prenda-retirada.q
       dlq: styleradar.notificaciones.dlq
     routing-keys:
       inventory-updated: styleradar.inventario.actualizado
