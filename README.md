@@ -26,15 +26,6 @@
     <a href="https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml">
       <img src="https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml/badge.svg?branch=develop" alt="CI / QA Pipeline Status" />
     </a>
-    <a href="https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html">
-      <img src="https://img.shields.io/badge/PROD-Active-16A34A?style=for-the-badge&logo=azure-app-services&logoColor=white" alt="PROD Deployment" />
-    </a>
-    <a href="https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html">
-      <img src="https://img.shields.io/badge/QA-Active-5600EF?style=for-the-badge&logo=azure-app-services&logoColor=white" alt="QA Deployment" />
-    </a>
-    <a href="https://sonarcloud.io/organizations/styleradar">
-      <img src="https://img.shields.io/badge/SonarQube-Quality_Gate_Passed-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white" alt="Quality Gate" />
-    </a>
     <a href="target/site/jacoco/index.html">
       <img src="https://img.shields.io/badge/JaCoCo_Coverage-%E2%89%A5_85%25-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage" />
     </a>
@@ -324,8 +315,8 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 
 | Entorno | Estado | Propósito | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **Producción (PROD)** | Active | Despliegue productivo de StyleRadar | `https://styleradar-backend-prod.azurewebsites.net` | [Swagger UI PROD](https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-backend-prod.azurewebsites.net/actuator/health) |
-| **Calidad / Pruebas (QA)** | Active | Pruebas integradas de Sprint y QA | `https://styleradar-backend-qa.azurewebsites.net` | [Swagger UI QA](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-backend-qa.azurewebsites.net/actuator/health) |
+| **Producción (PROD)** | Pendiente (GJ-92) | Despliegue productivo de StyleRadar | `https://styleradar-backend-prod.azurewebsites.net` | [Swagger UI PROD](https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-backend-prod.azurewebsites.net/actuator/health) |
+| **Calidad / Pruebas (QA)** | Pendiente (GJ-92) | Pruebas integradas de Sprint y QA | `https://styleradar-backend-qa.azurewebsites.net` | [Swagger UI QA](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-backend-qa.azurewebsites.net/actuator/health) |
 | **Desarrollo Local (DEV)** | Local | Entorno de desarrollo local en máquina | `http://localhost:8300` | [Swagger UI Local](http://localhost:8300/swagger-ui/index.html) | [`/actuator/health`](http://localhost:8300/actuator/health) |
 
 * **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8300/v3/api-docs` (o `/v3/api-docs` en los dominios de PROD y QA).
@@ -685,7 +676,7 @@ El ciclo de vida del software implementa integración continua y entrega continu
 | :--- | :--- | :--- | :--- | :---: |
 | **CI - Staging / QA** | Calidad (`QA`) | Pull Request o Push a rama `develop` | Build OK + Tests Unitarios/Integración + JaCoCo ≥ 85% + Docker Build | [![CI / QA Pipeline](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml/badge.svg?branch=develop)](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml) |
 | **CD - Producción (PROD)** | Producción (`PROD`) | Merge a rama `main` tras validación QA | Verificación completa + Imagen OCI lista para despliegue | [![CD / PROD Pipeline](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/cd-prod.yml/badge.svg?branch=main)](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/cd-prod.yml) |
-| **Quality Gate SonarQube** | Transversal | Ejecutado en cada build de CI | 0 Vulnerabilidades, 0 Bugs, Deuda Técnica &lt; 5% | [![Quality Gate](https://img.shields.io/badge/SonarQube-Quality_Gate_Passed-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white)](https://sonarcloud.io/organizations/styleradar) |
+| **Análisis estático (SonarQube)** | Transversal | Pendiente de configurar en el CI | Meta: 0 Vulnerabilidades, 0 Bugs, Deuda Técnica &lt; 5% | Pendiente |
 
 ### Diagrama del Flujo Automatizado (Pipeline Stages)
 
@@ -693,9 +684,9 @@ El ciclo de vida del software implementa integración continua y entrega continu
 flowchart LR
     A["Push / PR<br>(GitHub)"] --> B["Build & Compile<br>(Maven Java 21)"]
     B --> C["Tests & JaCoCo<br>(Coverage ≥ 85%)"]
-    C --> D["Análisis SonarQube<br>(0 Vulnerabilities)"]
+    C --> D["Análisis estático<br>(pendiente)"]
     D --> E["Build Docker OCI<br>(Multi-stage Build)"]
-    E --> F["Deploy Cloud<br>(Azure App Service)"]
+    E --> F["Deploy Cloud<br>(pendiente, GJ-92)"]
 
     classDef step fill:#12063A,stroke:#5600EF,stroke-width:2px,color:#FFFFFF;
     classDef pass fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#0C0C12;
@@ -704,7 +695,7 @@ flowchart LR
     class C,D pass;
 ```
 
-### Reglas de Calidad en SonarQube (*Quality Gate Passed*)
+### Metas de calidad en SonarQube (pendiente de configurar)
 
 * **Bugs:** 0
 * **Vulnerabilidades:** 0
@@ -783,10 +774,10 @@ El seguimiento de requerimientos, evidencias y artefactos de entrega se centrali
 
 ### Enlaces de Gestión, Repositorios y Evidencias
 
-* **Épica Oficial del Microservicio (Jira):** [https://styleradar.atlassian.net/browse/NOT](https://styleradar.atlassian.net/browse/NOT)
-* **Tablero Scrum del Squad (Jira):** [https://styleradar.atlassian.net/jira/software/projects/SR/boards/1](https://styleradar.atlassian.net/jira/software/projects/SR/boards/1)
-* **API Swagger en Producción (PROD):** [https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html](https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html)
-* **API Swagger en Calidad (QA):** [https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html)
+* **Épica Oficial del Microservicio (Jira):** [GJ-2 · ms-notificaciones](https://mail-team-nyjtgqcj.atlassian.net/browse/GJ-2)
+* **Proyecto en Jira (GJ):** [https://mail-team-nyjtgqcj.atlassian.net/browse/GJ](https://mail-team-nyjtgqcj.atlassian.net/browse/GJ)
+* **API Swagger en Producción (PROD, pendiente de despliegue):** [https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html](https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html)
+* **API Swagger en Calidad (QA, pendiente de despliegue):** [https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html)
 * **Colección de Pruebas Postman:** [postman/styleradar-notificaciones.postman_collection.json](postman/styleradar-notificaciones.postman_collection.json)
 * **Contratos de Eventos Asíncronos (NOT-21):** [docs/CONTRATOS_EVENTOS_NOT21.md](docs/CONTRATOS_EVENTOS_NOT21.md)
 * **Diagramas UML Oficiales en Draw.io:** [docs/uml/](docs/uml/)
