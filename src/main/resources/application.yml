@@ -31,6 +31,11 @@ application:
   messaging:
     exchange: ${RABBITMQ_EXCHANGE:styleradar.exchange}
     dlx: ${RABBITMQ_DLX:styleradar.dlx}
+    retry:
+      max-attempts: 3
+      initial-interval-ms: 1000
+      multiplier: 2.0
+      max-interval-ms: 10000
     queues:
       inventory-updated: styleradar.notificaciones.inventario-actualizado.q
       garment-published: styleradar.notificaciones.prenda-publicada.q
