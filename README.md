@@ -13,7 +13,7 @@
 
   <p align="center">
     <img src="https://img.shields.io/badge/BOUNDED_CONTEXT-Notificaciones_y_Alertas-12063A?style=for-the-badge" alt="Context" />
-    <img src="https://img.shields.io/badge/PUERTO_OFICIAL-8088-5600EF?style=for-the-badge" alt="Port" />
+    <img src="https://img.shields.io/badge/PUERTO_OFICIAL-8300-5600EF?style=for-the-badge" alt="Port" />
     <img src="https://img.shields.io/badge/ARQUITECTURA-HEXAGONAL-16A34A?style=for-the-badge" alt="Hexagonal" />
   </p>
 
@@ -77,7 +77,7 @@
 
 * **Identificador de Servicio:** `ms-notificaciones` (`GJ-Notification-Service`)
 * **Paquete Arquitectónico:** `Paquete 3: Notificaciones y Chat`
-* **Puerto de Escucha Oficial:** `8088` (definido en la matriz de puertos sin colisión)
+* **Puerto de Escucha Oficial:** `8300` (definido en la matriz de puertos sin colisión)
 * **Base de Datos Asignada:** `PostgreSQL 16` (`notificaciones_db`), aislada bajo el patrón *Database-per-Service*.
 * **Bounded Context:** `Notificaciones, Alertas de Disponibilidad y Tiempo Real`
 
@@ -87,9 +87,9 @@ Este microservicio encapsula exclusivamente la lógica de negocio correspondient
 
 | Qué HACE este Microservicio (Alcance)                             | Qué NO HACE este Microservicio (Límites)                                          |
 | :----------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
-| • Gestiona alertas de prendas agotadas (`ITEM_AGOTADO`) y búsquedas guardadas (`BUSQUEDA_GUARDADA`) validando stock contra `ms-item-catalogo`. | • NO autentica credenciales ni emite tokens iniciales (delegado a `ms-auth` en `:8081`). |
-| • Evalúa en memoria coincidencias entre eventos (`InventarioActualizado`, `PrendaPublicada`) y copias locales de búsquedas guardadas sin hacer SQL cruzado. | • NO gestiona transacciones monetarias ni pasarelas (delegado a `ms-pagos-suscripciones` en `:8090`). |
-| • Sincroniza copias locales de búsquedas guardadas y estados de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`) mediante eventos asíncronos. | • NO persiste conversaciones ni historial de mensajes STOMP (delegado a `ms-chat` en `:8089`). |
+| • Gestiona alertas de prendas agotadas (`ITEM_AGOTADO`) y búsquedas guardadas (`BUSQUEDA_GUARDADA`) validando stock contra `ms-item-catalogo`. | • NO autentica credenciales ni emite tokens iniciales (delegado a `ms-auth` en `:8100`). |
+| • Evalúa en memoria coincidencias entre eventos (`InventarioActualizado`, `PrendaPublicada`) y copias locales de búsquedas guardadas sin hacer SQL cruzado. | • NO gestiona transacciones monetarias ni pasarelas (delegado a `ms-pagos-suscripciones` en `:8400`). |
+| • Sincroniza copias locales de búsquedas guardadas y estados de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`) mediante eventos asíncronos. | • NO persiste conversaciones ni historial de mensajes STOMP (delegado a `ms-chat` en `:8320`). |
 | • Entrega notificaciones generalizadas (stock, mensajes, donaciones, moderación) y emite actualizaciones en tiempo real mediante Server-Sent Events (SSE). | • NO accede directamente a tablas ni bases de datos de otros microservicios (cero llaves foráneas externas). |
 | • Garantiza persistencia ACID e idempotencia mediante la restricción única `(alerta_id, item_id, ciclo_reposicion)` y desvío de fallos a Dead Letter Queue (`SR-RNF-15`). | • NO modifica el inventario ni el catálogo maestro de prendas. |
 
@@ -168,7 +168,7 @@ flowchart LR
     %% Adaptadores de Salida
     subgraph ADAPTERS_OUT["Infraestructura: Salida"]
         JPA_ADAPTER["Adaptadores JPA<br>PostgreSQL 16 (Flyway)"]
-        FEIGN_ADAPTER["CatalogoClientAdapter<br>OpenFeign (:8082)"]
+        FEIGN_ADAPTER["CatalogoClientAdapter<br>OpenFeign (:8220)"]
         AMQP_ADAPTER["RabbitMqEventPublisher<br>(Exchange Topic)"]
         SSE_ADAPTER["SseNotificationAdapter<br>(Campana Tiempo Real)"]
     end
@@ -326,9 +326,9 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 | :--- | :---: | :--- | :--- | :--- | :--- |
 | **Producción (PROD)** | Active | Despliegue productivo de StyleRadar | `https://styleradar-backend-prod.azurewebsites.net` | [Swagger UI PROD](https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-backend-prod.azurewebsites.net/actuator/health) |
 | **Calidad / Pruebas (QA)** | Active | Pruebas integradas de Sprint y QA | `https://styleradar-backend-qa.azurewebsites.net` | [Swagger UI QA](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-backend-qa.azurewebsites.net/actuator/health) |
-| **Desarrollo Local (DEV)** | Local | Entorno de desarrollo local en máquina | `http://localhost:8088` | [Swagger UI Local](http://localhost:8088/swagger-ui/index.html) | [`/actuator/health`](http://localhost:8088/actuator/health) |
+| **Desarrollo Local (DEV)** | Local | Entorno de desarrollo local en máquina | `http://localhost:8300` | [Swagger UI Local](http://localhost:8300/swagger-ui/index.html) | [`/actuator/health`](http://localhost:8300/actuator/health) |
 
-* **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8088/v3/api-docs` (o `/v3/api-docs` en los dominios de PROD y QA).
+* **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8300/v3/api-docs` (o `/v3/api-docs` en los dominios de PROD y QA).
 
 
 <div align="center">
@@ -340,7 +340,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
           <strong><font color="#5600EF" size="3">DOCUMENTACIÓN SWAGGER OPENAPI UI ACTIVA</font></strong>
         </p>
         <p>
-          <sub>Pega aquí la captura de pantalla de la interfaz interactiva corriendo en <code>http://localhost:8088/swagger-ui/index.html</code> mostrando los endpoints del controlador.</sub>
+          <sub>Pega aquí la captura de pantalla de la interfaz interactiva corriendo en <code>http://localhost:8300/swagger-ui/index.html</code> mostrando los endpoints del controlador.</sub>
         </p>
         <p>
 <!-- Al generar tu captura, descomenta la siguiente línea y guarda la imagen en la ruta indicada: -->
@@ -375,7 +375,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 #### Ejemplo Request (`POST /api/v1/usuarios/me/alertas`)
 
 ```bash
-curl -X POST "http://localhost:8088/api/v1/usuarios/me/alertas" \
+curl -X POST "http://localhost:8300/api/v1/usuarios/me/alertas" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -d '{
@@ -493,7 +493,7 @@ cd GJ-Notification-Service
 # 2. Levantar servicios de infraestructura en Docker (PostgreSQL, Redis, RabbitMQ)
 docker compose up -d notificaciones-db notificaciones-redis event-broker
 
-# 3. Ejecutar el microservicio localmente en el puerto 8088
+# 3. Ejecutar el microservicio localmente en el puerto 8300
 mvn clean spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
@@ -520,7 +520,7 @@ docker compose up --build -d
 ### Comprobación de Salud (Health Check)
 
 ```bash
-curl -s http://localhost:8088/actuator/health
+curl -s http://localhost:8300/actuator/health
 # Esperado: {"status":"UP"}
 ```
 
@@ -556,7 +556,7 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 
 | Variable | Descripción | Valor por Defecto (`dev`) | Requerido en Prod |
 | :--- | :--- | :--- | :---: |
-| `PORT` | Puerto de escucha HTTP del microservicio | `8088` | Sí |
+| `PORT` | Puerto de escucha HTTP del microservicio | `8300` | Sí |
 | `SPRING_PROFILES_ACTIVE` | Perfil de configuración Spring Boot activo | `dev` | Sí |
 | `DB_HOST` | Hostname o IP del servidor PostgreSQL | `localhost` | Sí |
 | `DB_PORT` | Puerto de conexión a PostgreSQL | `5432` | Sí |
@@ -568,7 +568,7 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 | `RABBITMQ_USER` | Usuario de conexión a RabbitMQ | `guest` | Sí |
 | `RABBITMQ_PASSWORD` | Contraseña de conexión a RabbitMQ | `guest` | Sí |
 | `REDIS_HOST` | Hostname del servidor de caché Redis | `localhost` | No |
-| `CATALOG_SERVICE_URL` | URL base de `ms-item-catalogo` para OpenFeign | `http://localhost:8085` | Sí |
+| `CATALOG_SERVICE_URL` | URL base de `ms-item-catalogo` para OpenFeign | `http://localhost:8220` | Sí |
 | `JWT_SECRET` | Clave secreta HMAC-SHA256 (mínimo 256 bits) para validar JWT | `clave_secreta_minimo_256_bits...` | Sí |
 
 <details>
@@ -580,7 +580,7 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 # ==============================================================================
 # STYLERADAR · VARIABLES DE ENTORNO LOCALES (.env) - ms-notificaciones
 # ==============================================================================
-PORT=8088
+PORT=8300
 SPRING_PROFILES_ACTIVE=dev
 
 # Persistencia PostgreSQL
@@ -603,7 +603,7 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 
 # Cliente Feign Catálogo
-CATALOG_SERVICE_URL=http://localhost:8085
+CATALOG_SERVICE_URL=http://localhost:8220
 
 # Seguridad JWT
 JWT_SECRET=clave_secreta_minimo_256_bits_para_firmado_seguro_hs256_styleradar_2026

@@ -1,6 +1,6 @@
 # DOCUMENTACIÓN ARQUITECTÓNICA Y DIAGRAMAS UML — GJ-Notification-Service (NOT-20)
 
-- **Microservicio:** `GJ-Notification-Service` (`ms-notificaciones`, Puerto `8088`)
+- **Microservicio:** `GJ-Notification-Service` (`ms-notificaciones`, Puerto `8300`)
 - **Equipo:** Guatoque Jiraguas (`GJ`)
 - **Bounded Context:** Notificaciones, Alertas de Disponibilidad y Tiempo Real (`SSE`)
 - **Ubicación de archivos fuente Draw.io:** [`docs/uml/`](./uml/)
@@ -26,12 +26,12 @@
 </p>
 
 ### 1.1. Explicación Técnica
-El Diagrama de Contexto delimita la frontera del microservicio **`GJ-Notification-Service` (`:8088`)** dentro del ecosistema distribuido de StyleRadar e identifica los actores y sistemas externos con los que intercambia información:
+El Diagrama de Contexto delimita la frontera del microservicio **`GJ-Notification-Service` (`:8300`)** dentro del ecosistema distribuido de StyleRadar e identifica los actores y sistemas externos con los que intercambia información:
 1. **Usuario Comprador / Donatario y API Gateway (`sr-api-gateway :8080`):** El usuario autenticado interactúa desde la SPA de StyleRadar a través del API Gateway mediante peticiones HTTPS REST (`/api/v1/usuarios/me/alertas` y `/api/v1/usuarios/me/notificaciones`) portando su token Bearer JWT, y mantiene una conexión abierta **Server-Sent Events (`SSE`)** en `/api/v1/usuarios/me/notificaciones/stream` para recibir notificaciones en la campana sin recargar la página.
-2. **Microservicio de Catálogo e Inventario (`ms-item-catalogo :8082`):** Interactúa de forma dual:
+2. **Microservicio de Catálogo e Inventario (`ms-item-catalogo :8220`):** Interactúa de forma dual:
    - **Síncrona (OpenFeign REST):** Al crear una alerta por ítem específico (`NOT-10`), `GJ-Notification-Service` consulta a Catálogo para verificar que la prenda esté realmente agotada (`stockTotal == 0`).
    - **Asíncrona (RabbitMQ AMQP):** Catálogo publica los eventos `InventarioActualizado`, `PrendaPublicada` y `ModeracionPrendaCambiada`, los cuales son consumidos por `GJ-Notification-Service`.
-3. **Microservicio de Identidad y Búsquedas (`ms-identidad :8081`):** Publica en RabbitMQ los eventos `UsuarioEstadoCambiado` y `BusquedaGuardadaSincronizada` para mantener actualizadas las copias locales en la base de datos de notificaciones (`NOT-08`, `NOT-09`).
+3. **Microservicio de Identidad y Búsquedas (`ms-usuarios :8120`):** Publica en RabbitMQ los eventos `UsuarioEstadoCambiado` y `BusquedaGuardadaSincronizada` para mantener actualizadas las copias locales en la base de datos de notificaciones (`NOT-08`, `NOT-09`).
 4. **Microservicios de Mensajes y Donaciones (`ms-mensajes`, `ms-donaciones`):** Publican los eventos `MensajeEnviado` y `DonacionEstadoCambiado` (`NOT-14`) para generar notificaciones transaccionales con enlace directo.
 5. **Microservicio de Estadísticas (`ms-estadisticas`):** Consume el evento de dominio `AlertaCreada` (`routingKey: alerta.creada`) publicado por `GJ-Notification-Service` cada vez que un usuario registra una nueva alerta (`NOT-16`).
 6. **Base de Datos Propia (`PostgreSQL 16 — notificaciones_db`):** Almacena de forma aislada las alertas, notificaciones y copias locales sin compartir tablas con ningún otro microservicio.
@@ -139,9 +139,9 @@ Describe la topología física de ejecución y el flujo automatizado de integrac
    - El runner ejecuta `ci-qa.yml` y `cd-prod.yml` (`mvn clean verify`, validación de cobertura JaCoCo >= 85 % y análisis SonarQube).
    - Construye la imagen Docker multi-stage (`eclipse-temurin:21-jre-alpine`, usuario sin privilegios `spring:spring`) y la publica en **Docker Hub Registry** (`styleradar/ms-notificaciones:qa` y `:latest`).
 2. **Ambientes `Microsoft Azure — Ambiente QA` y `Microsoft Azure — Ambiente PROD`:**
-   - **Azure App Service** descarga la imagen desde Docker Hub y ejecuta el contenedor en el **puerto oficial `8088`**.
-   - El contenedor se comunica por **JDBC (`:5432`)** con **Azure Database for PostgreSQL 16 (`notificaciones_db`)**, por **AMQP/AMQPS (`:5672` / `:5671`)** con **RabbitMQ 3.13** (incluyendo la cola principal y la Dead Letter Queue `.dlq`), y por **OpenFeign REST/HTTPS (`:8082`)** con `ms-item-catalogo`.
-   - Los clientes externos y el API Gateway consumen el servicio por `HTTPS (443 -> 8088)` tanto para llamadas REST como para el flujo continuo `SSE`.
+   - **Azure App Service** descarga la imagen desde Docker Hub y ejecuta el contenedor en el **puerto oficial `8300`**.
+   - El contenedor se comunica por **JDBC (`:5432`)** con **Azure Database for PostgreSQL 16 (`notificaciones_db`)**, por **AMQP/AMQPS (`:5672` / `:5671`)** con **RabbitMQ 3.13** (incluyendo la cola principal y la Dead Letter Queue `.dlq`), y por **OpenFeign REST/HTTPS (`:8220`)** con `ms-item-catalogo`.
+   - Los clientes externos y el API Gateway consumen el servicio por `HTTPS (443 -> 8300)` tanto para llamadas REST como para el flujo continuo `SSE`.
 
 ### 5.2. Justificación Arquitectónica
 - **Imagen OCI Multi-Stage Inmutable:** Compilar con Maven en una primera etapa (`jdk-alpine`) y copiar únicamente el `app.jar` a una segunda etapa (`jre-alpine`) reduce la superficie de ataque y disminuye el tamaño de la imagen en más de un 60 %, acelerando el `docker pull` en Azure App Service.

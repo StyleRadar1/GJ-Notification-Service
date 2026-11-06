@@ -1,6 +1,6 @@
 # Contratos de Eventos Asíncronos — Microservicio de Notificaciones (NOT-21)
 
-**Servicio:** `ms-notificaciones` (Puerto `8088`)  
+**Servicio:** `ms-notificaciones` (Puerto `8300`)  
 **Broker:** RabbitMQ (`styleradar.exchange` — Tipo `topic`, Dead Letter Exchange `styleradar.dlx`)  
 **Acuerdos de Integración:** Catálogo (`ms-inventario`, `ms-item-catalogo`), Identidad (`ms-usuarios`), Mensajes (`ms-chat`), Donaciones (`ms-segunda-vida-donaciones`) y Estadísticas (`ms-estadisticas`).
 
