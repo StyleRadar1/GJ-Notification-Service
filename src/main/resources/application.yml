@@ -6,6 +6,13 @@ spring:
     name: ms-notificaciones
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 2000
+            read-timeout: 3000
   jpa:
     open-in-view: false
     properties:

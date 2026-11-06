@@ -4,6 +4,7 @@ import edu.dosw.styleradar.notificaciones.domain.exception.AccesoDenegadoExcepti
 import edu.dosw.styleradar.notificaciones.domain.exception.ConflictoException;
 import edu.dosw.styleradar.notificaciones.domain.exception.RecursoNoEncontradoException;
 import edu.dosw.styleradar.notificaciones.domain.exception.ReglaDeNegocioException;
+import edu.dosw.styleradar.notificaciones.domain.exception.ServicioExternoNoDisponibleException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.time.Instant;
@@ -102,6 +103,19 @@ public class GlobalExceptionHandler {
         return buildProblemDetail(
                 HttpStatus.UNPROCESSABLE_ENTITY,
                 "Violacion de regla de negocio",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(ServicioExternoNoDisponibleException.class)
+    public ResponseEntity<ProblemDetail> handleExternalServiceUnavailable(
+            ServicioExternoNoDisponibleException ex,
+            HttpServletRequest request
+    ) {
+        return buildProblemDetail(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Servicio externo no disponible",
                 ex.getMessage(),
                 request
         );
