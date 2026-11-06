@@ -11,7 +11,7 @@
 ### 1.1 `InventarioActualizado` (Emisor: `ms-inventario`)
 - **Routing Key:** `styleradar.inventario.actualizado`
 - **Cola Destino:** `styleradar.notificaciones.inventario-actualizado.q`
-- **Propósito:** Notificar una reposición de stock o cambio de unidades por prenda/talla/sede. Incrementa o incluye el `cicloReposicion` para preservar la restricción de idempotencia `(alerta_id, item_id, ciclo_reposicion)`.
+- **Propósito:** Notificar una reposición de stock o cambio de unidades por prenda/talla/sede. Solo se notifica cuando la prenda se repone de stock cero (`stockAnterior == 0` y `stockActual > 0`); cualquier otro cambio de stock se ignora. El `cicloReposicion` preserva la restricción de idempotencia `(alerta_id, item_id, ciclo_reposicion)`.
 
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
@@ -25,7 +25,7 @@
 | `estilo` | `String` | No | Arquetipo o estilo (`STREETWEAR`, `SASTRE`, etc.) |
 | `precio` | `BigDecimal` | Sí | Precio unitario vigente |
 | `stockAnterior` | `Integer` | Sí | Stock antes de la actualización |
-| `stockActual` | `Integer` | Sí | Nuevo stock disponible (`> 0` dispara evaluación de alertas) |
+| `stockActual` | `Integer` | Sí | Nuevo stock disponible (con `stockAnterior == 0` y `> 0` dispara la evaluación de alertas) |
 | `cicloReposicion` | `Integer` | Sí | Número secuencial de ciclo de reposición del ítem |
 | `tiendaId` | `Long` | Sí | ID de la tienda aliada |
 | `localidad` | `String` | No | Localidad o zona geográfica de la sede en Bogotá |
@@ -159,6 +159,28 @@
 - **`DonacionEstadoCambiado` (`styleradar.donaciones.estado.cambiado`):** Genera notificación de tipo `CAMBIO_DONACION` con enlace `/donaciones/{donacionId}`.
 - **`ModeracionPrendaCambiada` (`styleradar.catalogo.moderacion.cambiada`):** Genera notificación de tipo `MODERACION_PRENDA` con enlace `/catalogo/mis-prendas/{itemId}`.
 
+### 1.6 `PrendaRetirada` (Emisor: `ms-item-catalogo`)
+- **Routing Key:** `styleradar.catalogo.prenda.retirada`
+- **Cola Destino:** `styleradar.notificaciones.prenda-retirada.q`
+- **Propósito:** Desactivar las alertas activas de una prenda que el catálogo retiró o eliminó, para que no queden alertas sobre un ítem que ya no existe.
+
+| Campo | Tipo | Obligatorio | Descripción |
+| :--- | :--- | :---: | :--- |
+| `eventoId` | `String` | Sí | Identificador del evento |
+| `itemId` | `Long` | Sí | ID de la prenda retirada |
+| `motivo` | `String` | No | Motivo del retiro (eliminada por el dueño, moderación, etc.) |
+| `fechaEvento` | `LocalDateTime` | Sí | Fecha y hora del retiro |
+
+**Ejemplo JSON:**
+```json
+{
+  "eventoId": "evt-cat-30188",
+  "itemId": 1045,
+  "motivo": "ELIMINADA_POR_DUENO",
+  "fechaEvento": "2026-11-02T13:00:00"
+}
+```
+
 ---
 
 ## 2. Eventos Publicados por `ms-notificaciones`
@@ -178,3 +200,27 @@
   "fechaCreacion": "2026-11-02T12:30:00"
 }
 ```
+
+---
+
+## 3. Propiedades del Broker
+
+| Propiedad | Valor |
+| :--- | :--- |
+| Exchange | `styleradar.exchange` (tipo `topic`, durable) |
+| Dead Letter Exchange | `styleradar.dlx` |
+| Cola de errores (DLQ) | `styleradar.notificaciones.dlq` (routing key `styleradar.notificaciones.error`) |
+| Colas consumidas | 8, todas durables y con la DLX configurada |
+| Formato del mensaje | JSON (`application/json`), fechas en ISO-8601 |
+| Virtual host | `RABBITMQ_VHOST` (por defecto `/`) |
+| TLS | `RABBITMQ_SSL_ENABLED` (puerto `5671` cuando está activo) |
+
+### Manejo de errores
+
+- **Payload inválido** (campo obligatorio ausente, estado de cuenta desconocido o JSON que no se puede convertir): el mensaje va directo a la DLQ, sin reintentos.
+- **Fallo transitorio** (por ejemplo, la base de datos no responde): se reintenta hasta 3 veces con espera exponencial (1 s, 2 s, hasta 10 s) y después va a la DLQ.
+- **Duplicados:** el consumidor es idempotente; una entrega repetida del mismo evento no genera una segunda notificación.
+
+### Nombres de eventos pendientes de confirmar
+
+Los nombres de esta página son los que implementa `ms-notificaciones` hoy. Si el equipo de Inventario y Catálogo publica con otros nombres (por ejemplo `StockChangedEvent` o `NuevaPrendaCreadaEvent`), basta con cambiar la routing key en `application.messaging.routing-keys`; el payload no cambia.
