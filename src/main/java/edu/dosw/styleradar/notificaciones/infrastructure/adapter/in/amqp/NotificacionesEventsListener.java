@@ -40,6 +40,14 @@ public class NotificacionesEventsListener {
         if (payload == null || payload.itemId() == null) {
             throw payloadInvalido("InventarioActualizado", "sin itemId");
         }
+        if (payload.stockAnterior() == null || payload.stockActual() == null) {
+            throw payloadInvalido("InventarioActualizado", "sin stockAnterior o stockActual");
+        }
+        if (!payload.esReposicion()) {
+            log.debug("InventarioActualizado del item {} no es una reposicion (stock {} a {}), se ignora",
+                    payload.itemId(), payload.stockAnterior(), payload.stockActual());
+            return;
+        }
         DatosPrendaVO datosPrenda = new DatosPrendaVO(
                 payload.itemId(),
                 payload.nombrePrenda(),

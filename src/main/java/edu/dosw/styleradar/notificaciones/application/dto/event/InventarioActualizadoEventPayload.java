@@ -20,4 +20,9 @@ public record InventarioActualizadoEventPayload(
         String localidad,
         LocalDateTime fechaEvento
 ) {
+
+    /** Hay reposicion cuando la prenda estaba agotada y vuelve a tener unidades. */
+    public boolean esReposicion() {
+        return stockAnterior != null && stockAnterior == 0 && stockActual != null && stockActual > 0;
+    }
 }
