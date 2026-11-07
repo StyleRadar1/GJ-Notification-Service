@@ -20,8 +20,10 @@ public class NotificacionRepositoryAdapter implements NotificacionRepositoryPort
     private final SpringDataNotificacionRepository repository;
     private final NotificacionEntityMapper mapper;
 
+    // Sin transaccion propia: cada operacion del repositorio abre la suya. Si la restriccion unica
+    // (alerta, item, ciclo) rechaza el duplicado de una entrega simultanea, solo se revierte esa
+    // escritura y no una transaccion exterior que despues fallaria con UnexpectedRollbackException.
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public Notificacion guardar(Notificacion notificacion) {
         if (notificacion.getId() == null
                 && notificacion.getAlertaId() != null

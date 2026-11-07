@@ -13,7 +13,7 @@
 
   <p align="center">
     <img src="https://img.shields.io/badge/BOUNDED_CONTEXT-Notificaciones_y_Alertas-12063A?style=for-the-badge" alt="Context" />
-    <img src="https://img.shields.io/badge/PUERTO_OFICIAL-8088-5600EF?style=for-the-badge" alt="Port" />
+    <img src="https://img.shields.io/badge/PUERTO_OFICIAL-8300-5600EF?style=for-the-badge" alt="Port" />
     <img src="https://img.shields.io/badge/ARQUITECTURA-HEXAGONAL-16A34A?style=for-the-badge" alt="Hexagonal" />
   </p>
 
@@ -27,13 +27,10 @@
       <img src="https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml/badge.svg?branch=develop" alt="CI / QA Pipeline Status" />
     </a>
     <a href="#4-endpoints-y-enlace-a-swagger">
-      <img src="https://img.shields.io/badge/Swagger_UI-ms--notificaciones_(:8088)-5600EF?style=for-the-badge&logo=swagger&logoColor=white" alt="Swagger UI ms-notificaciones" />
+      <img src="https://img.shields.io/badge/Swagger_UI-ms--notificaciones_(:8300)-5600EF?style=for-the-badge&logo=swagger&logoColor=white" alt="Swagger UI ms-notificaciones" />
     </a>
     <a href="#4-endpoints-y-enlace-a-swagger">
-      <img src="https://img.shields.io/badge/OpenAPI_3.0-Contract_Active-16A34A?style=for-the-badge&logo=openapi-initiative&logoColor=white" alt="OpenAPI 3.0" />
-    </a>
-    <a href="https://sonarcloud.io/organizations/styleradar">
-      <img src="https://img.shields.io/badge/SonarQube-Quality_Gate_Passed-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white" alt="Quality Gate" />
+      <img src="https://img.shields.io/badge/OpenAPI-3.0-16A34A?style=for-the-badge&logo=openapi-initiative&logoColor=white" alt="OpenAPI 3.0" />
     </a>
     <a href="target/site/jacoco/index.html">
       <img src="https://img.shields.io/badge/JaCoCo_Coverage-%E2%89%A5_85%25-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage" />
@@ -77,7 +74,7 @@
 
 * **Identificador de Servicio:** `ms-notificaciones` (`GJ-Notification-Service`)
 * **Paquete Arquitectónico:** `Paquete 3: Notificaciones y Chat`
-* **Puerto de Escucha Oficial:** `8088` (definido en la matriz de puertos sin colisión)
+* **Puerto de Escucha Oficial:** `8300` (definido en la matriz de puertos sin colisión)
 * **Base de Datos Asignada:** `PostgreSQL 16` (`notificaciones_db`), aislada bajo el patrón *Database-per-Service*.
 * **Bounded Context:** `Notificaciones, Alertas de Disponibilidad y Tiempo Real`
 
@@ -87,9 +84,9 @@ Este microservicio encapsula exclusivamente la lógica de negocio correspondient
 
 | Qué HACE este Microservicio (Alcance)                             | Qué NO HACE este Microservicio (Límites)                                          |
 | :----------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
-| • Gestiona alertas de prendas agotadas (`ITEM_AGOTADO`) y búsquedas guardadas (`BUSQUEDA_GUARDADA`) validando stock contra `ms-item-catalogo`. | • NO autentica credenciales ni emite tokens iniciales (delegado a `ms-auth` en `:8081`). |
-| • Evalúa en memoria coincidencias entre eventos (`InventarioActualizado`, `PrendaPublicada`) y copias locales de búsquedas guardadas sin hacer SQL cruzado. | • NO gestiona transacciones monetarias ni pasarelas (delegado a `ms-pagos-suscripciones` en `:8090`). |
-| • Sincroniza copias locales de búsquedas guardadas y estados de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`) mediante eventos asíncronos. | • NO persiste conversaciones ni historial de mensajes STOMP (delegado a `ms-chat` en `:8089`). |
+| • Gestiona alertas de prendas agotadas (`ITEM_AGOTADO`) y búsquedas guardadas (`BUSQUEDA_GUARDADA`) validando stock contra `ms-item-catalogo`. | • NO autentica credenciales ni emite tokens iniciales (delegado a `ms-auth` en `:8100`). |
+| • Evalúa en memoria coincidencias entre eventos (`InventarioActualizado`, `PrendaPublicada`) y copias locales de búsquedas guardadas sin hacer SQL cruzado. | • NO gestiona transacciones monetarias ni pasarelas (delegado a `ms-pagos-suscripciones` en `:8400`). |
+| • Sincroniza copias locales de búsquedas guardadas y estados de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`) mediante eventos asíncronos. | • NO persiste conversaciones ni historial de mensajes STOMP (delegado a `ms-chat` en `:8320`). |
 | • Entrega notificaciones generalizadas (stock, mensajes, donaciones, moderación) y emite actualizaciones en tiempo real mediante Server-Sent Events (SSE). | • NO accede directamente a tablas ni bases de datos de otros microservicios (cero llaves foráneas externas). |
 | • Garantiza persistencia ACID e idempotencia mediante la restricción única `(alerta_id, item_id, ciclo_reposicion)` y desvío de fallos a Dead Letter Queue (`SR-RNF-15`). | • NO modifica el inventario ni el catálogo maestro de prendas. |
 
@@ -168,7 +165,7 @@ flowchart LR
     %% Adaptadores de Salida
     subgraph ADAPTERS_OUT["Infraestructura: Salida"]
         JPA_ADAPTER["Adaptadores JPA<br>PostgreSQL 16 (Flyway)"]
-        FEIGN_ADAPTER["CatalogoClientAdapter<br>OpenFeign (:8082)"]
+        FEIGN_ADAPTER["CatalogoClientAdapter<br>OpenFeign (:8220)"]
         AMQP_ADAPTER["RabbitMqEventPublisher<br>(Exchange Topic)"]
         SSE_ADAPTER["SseNotificationAdapter<br>(Campana Tiempo Real)"]
     end
@@ -321,17 +318,17 @@ src/main/java/edu/dosw/styleradar/notificaciones/
 La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encuentran desplegados y clasificados por entorno:
 
 > [!IMPORTANT]
-> **Alcance Exclusivo del Microservicio:** Esta documentación Swagger y especificación OpenAPI 3.0 pertenece **única y exclusivamente al Microservicio de Notificaciones y Alertas (`ms-notificaciones` / Puerto 8088)** del equipo **Guatoque Jiraguas (GJ)**. No contiene ni mezcla endpoints de otros microservicios del ecosistema (como autenticación, usuarios, tiendas o catálogo), garantizando el desacoplamiento estricto por servicio (Database-per-Service & API Isolation).
+> **Alcance Exclusivo del Microservicio:** Esta documentación Swagger y especificación OpenAPI 3.0 pertenece **única y exclusivamente al Microservicio de Notificaciones y Alertas (`ms-notificaciones` / Puerto 8300)** del equipo **Guatoque Jiraguas (GJ)**. No contiene ni mezcla endpoints de otros microservicios del ecosistema (como autenticación, usuarios, tiendas o catálogo), garantizando el desacoplamiento estricto por servicio (Database-per-Service & API Isolation).
 
 ### Matriz Oficial de Enlaces de Swagger para `ms-notificaciones`
 
 | Entorno | Estado | Propósito | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **Desarrollo Local / Docker (DEV)** | Activo | Ejecución local en máquina o Docker Compose | `http://localhost:8088` | [Swagger UI Local](http://localhost:8088/swagger-ui/index.html) | [`/actuator/health`](http://localhost:8088/actuator/health) |
-| **Calidad / Pruebas (QA)** | Configurado | Contenedor en Azure App Service QA | `https://styleradar-notificaciones-qa.azurewebsites.net` | [Swagger UI QA](https://styleradar-notificaciones-qa.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-notificaciones-qa.azurewebsites.net/actuator/health) |
-| **Producción (PROD)** | Configurado | Contenedor en Azure App Service PROD | `https://styleradar-notificaciones-prod.azurewebsites.net` | [Swagger UI PROD](https://styleradar-notificaciones-prod.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-notificaciones-prod.azurewebsites.net/actuator/health) |
+| **Desarrollo Local / Docker (DEV)** | Local | Entorno de desarrollo local en máquina | `http://localhost:8300` | [Swagger UI Local](http://localhost:8300/swagger-ui/index.html) | [`/actuator/health`](http://localhost:8300/actuator/health) |
+| **Producción (PROD)** | Pendiente (GJ-92) | Despliegue productivo de StyleRadar | `https://styleradar-backend-prod.azurewebsites.net` | [Swagger UI PROD](https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-backend-prod.azurewebsites.net/actuator/health) |
+| **Calidad / Pruebas (QA)** | Pendiente (GJ-92) | Pruebas integradas de Sprint y QA | `https://styleradar-backend-qa.azurewebsites.net` | [Swagger UI QA](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-backend-qa.azurewebsites.net/actuator/health) |
 
-* **Especificación OpenAPI (Contrato JSON Schema):** [`http://localhost:8088/v3/api-docs`](http://localhost:8088/v3/api-docs) (o `/v3/api-docs` en cada entorno).
+* **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8300/v3/api-docs` (o `/v3/api-docs` en los dominios de PROD y QA).
 
 
 <div align="center">
@@ -343,7 +340,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
           <strong><font color="#5600EF" size="3">DOCUMENTACIÓN SWAGGER OPENAPI UI ACTIVA</font></strong>
         </p>
         <p>
-          <sub>Pega aquí la captura de pantalla de la interfaz interactiva corriendo en <code>http://localhost:8088/swagger-ui/index.html</code> mostrando los endpoints del controlador.</sub>
+          <sub>Pega aquí la captura de pantalla de la interfaz interactiva corriendo en <code>http://localhost:8300/swagger-ui/index.html</code> mostrando los endpoints del controlador.</sub>
         </p>
         <p>
 <!-- Al generar tu captura, descomenta la siguiente línea y guarda la imagen en la ruta indicada: -->
@@ -378,7 +375,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 #### Ejemplo Request (`POST /api/v1/usuarios/me/alertas`)
 
 ```bash
-curl -X POST "http://localhost:8088/api/v1/usuarios/me/alertas" \
+curl -X POST "http://localhost:8300/api/v1/usuarios/me/alertas" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -d '{
@@ -459,12 +456,6 @@ La comunicación asíncrona entre microservicios se orquesta a través de **Rabb
 
 ## <img src="https://img.shields.io/badge/06-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 6. TECNOLOGÍAS Y DEPENDENCIAS
 
-
-
-> [!NOTE]
-> **Documento Oficial de Análisis y Justificación Tecnológica:** Para consultar el análisis comparativo formal de alternativas evaluadas y descartadas (PostgreSQL vs NoSQL, RabbitMQ vs Kafka, Java/Spring vs Node/Python, SSE vs WebSockets, JavaMailSender vs SDKs propietarios), visita:
-> **[docs/ANALISIS_DECISIONES_TECNOLOGICAS.md](docs/ANALISIS_DECISIONES_TECNOLOGICAS.md)**.
-
 El stack del microservicio cumple con el estándar unificado de arquitectura de StyleRadar:
 
 | Capa / Componente | Tecnología | Versión | Justificación Técnica |
@@ -481,6 +472,10 @@ El stack del microservicio cumple con el estándar unificado de arquitectura de 
 | **Métricas de Cobertura** | JaCoCo Plugin | `0.8.11` | Verificación estricta de cobertura mínima (`>= 85%`) como regla obligatoria en `mvn verify`. |
 
 ---
+
+> [!NOTE]
+> **Documento Oficial de Análisis y Justificación Tecnológica:** Para consultar el análisis comparativo formal de alternativas evaluadas y descartadas (PostgreSQL vs NoSQL, RabbitMQ vs Kafka, Java/Spring vs Node/Python, SSE vs WebSockets, JavaMailSender vs SDKs propietarios), visita:
+> **[docs/ANALISIS_DECISIONES_TECNOLOGICAS.md](docs/ANALISIS_DECISIONES_TECNOLOGICAS.md)**.
 
 <a id="7-cómo-ejecutar-local-y-con-docker"></a>
 
@@ -502,7 +497,7 @@ cd GJ-Notification-Service
 # 2. Levantar servicios de infraestructura en Docker (PostgreSQL, Redis, RabbitMQ)
 docker compose up -d notificaciones-db notificaciones-redis event-broker
 
-# 3. Ejecutar el microservicio localmente en el puerto 8088
+# 3. Ejecutar el microservicio localmente en el puerto 8300
 mvn clean spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
@@ -529,7 +524,7 @@ docker compose up --build -d
 ### Comprobación de Salud (Health Check)
 
 ```bash
-curl -s http://localhost:8088/actuator/health
+curl -s http://localhost:8300/actuator/health
 # Esperado: {"status":"UP"}
 ```
 
@@ -565,7 +560,7 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 
 | Variable | Descripción | Valor por Defecto (`dev`) | Requerido en Prod |
 | :--- | :--- | :--- | :---: |
-| `PORT` | Puerto de escucha HTTP del microservicio | `8088` | Sí |
+| `PORT` | Puerto de escucha HTTP del microservicio | `8300` | Sí |
 | `SPRING_PROFILES_ACTIVE` | Perfil de configuración Spring Boot activo | `dev` | Sí |
 | `DB_HOST` | Hostname o IP del servidor PostgreSQL | `localhost` | Sí |
 | `DB_PORT` | Puerto de conexión a PostgreSQL | `5432` | Sí |
@@ -576,8 +571,11 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 | `RABBITMQ_PORT` | Puerto AMQP de RabbitMQ | `5672` | Sí |
 | `RABBITMQ_USER` | Usuario de conexión a RabbitMQ | `guest` | Sí |
 | `RABBITMQ_PASSWORD` | Contraseña de conexión a RabbitMQ | `guest` | Sí |
+| `RABBITMQ_VHOST` | Virtual host del broker (solo perfil `prod`) | `/` | No |
+| `RABBITMQ_SSL_ENABLED` | Activa TLS hacia el broker; con TLS se usa el puerto `5671` (solo perfil `prod`) | `false` | No |
+| `RABBITMQ_SSL_VERIFY_HOSTNAME` | Verifica que el certificado del broker coincida con el host (solo perfil `prod`) | `true` | No |
 | `REDIS_HOST` | Hostname del servidor de caché Redis | `localhost` | No |
-| `CATALOG_SERVICE_URL` | URL base de `ms-item-catalogo` para OpenFeign | `http://localhost:8085` | Sí |
+| `CATALOG_SERVICE_URL` | URL base de `ms-item-catalogo` para OpenFeign | `http://localhost:8220` | Sí |
 | `JWT_SECRET` | Clave secreta HMAC-SHA256 (mínimo 256 bits) para validar JWT | `clave_secreta_minimo_256_bits...` | Sí |
 
 <details>
@@ -589,7 +587,7 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 # ==============================================================================
 # STYLERADAR · VARIABLES DE ENTORNO LOCALES (.env) - ms-notificaciones
 # ==============================================================================
-PORT=8088
+PORT=8300
 SPRING_PROFILES_ACTIVE=dev
 
 # Persistencia PostgreSQL
@@ -604,6 +602,9 @@ RABBITMQ_HOST=localhost
 RABBITMQ_PORT=5672
 RABBITMQ_USER=guest
 RABBITMQ_PASSWORD=guest
+RABBITMQ_VHOST=/
+RABBITMQ_SSL_ENABLED=false
+RABBITMQ_SSL_VERIFY_HOSTNAME=true
 RABBITMQ_EXCHANGE=styleradar.exchange
 RABBITMQ_DLX=styleradar.dlx
 
@@ -612,7 +613,7 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 
 # Cliente Feign Catálogo
-CATALOG_SERVICE_URL=http://localhost:8085
+CATALOG_SERVICE_URL=http://localhost:8220
 
 # Seguridad JWT
 JWT_SECRET=clave_secreta_minimo_256_bits_para_firmado_seguro_hs256_styleradar_2026
@@ -688,7 +689,7 @@ El ciclo de vida del software implementa integración continua y entrega continu
 | :--- | :--- | :--- | :--- | :---: |
 | **CI - Staging / QA** | Calidad (`QA`) | Pull Request o Push a rama `develop` | Build OK + Tests Unitarios/Integración + JaCoCo ≥ 85% + Docker Build | [![CI / QA Pipeline](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml/badge.svg?branch=develop)](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml) |
 | **CD - Producción (PROD)** | Producción (`PROD`) | Merge a rama `main` tras validación QA | Verificación completa + Imagen OCI lista para despliegue | [![CD / PROD Pipeline](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/cd-prod.yml/badge.svg?branch=main)](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/cd-prod.yml) |
-| **Quality Gate SonarQube** | Transversal | Ejecutado en cada build de CI | 0 Vulnerabilidades, 0 Bugs, Deuda Técnica &lt; 5% | [![Quality Gate](https://img.shields.io/badge/SonarQube-Quality_Gate_Passed-16A34A?style=for-the-badge&logo=sonarqube&logoColor=white)](https://sonarcloud.io/organizations/styleradar) |
+| **Análisis estático (SonarQube)** | Transversal | Pendiente de configurar en el CI | Meta: 0 Vulnerabilidades, 0 Bugs, Deuda Técnica &lt; 5% | Pendiente |
 
 ### Diagrama del Flujo Automatizado (Pipeline Stages)
 
@@ -696,9 +697,9 @@ El ciclo de vida del software implementa integración continua y entrega continu
 flowchart LR
     A["Push / PR<br>(GitHub)"] --> B["Build & Compile<br>(Maven Java 21)"]
     B --> C["Tests & JaCoCo<br>(Coverage ≥ 85%)"]
-    C --> D["Análisis SonarQube<br>(0 Vulnerabilities)"]
+    C --> D["Análisis estático<br>(pendiente)"]
     D --> E["Build Docker OCI<br>(Multi-stage Build)"]
-    E --> F["Deploy Cloud<br>(Azure App Service)"]
+    E --> F["Deploy Cloud<br>(pendiente, GJ-92)"]
 
     classDef step fill:#12063A,stroke:#5600EF,stroke-width:2px,color:#FFFFFF;
     classDef pass fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#0C0C12;
@@ -707,7 +708,7 @@ flowchart LR
     class C,D pass;
 ```
 
-### Reglas de Calidad en SonarQube (*Quality Gate Passed*)
+### Metas de calidad en SonarQube (pendiente de configurar)
 
 * **Bugs:** 0
 * **Vulnerabilidades:** 0
@@ -786,16 +787,19 @@ El seguimiento de requerimientos, evidencias y artefactos de entrega se centrali
 
 ### Enlaces de Gestión, Repositorios y Evidencias
 
-* **Épica Oficial del Microservicio (Jira):** [https://styleradar.atlassian.net/browse/NOT](https://styleradar.atlassian.net/browse/NOT)
-* **Tablero Scrum del Squad (Jira):** [https://styleradar.atlassian.net/jira/software/projects/SR/boards/1](https://styleradar.atlassian.net/jira/software/projects/SR/boards/1)
-* **Swagger UI Microservicio Notificaciones (:8088):** [http://localhost:8088/swagger-ui/index.html](http://localhost:8088/swagger-ui/index.html)
-* **Especificación OpenAPI 3.0 JSON Schema:** [http://localhost:8088/v3/api-docs](http://localhost:8088/v3/api-docs)
+* **Épica Oficial del Microservicio (Jira):** [GJ-2 · ms-notificaciones](https://mail-team-nyjtgqcj.atlassian.net/browse/GJ-2)
+* **Proyecto en Jira (GJ):** [https://mail-team-nyjtgqcj.atlassian.net/browse/GJ](https://mail-team-nyjtgqcj.atlassian.net/browse/GJ)
+* **API Swagger en Producción (PROD, pendiente de despliegue):** [https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html](https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html)
+* **API Swagger en Calidad (QA, pendiente de despliegue):** [https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html)
+* **Swagger UI Microservicio Notificaciones (:8300):** [http://localhost:8300/swagger-ui/index.html](http://localhost:8300/swagger-ui/index.html)
+* **Especificación OpenAPI 3.0 JSON Schema:** [http://localhost:8300/v3/api-docs](http://localhost:8300/v3/api-docs)
+* **Documento de Análisis y Justificación de Decisiones Tecnológicas:** [docs/ANALISIS_DECISIONES_TECNOLOGICAS.md](docs/ANALISIS_DECISIONES_TECNOLOGICAS.md)
+* **Contratos y Especificación de Eventos Asíncronos (NOT-21):** [docs/CONTRATOS_EVENTOS_NOT21.md](docs/CONTRATOS_EVENTOS_NOT21.md)
+* **Contrato de autenticación JWT (GJ-35):** [docs/CONTRATO_JWT_AUTENTICACION.md](docs/CONTRATO_JWT_AUTENTICACION.md)
 * **Colección de Pruebas Postman:** [postman/styleradar-notificaciones.postman_collection.json](postman/styleradar-notificaciones.postman_collection.json)
 * **Contratos de Eventos Asíncronos (NOT-21):** [docs/CONTRATOS_EVENTOS_NOT21.md](docs/CONTRATOS_EVENTOS_NOT21.md)
 * **Diagramas UML Oficiales en Draw.io:** [docs/uml/](docs/uml/)
-* **Documento de Análisis y Justificación de Decisiones Tecnológicas:** [docs/ANALISIS_DECISIONES_TECNOLOGICAS.md](docs/ANALISIS_DECISIONES_TECNOLOGICAS.md)
-* **Documentación Arquitectónica y Justificaciones (NOT-20):** [docs/DIAGRAMAS_NOT20.md](docs/DIAGRAMAS_NOT20.md)
-* **Contratos y Especificación de Eventos Asíncronos (NOT-21):** [docs/CONTRATOS_EVENTOS_NOT21.md](docs/CONTRATOS_EVENTOS_NOT21.md)
+* **Documentación Arquitectónica y Justificaciones (NOT-20):** [docs/DIAGRAMAS_NOT20.md](docs/DIAGRAMAS_NOT20.md)
 
 
 <div align="center">

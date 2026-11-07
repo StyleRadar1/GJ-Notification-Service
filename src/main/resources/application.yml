@@ -1,11 +1,18 @@
 server:
-  port: ${PORT:8088}
+  port: ${PORT:8300}
 
 spring:
   application:
     name: ms-notificaciones
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 2000
+            read-timeout: 3000
   jpa:
     open-in-view: false
     properties:
@@ -19,11 +26,16 @@ spring:
 application:
   security:
     jwt:
-      secret-key: ${JWT_SECRET:clave_secreta_minimo_256_bits_para_firmado_seguro_hs256_styleradar_2026}
+      secret-key: ${JWT_SECRET}
       expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   messaging:
     exchange: ${RABBITMQ_EXCHANGE:styleradar.exchange}
     dlx: ${RABBITMQ_DLX:styleradar.dlx}
+    retry:
+      max-attempts: 3
+      initial-interval-ms: 1000
+      multiplier: 2.0
+      max-interval-ms: 10000
     queues:
       inventory-updated: styleradar.notificaciones.inventario-actualizado.q
       garment-published: styleradar.notificaciones.prenda-publicada.q
@@ -32,6 +44,7 @@ application:
       message-sent: styleradar.notificaciones.mensaje-enviado.q
       donation-changed: styleradar.notificaciones.donacion-cambiada.q
       moderation-changed: styleradar.notificaciones.moderacion-cambiada.q
+      garment-deleted: styleradar.notificaciones.prenda-retirada.q
       dlq: styleradar.notificaciones.dlq
     routing-keys:
       inventory-updated: styleradar.inventario.actualizado
@@ -45,13 +58,13 @@ application:
       alert-created: styleradar.notificaciones.alerta.creada
       dlq: styleradar.notificaciones.error
   clients:
-    catalog-url: ${CATALOG_SERVICE_URL:http://localhost:8085}
+    catalog-url: ${CATALOG_SERVICE_URL:http://localhost:8220}
 
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
-    path: /swagger-ui/index.html
+    path: /swagger-ui
     operationsSorter: method
 
 management:

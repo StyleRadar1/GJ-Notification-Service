@@ -4,6 +4,7 @@ import edu.dosw.styleradar.notificaciones.domain.exception.AccesoDenegadoExcepti
 import edu.dosw.styleradar.notificaciones.domain.exception.ConflictoException;
 import edu.dosw.styleradar.notificaciones.domain.exception.RecursoNoEncontradoException;
 import edu.dosw.styleradar.notificaciones.domain.exception.ReglaDeNegocioException;
+import edu.dosw.styleradar.notificaciones.domain.exception.ServicioExternoNoDisponibleException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.time.Instant;
@@ -19,6 +20,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -72,6 +74,19 @@ public class GlobalExceptionHandler {
         return buildProblemDetail(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage(), request);
     }
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ProblemDetail> handleNoResource(
+            NoResourceFoundException ex,
+            HttpServletRequest request
+    ) {
+        return buildProblemDetail(
+                HttpStatus.NOT_FOUND,
+                "Recurso no encontrado",
+                "La ruta solicitada no existe",
+                request
+        );
+    }
+
     @ExceptionHandler(ConflictoException.class)
     public ResponseEntity<ProblemDetail> handleConflict(
             ConflictoException ex,
@@ -88,6 +103,19 @@ public class GlobalExceptionHandler {
         return buildProblemDetail(
                 HttpStatus.UNPROCESSABLE_ENTITY,
                 "Violacion de regla de negocio",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(ServicioExternoNoDisponibleException.class)
+    public ResponseEntity<ProblemDetail> handleExternalServiceUnavailable(
+            ServicioExternoNoDisponibleException ex,
+            HttpServletRequest request
+    ) {
+        return buildProblemDetail(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Servicio externo no disponible",
                 ex.getMessage(),
                 request
         );
