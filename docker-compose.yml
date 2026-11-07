@@ -72,6 +72,8 @@ services:
       REDIS_PORT: 6379
       CATALOG_SERVICE_URL: ${CATALOG_SERVICE_URL:-http://host.docker.internal:8220}
       JWT_SECRET: ${JWT_SECRET:-solo_desarrollo_local_no_usar_en_produccion_styleradar_2026}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       notificaciones-db:
         condition: service_healthy

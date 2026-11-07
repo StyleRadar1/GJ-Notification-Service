@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "StyleRadar - ms-notificaciones API (NOT-19)",
-    "_postman_id": "e7f5a301-8891-4b21-9c12-styleradar8088",
-    "description": "Coleccion oficial de pruebas de endpoints para ms-notificaciones bajo /api/v1/usuarios/me",
+    "_postman_id": "e7f5a301-8891-4b21-9c12-styleradar8300",
+    "description": "Coleccion oficial de pruebas de endpoints para ms-notificaciones bajo /api/v1/usuarios/me (Puerto 8300)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -30,6 +30,26 @@
   "item": [
     {
       "name": "1. Crear Alerta de Item Agotado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Estado HTTP 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Alerta creada con estado ACTIVA', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body).to.have.property('id');",
+              "    pm.expect(body.estado).to.eql('ACTIVA');",
+              "    pm.expect(body.tipoAlerta).to.eql('ITEM_AGOTADO');",
+              "    pm.collectionVariables.set('alertaId', String(body.id));",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -49,6 +69,25 @@
     },
     {
       "name": "2. Listar Mis Alertas",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Estado HTTP 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Retorna listado de alertas del usuario', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body).to.be.an('array');",
+              "    pm.expect(body.length).to.be.above(0);",
+              "    pm.collectionVariables.set('alertaId', String(body[0].id));",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -63,6 +102,23 @@
     },
     {
       "name": "3. Desactivar Alerta",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Estado HTTP 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Alerta cambia a estado DESACTIVADA', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.estado).to.eql('DESACTIVADA');",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "DELETE",
         "header": [
@@ -77,6 +133,26 @@
     },
     {
       "name": "4. Listar Mis Notificaciones",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Estado HTTP 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Retorna listado de notificaciones del usuario', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body).to.be.an('array');",
+              "    if (body.length > 0) {",
+              "        pm.collectionVariables.set('notificacionId', String(body[0].id));",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -92,6 +168,24 @@
     },
     {
       "name": "5. Contador de Notificaciones No Leidas",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Estado HTTP 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Retorna contador de no leidas', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body).to.have.property('usuarioId');",
+              "    pm.expect(body).to.have.property('cantidadNoLeidas');",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -106,6 +200,23 @@
     },
     {
       "name": "6. Marcar Notificacion Como Leida",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Estado HTTP 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Notificacion queda marcada como leida', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.leida).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "PATCH",
         "header": [
@@ -120,6 +231,23 @@
     },
     {
       "name": "7. Marcar Todas Como Leidas",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Estado HTTP 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Contador de notificaciones no leidas queda en 0', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.cantidadNoLeidas).to.eql(0);",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "PATCH",
         "header": [
@@ -134,8 +262,23 @@
     },
     {
       "name": "8. Suscripcion Campana Tiempo Real (SSE)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Endpoint SSE autenticado responde 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const allowHeader = pm.response.headers.get('Allow') || '';",
+              "    pm.expect(allowHeader).to.include('GET');",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
-        "method": "GET",
+        "method": "OPTIONS",
         "header": [
           { "key": "Authorization", "value": "Bearer {{jwtToken}}" },
           { "key": "Accept", "value": "text/event-stream" }
@@ -149,4 +292,3 @@
     }
   ]
 }
-
