@@ -112,6 +112,10 @@ public class ProcesarEventosExternosUseCaseImpl implements ProcesarEventosExtern
         );
 
         Notificacion guardada = notificacionRepositoryPort.guardar(nueva);
+        if (guardada.getId() == null) {
+            // El puerto devuelve la notificacion sin id cuando otra entrega ya registro este ciclo
+            return;
+        }
         realTimeNotificationPort.emitirNotificacionTiempoReal(guardada.getUsuarioId(), guardada);
         generadas.add(guardada);
     }

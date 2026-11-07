@@ -1,6 +1,6 @@
 services:
   notificaciones-db:
-    image: postgres:16-alpine
+    image: postgres:16.15-alpine
     container_name: styleradar-notificaciones-db
     environment:
       POSTGRES_DB: ${DB_NAME:-notificaciones_db}
@@ -19,7 +19,7 @@ services:
       - styleradar-net
 
   notificaciones-redis:
-    image: redis:7-alpine
+    image: redis:7.4.12-alpine
     container_name: styleradar-notificaciones-redis
     ports:
       - "${REDIS_PORT:-6379}:6379"
@@ -32,7 +32,7 @@ services:
       - styleradar-net
 
   event-broker:
-    image: rabbitmq:3.13-management-alpine
+    image: rabbitmq:3.13.7-management-alpine
     container_name: styleradar-event-broker
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
@@ -55,9 +55,9 @@ services:
     image: styleradar/ms-notificaciones:qa
     container_name: styleradar-ms-notificaciones
     ports:
-      - "${PORT:-8088}:8088"
+      - "${PORT:-8300}:8300"
     environment:
-      PORT: 8088
+      PORT: 8300
       SPRING_PROFILES_ACTIVE: dev
       DB_HOST: notificaciones-db
       DB_PORT: 5432
@@ -70,8 +70,10 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       REDIS_HOST: notificaciones-redis
       REDIS_PORT: 6379
-      CATALOG_SERVICE_URL: ${CATALOG_SERVICE_URL:-http://host.docker.internal:8085}
-      JWT_SECRET: ${JWT_SECRET:-clave_secreta_minimo_256_bits_para_firmado_seguro_hs256_styleradar_2026}
+      CATALOG_SERVICE_URL: ${DOCKER_CATALOG_SERVICE_URL:-http://host.docker.internal:8220}
+      JWT_SECRET: ${JWT_SECRET:-solo_desarrollo_local_no_usar_en_produccion_styleradar_2026}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       notificaciones-db:
         condition: service_healthy

@@ -17,3 +17,8 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASSWORD:guest}
+
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET:solo_desarrollo_local_no_usar_en_produccion_styleradar_2026}

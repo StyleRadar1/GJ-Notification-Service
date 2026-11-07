@@ -23,6 +23,7 @@ import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaPublicadaE
 import edu.dosw.styleradar.notificaciones.application.dto.event.UsuarioEstadoCambiadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.request.CrearAlertaRequest;
 import edu.dosw.styleradar.notificaciones.domain.event.AlertaCreadaDomainEvent;
+import edu.dosw.styleradar.notificaciones.domain.exception.ServicioExternoNoDisponibleException;
 import edu.dosw.styleradar.notificaciones.domain.model.BusquedaGuardadaCopia;
 import edu.dosw.styleradar.notificaciones.domain.model.CanalNotificacion;
 import edu.dosw.styleradar.notificaciones.domain.model.CriterioBusquedaVO;
@@ -334,11 +335,12 @@ class AlertaControllerAndInfrastructureTest {
         publisher.publicarAlertaCreada(evt);
         verify(mockRabbit).convertAndSend(any(), any(), any(AlertaCreadaDomainEvent.class));
 
-        // 4. CatalogoClientAdapter fallback cuando ms-item-catalogo lanza excepcion
+        // 4. CatalogoClientAdapter informa servicio no disponible cuando ms-item-catalogo falla (GJ-49)
         CatalogoFeignClient failingFeign = mock(CatalogoFeignClient.class);
         when(failingFeign.consultarDisponibilidad(any())).thenThrow(new RuntimeException("Connection refused"));
         CatalogoClientAdapter clientAdapter = new CatalogoClientAdapter(failingFeign);
-        assertThat(clientAdapter.verificarItemAgotado(1045L, "M")).isTrue();
+        assertThatThrownBy(() -> clientAdapter.verificarItemAgotado(1045L, "M"))
+                .isInstanceOf(ServicioExternoNoDisponibleException.class);
 
         // 5. Verificar beans de RabbitMqConfig
         assertThat(rabbitMqConfig.styleradarExchange()).isNotNull();

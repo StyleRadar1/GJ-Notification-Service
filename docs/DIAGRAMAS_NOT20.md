@@ -1,148 +1,211 @@
 # DOCUMENTACIÓN ARQUITECTÓNICA Y DIAGRAMAS UML — GJ-Notification-Service (NOT-20)
 
-- **Microservicio:** `GJ-Notification-Service` (`ms-notificaciones`, Puerto `8088`)
+- **Microservicio:** `GJ-Notification-Service` (`ms-notificaciones`, puerto `8300`)
 - **Equipo:** Guatoque Jiraguas (`GJ`)
-- **Bounded Context:** Notificaciones, Alertas de Disponibilidad y Tiempo Real (`SSE`)
-- **Ubicación de archivos fuente Draw.io:** [`docs/uml/`](./uml/)
+- **Bounded Context:** Notificaciones, alertas de disponibilidad y tiempo real (`SSE`)
+- **Archivos fuente editables (Draw.io):** [`docs/uml/`](./uml/)
+- **Imágenes exportadas:** [`docs/images/`](./images/)
 
-> **Regla de Oro de Ingeniería StyleRadar:** Todo diagrama arquitectónico está acompañado de su **Explicación Técnica** (qué representa y cómo fluye la información) y su **Justificación Arquitectónica** (por qué se tomaron esas decisiones de diseño frente a otras alternativas).
->
-> **Diagramas Oficiales Solicitados para el Microservicio:**
-> 1. **Diagrama de Componentes con Arquitectura Hexagonal:** [`docs/uml/diagrama-componentes-especifico.drawio`](./uml/diagrama-componentes-especifico.drawio)
-> 2. **Diagrama de Clases (Modelo de Dominio):** [`docs/uml/diagrama-clases.drawio`](./uml/diagrama-clases.drawio)
-> 3. **Diagrama de Base de Datos (Modelo Relacional / ER):** [`docs/uml/diagrama-base-datos.drawio`](./uml/diagrama-base-datos.drawio)
-> *(Diagramas complementarios de apoyo para el curso: Despliegue en `docs/uml/diagrama-despliegue.drawio` y Contexto C4 en `docs/uml/diagrama-contexto.drawio`)*
+> **Regla de oro de StyleRadar:** cada diagrama va acompañado de su explicación técnica (qué representa) y de su justificación arquitectónica (por qué se diseñó así). Un diagrama sin texto no se recibe.
+
+## Plantilla de estilo
+
+Todos los diagramas siguen la plantilla de diagramas de StyleRadar: fondo blanco, tipografía Poppins y la paleta del curso.
+
+| Color | Uso | Valor |
+| :--- | :--- | :---: |
+| Acento | Bordes, títulos y relaciones | `#47119A` |
+| Dominante | Notas y detalles | `#E8DDCA` |
+| Secundario | Texto y nodos de despliegue | `#262626` |
+| Apoyo | Broker y notas informativas | `#BAB9C9` |
+| Base | Fondo | `#FFFFFF` |
+
+Los valores se tomaron de la imagen de la propuesta de estilo. Si el curso publica los códigos oficiales, se reemplazan en los cinco archivos `.drawio`.
+
+Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archivo `.drawio`. Después de editarlos se exporta el PNG con el mismo nombre.
+
+| Diagrama | Fuente editable | Imagen |
+| :--- | :--- | :--- |
+| Contexto | [`diagrama-contexto.drawio`](./uml/diagrama-contexto.drawio) | [`diagrama-contexto.png`](./images/diagrama-contexto.png) |
+| Componentes específico | [`diagrama-componentes-especifico.drawio`](./uml/diagrama-componentes-especifico.drawio) | [`diagrama-componentes-especifico.png`](./images/diagrama-componentes-especifico.png) |
+| Clases | [`diagrama-clases.drawio`](./uml/diagrama-clases.drawio) | [`diagrama-clases.png`](./images/diagrama-clases.png) |
+| Base de datos | [`diagrama-base-datos.drawio`](./uml/diagrama-base-datos.drawio) | [`diagrama-base-datos.png`](./images/diagrama-base-datos.png) |
+| Despliegue | [`diagrama-despliegue.drawio`](./uml/diagrama-despliegue.drawio) | [`diagrama-despliegue.png`](./images/diagrama-despliegue.png) |
+| Secuencia 7.8 | [`diagrama-secuencia.drawio`](./uml/diagrama-secuencia.drawio) | [`diagrama-secuencia.png`](./images/diagrama-secuencia.png) |
 
 ---
 
-## 1. Diagrama de Contexto del Sistema (Nivel C4 - L1)
-
-- **Archivo versionado en Draw.io:** [`docs/uml/diagrama-contexto.drawio`](./uml/diagrama-contexto.drawio)
+## 1. Diagrama de contexto
 
 <p align="center">
-  <a href="./images/diagrama-contexto.png" target="_blank">
-    <img src="./images/diagrama-contexto.png" alt="Diagrama de Contexto del Sistema" width="95%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
-  </a>
+  <img src="./images/diagrama-contexto.png" alt="Diagrama de contexto de GJ-Notification-Service" width="95%" />
 </p>
 
-### 1.1. Explicación Técnica
-El Diagrama de Contexto delimita la frontera del microservicio **`GJ-Notification-Service` (`:8088`)** dentro del ecosistema distribuido de StyleRadar e identifica los actores y sistemas externos con los que intercambia información:
-1. **Usuario Comprador / Donatario y API Gateway (`sr-api-gateway :8080`):** El usuario autenticado interactúa desde la SPA de StyleRadar a través del API Gateway mediante peticiones HTTPS REST (`/api/v1/usuarios/me/alertas` y `/api/v1/usuarios/me/notificaciones`) portando su token Bearer JWT, y mantiene una conexión abierta **Server-Sent Events (`SSE`)** en `/api/v1/usuarios/me/notificaciones/stream` para recibir notificaciones en la campana sin recargar la página.
-2. **Microservicio de Catálogo e Inventario (`ms-item-catalogo :8082`):** Interactúa de forma dual:
-   - **Síncrona (OpenFeign REST):** Al crear una alerta por ítem específico (`NOT-10`), `GJ-Notification-Service` consulta a Catálogo para verificar que la prenda esté realmente agotada (`stockTotal == 0`).
-   - **Asíncrona (RabbitMQ AMQP):** Catálogo publica los eventos `InventarioActualizado`, `PrendaPublicada` y `ModeracionPrendaCambiada`, los cuales son consumidos por `GJ-Notification-Service`.
-3. **Microservicio de Identidad y Búsquedas (`ms-identidad :8081`):** Publica en RabbitMQ los eventos `UsuarioEstadoCambiado` y `BusquedaGuardadaSincronizada` para mantener actualizadas las copias locales en la base de datos de notificaciones (`NOT-08`, `NOT-09`).
-4. **Microservicios de Mensajes y Donaciones (`ms-mensajes`, `ms-donaciones`):** Publican los eventos `MensajeEnviado` y `DonacionEstadoCambiado` (`NOT-14`) para generar notificaciones transaccionales con enlace directo.
-5. **Microservicio de Estadísticas (`ms-estadisticas`):** Consume el evento de dominio `AlertaCreada` (`routingKey: alerta.creada`) publicado por `GJ-Notification-Service` cada vez que un usuario registra una nueva alerta (`NOT-16`).
-6. **Base de Datos Propia (`PostgreSQL 16 — notificaciones_db`):** Almacena de forma aislada las alertas, notificaciones y copias locales sin compartir tablas con ningún otro microservicio.
+### 1.1. Explicación técnica
 
-### 1.2. Justificación Arquitectónica
-- **Desacoplamiento por Eventos (Event-Driven Architecture) frente a Polling SQL:** En el monolito original, un `DetectorDisponibilidad` ejecutaba consultas periódicas sobre las tablas de inventario. Al extraer el microservicio, ese acoplamiento violaría el principio *Database-per-Service*. Reemplazar el detector por suscripción asíncrona a eventos AMQP en RabbitMQ elimina el acoplamiento temporal y de base de datos, reduciendo la latencia de notificación a milisegundos.
-- **Validación Síncrona Puntual con OpenFeign (`NOT-10`):** Se utiliza comunicación síncrona únicamente en el comando `POST /alertas` porque el usuario necesita una respuesta inmediata (`201 Created` o `409 Conflict`) que confirme si el ítem está agotado antes de registrar la alerta.
+El diagrama muestra la frontera de `ms-notificaciones` (puerto `8300`) y los sistemas con los que se comunica.
+
+1. **Frontend y API Gateway (`api-gateway`, `:8080`):** el usuario llega por HTTPS a través del gateway. Las rutas REST de `/api/v1/usuarios/me` y la suscripción SSE de la campana exigen un JWT Bearer.
+2. **Broker de eventos (RabbitMQ, `:5672`):** el servicio consume 8 colas durables sobre el exchange `styleradar.exchange`:
+   - `ms-inventario` (`:8200`) publica `InventarioActualizado`.
+   - `ms-usuarios` (`:8120`) publica el estado de cuenta y las búsquedas guardadas.
+   - `ms-chat` (`:8320`) publica `MensajeEnviado`.
+   - `ms-segunda-vida-donaciones` (`:8520`) publica `DonacionEstadoCambiado`.
+   - `ms-item-catalogo` (`:8220`) publica prenda publicada, prenda retirada y cambios de moderación.
+3. **Publicación de `AlertaCreada`:** cada alerta nueva se publica en el broker y la consume `ms-estadisticas` (`:8420`).
+4. **Catálogo por OpenFeign:** al crear una alerta sobre una prenda, el servicio consulta la disponibilidad en `ms-item-catalogo`. Si Catálogo no responde, el cliente recibe `503` y no se crea la alerta.
+5. **Autenticación (`ms-auth`, `:8100`):** emite el JWT. `ms-notificaciones` no lo consulta: valida la firma HS256 con la clave compartida.
+6. **Base de datos propia:** `notificaciones_db` (PostgreSQL 16, `:5432`), sin tablas compartidas con otros servicios.
+7. **Redis:** está en `docker-compose`, pero el servicio todavía no lo usa.
+
+### 1.2. Justificación arquitectónica
+
+- **Eventos en vez de consultas a otras bases de datos:** el monolito original detectaba reposiciones consultando tablas de inventario. En microservicios eso viola *Database-per-Service*. Consumir eventos elimina ese acoplamiento y reacciona al cambio en cuanto ocurre.
+- **Una sola llamada síncrona:** solo la creación de una alerta necesita una respuesta inmediata sobre el stock, por eso es la única comunicación HTTP hacia otro servicio.
+- **Validación local del token:** evita una llamada a `ms-auth` en cada petición y mantiene el servicio disponible aunque autenticación esté caída.
 
 ---
 
-## 2. Diagrama de Componentes Específico (Arquitectura Hexagonal)
-
-- **Archivo versionado en Draw.io:** [`docs/uml/diagrama-componentes-especifico.drawio`](./uml/diagrama-componentes-especifico.drawio)
+## 2. Diagrama de componentes específico (arquitectura hexagonal)
 
 <p align="center">
-  <a href="./images/diagrama-componentes-especifico.png" target="_blank">
-    <img src="./images/diagrama-componentes-especifico.png" alt="Diagrama de Componentes Hexagonal" width="95%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
-  </a>
+  <img src="./images/diagrama-componentes-especifico.png" alt="Diagrama de componentes hexagonal de ms-notificaciones" width="95%" />
 </p>
 
-### 2.1. Explicación Técnica
-Representa la estructura interna de **`GJ-Notification-Service`** siguiendo estrictamente el patrón **Arquitectura Hexagonal (Puertos y Adaptadores)** dividido en tres anillos concéntricos con inversión de dependencias hacia el núcleo:
-1. **Adaptadores de Entrada (`infrastructure.adapter.in` — Driving Adapters):**
-   - `AlertaController` (que implementa la interfaz documentada `AlertaApi` de OpenAPI/Swagger) recibe las solicitudes HTTP bajo `/api/v1/usuarios/me`.
-   - `JwtAuthenticationFilter` y `SecurityConfig` interceptan cada petición stateless, validan la firma HMAC-SHA256 del JWT y extraen el `usuarioId` autenticado (`NOT-22`).
-   - `NotificacionesEventsListener` escucha la cola durable `styleradar.notificaciones.queue` en RabbitMQ y delega la carga útil de cada evento al puerto de entrada correspondiente.
-2. **Capa de Aplicación y Puertos de Entrada (`domain.port.in`, `application.usecase`, `application.service`):**
-   - Los controladores y listeners solo conocen las **interfaces de los casos de uso** (`CrearAlertaUseCase`, `ListarAlertasUseCase`, `DesactivarAlertaUseCase`, `ListarNotificacionesUseCase`, `MarcarNotificacionLeidaUseCase`, `ProcesarEventosExternosUseCase`).
-   - Las implementaciones `*UseCaseImpl` y la capa `application/service` (`AlertaApplicationService` + `AlertaApplicationServiceImpl`, `NotificacionApplicationService` + `NotificacionApplicationServiceImpl`) coordinan el flujo transaccional, transforman DTOs inmutables (`record`) con **MapStruct** (`AlertaDtoMapper`, `NotificacionDtoMapper`) e invocan las reglas del dominio.
-3. **Núcleo de Dominio Puro (`domain.model`, `domain.validator`, `domain.event`):**
-   - Contiene las entidades puras (`Alerta`, `Notificacion`, `BusquedaGuardadaCopia`, `EstadoCuentaCopia`), objetos de valor (`CriterioBusquedaVO`, `DatosPrendaVO`), `AlertaValidator` y `EvaluadorCriteriosMatcher`, escritos en Java 21 puro sin una sola dependencia de Spring ni JPA.
-4. **Puertos de Salida (`domain.port.out`) y Adaptadores de Salida (`infrastructure.adapter.out` — Driven Adapters):**
-   - `AlertaRepositoryAdapter`, `NotificacionRepositoryAdapter`, `BusquedaGuardadaCopiaRepositoryAdapter` y `EstadoCuentaCopiaRepositoryAdapter` implementan los puertos de persistencia usando Spring Data JPA sobre PostgreSQL.
-   - `CatalogoClientAdapter` implementa `CatalogoClientPort` mediante `CatalogoFeignClient`.
-   - `RabbitMqEventPublisherAdapter` implementa `EventPublisherPort` publicando `AlertaCreadaDomainEvent`.
-   - `SseRealTimeNotificationAdapter` implementa `RealTimeNotificationPort` gestionando los `SseEmitter` activos por usuario.
+### 2.1. Explicación técnica
 
-### 2.2. Justificación Arquitectónica
-- **Aislamiento del Dominio y Testabilidad (> 85 % JaCoCo):** Al mantener `domain` libre de frameworks y exigir siempre el par `Interfaz + Implementación` tanto en casos de uso como en servicios de aplicación, las reglas críticas de negocio (`AlertaValidator` y `EvaluadorCriteriosMatcher`) se prueban unitariamente en milisegundos sin levantar el contexto de Spring ni bases de datos, y cualquier tecnología externa (PostgreSQL, RabbitMQ, Feign o SSE) puede sustituirse cambiando únicamente su adaptador en `infrastructure`.
+El servicio se organiza en puertos y adaptadores, con las dependencias apuntando hacia el dominio.
+
+1. **Adaptadores de entrada (`infrastructure/adapter/in`):**
+   - `AlertaController` implementa `AlertaApi` (documentación Swagger) y expone 9 endpoints, incluida la suscripción SSE.
+   - `NotificacionesEventsListener` consume las 8 colas. Un payload inválido va directo a la cola de errores; un fallo transitorio se reintenta 3 veces antes de llegar a ella (`RabbitRetryConfig`).
+   - `JwtAuthenticationFilter` y `SecurityConfig` validan el JWT sin estado. Solo `/actuator/health` y la documentación Swagger son públicos.
+   - `GlobalExceptionHandler` responde con `ProblemDetail` (RFC 7807).
+2. **Aplicación (`application`):** los seis puertos de entrada (`domain/port/in`) son interfaces de casos de uso. Cada una tiene su implementación `*UseCaseImpl`, que delega en `AlertaApplicationService` y `NotificacionApplicationService` (también interfaz más implementación). Los DTO son `records` y el mapeo usa MapStruct.
+3. **Dominio (`domain`):** modelos, objetos de valor, reglas (`AlertaValidator`, `EvaluadorCriteriosMatcher`), evento y excepciones, sin Spring, JPA ni Lombok. Los puertos de salida son interfaces del dominio.
+4. **Adaptadores de salida (`infrastructure/adapter/out`):** implementan los puertos de salida: JPA sobre PostgreSQL, cliente OpenFeign de Catálogo, publicador de `AlertaCreada` y `SseEmitter` por usuario.
+
+### 2.2. Justificación arquitectónica
+
+- **Dominio aislado:** las reglas críticas se prueban sin levantar Spring ni una base de datos.
+- **Tecnologías intercambiables:** cambiar PostgreSQL, RabbitMQ o el cliente de Catálogo implica cambiar solo su adaptador.
+- **Interfaz más implementación:** casos de uso y servicios siempre tienen interfaz, como exige la estructura votada por el curso.
+
+### 2.3. Deuda arquitectónica conocida
+
+- Los mapeadores de persistencia (`application/mapper/out`) importan entidades JPA de `infrastructure`. Deben moverse a `adapter/out/persistence`.
+- `AlertaController` usa directamente `SseRealTimeNotificationAdapter` y `SecurityContextUserExtractor`. Deben exponerse mediante puertos.
 
 ---
 
-## 3. Diagrama de Clases (Modelos de Dominio y Patrones)
-
-- **Archivo versionado en Draw.io:** [`docs/uml/diagrama-clases.drawio`](./uml/diagrama-clases.drawio)
+## 3. Diagrama de clases
 
 <p align="center">
-  <a href="./images/diagrama-clases.png" target="_blank">
-    <img src="./images/diagrama-clases.png" alt="Diagrama de Clases - Modelo de Dominio" width="95%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
-  </a>
+  <img src="./images/diagrama-clases.png" alt="Diagrama de clases del dominio de ms-notificaciones" width="95%" />
 </p>
 
-### 3.1. Explicación Técnica
-Modela las clases del dominio de notificaciones, sus objetos de valor, enumeraciones y los tres patrones de diseño aplicados en el servicio:
-1. **Entidades de Dominio (`Alerta`, `Notificacion`, `BusquedaGuardadaCopia`, `EstadoCuentaCopia`, `AlertaCreadaDomainEvent`):**
-   - Reemplazan las referencias a entidades JPA del monolito (`Usuario`, `ItemCatalogo`, `BusquedaGuardada`) por **identificadores `UUID` inmutables** (`usuarioId`, `itemId`, `busquedaGuardadaId`) (`NOT-02`).
-   - `Notificacion` está generalizada (`NOT-12`) con `alertaId` opcional (`nullable`), `enlace` de navegación, bandera `leida` y soporte para los 5 tipos de `TipoNotificacion` (`STOCK_REPUESTO`, `COINCIDENCIA_BUSQUEDA`, `MENSAJE_NUEVO`, `DONACION_ESTADO`, `MODERACION_PRENDA`).
-2. **Value Objects y Enumeraciones (`CriterioBusquedaVO`, `DatosPrendaVO`, `EstadoAlerta`, `TipoAlerta`, `CanalNotificacion`, `TipoNotificacion`, `EstadoCuenta`):**
-   - Encapsulan los criterios de filtrado y los atributos del evento de prenda para evaluarlos en memoria sin tocar la base de datos de Catálogo (`NOT-07`).
-3. **Patrones Aplicados en el Dominio y Aplicación:**
-   - **Cadena de Validaciones y Evaluación en Memoria (`AlertaValidator` + `EvaluadorCriteriosMatcher`):** Valida el origen exclusivo de la alerta (`ITEM_ESPECIFICO` XOR `BUSQUEDA_GUARDADA`), verifica stock cero (`NOT-10`), evalúa coincidencias de categoría, talla, color, marca, precio máximo, condición y donación en memoria (`NOT-07`), y comprueba que la cuenta del usuario esté `ACTIVA` (`NOT-09`).
-   - **Patrón Strategy / Puertos de Procesamiento (`ProcesarEventosExternosUseCase` + `Impl`):** Desacopla la estrategia de reacción ante cada tipo de evento de dominio recibido desde RabbitMQ.
-   - **Patrón Factory Method (`crearNueva`, `crearPorStockRepuesto`, `crearPorCoincidenciaBusqueda`, `crearGeneral`, `reconstituir`):** Garantiza que ninguna instancia de `Alerta` o `Notificacion` pueda crearse en un estado inválido.
+### 3.1. Explicación técnica
 
-### 3.2. Justificación Arquitectónica
-- **Referencias por `UUID` en lugar de Entidades Externas (`NOT-02`):** En una arquitectura de microservicios, importar entidades de `ms-identidad` o `ms-item-catalogo` acoplaría los modelos de dominio. Usar `UUID` junto con los Value Objects `CriterioBusquedaVO` y `DatosPrendaVO` preserva la autonomía total del Bounded Context de Notificaciones.
-- **Factory Methods Estáticos Semánticos:** A diferencia de constructores públicos genéricos, métodos como `Notificacion.crearPorStockRepuesto(...)` y `Notificacion.crearGeneral(...)` documentan explícitamente la intención de negocio y asignan automáticamente el tipo, estado inicial (`leida = false`) y marca de tiempo.
+1. **Entidades:** `Notificacion`, `Alerta`, `BusquedaGuardadaCopia` y `EstadoCuentaCopia`. Los identificadores de usuario, ítem y búsqueda son `Long` y apuntan a otros servicios, por lo que no hay referencias a sus clases.
+2. **Relaciones por id:** `Notificacion` referencia a `Alerta` por `alertaId`, y `Alerta` referencia a `BusquedaGuardadaCopia` por `busquedaGuardadaId`. Son relaciones lógicas, no objetos enlazados.
+3. **Objetos de valor:** `CriterioBusquedaVO` (composición de la búsqueda guardada) y `DatosPrendaVO` (datos del evento de prenda).
+4. **Enumeraciones:** `TipoNotificacion`, `CanalNotificacion`, `TipoAlerta`, `EstadoAlerta` y `EstadoCuenta`.
+5. **Reglas:** `AlertaValidator` valida la creación, la propiedad y los duplicados de una alerta. `EvaluadorCriteriosMatcher` compara una búsqueda guardada o una alerta contra los datos de un evento, en memoria.
+6. **Evento de dominio:** `AlertaCreadaDomainEvent`, que el servicio publica al registrar una alerta.
+
+### 3.2. Justificación arquitectónica
+
+- **Referencias por id:** importar clases de otros servicios acoplaría los modelos de dominio. Con ids y objetos de valor, el contexto de notificaciones es autónomo.
+- **Evaluación en memoria:** comparar criterios contra el evento evita consultar el catálogo cada vez que llega un cambio de stock.
+- **Cambios de estado en el dominio:** los cambios pasan por métodos como `desactivar()` y `marcarComoLeida()`, no por asignación directa de campos.
 
 ---
 
-## 4. Diagrama de Base de Datos (Metamodelo Conceptual y Físico)
-
-- **Archivo versionado en Draw.io:** [`docs/uml/diagrama-base-datos.drawio`](./uml/diagrama-base-datos.drawio)
+## 4. Diagrama de base de datos
 
 <p align="center">
-  <a href="./images/diagrama-base-datos.png" target="_blank">
-    <img src="./images/diagrama-base-datos.png" alt="Diagrama de Base de Datos - Modelo Relacional" width="95%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
-  </a>
+  <img src="./images/diagrama-base-datos.png" alt="Diagrama de base de datos de notificaciones_db" width="95%" />
 </p>
 
-### 4.1. Explicación Técnica
-Representa el metamodelo de persistencia relacional en **PostgreSQL 16 (`notificaciones_db`)** gestionado mediante migraciones **Flyway (`V1__init_schema.sql` y `V2__add_indexes.sql`)**:
-1. **Capa Conceptual (4 Entidades + 2 Bloques Embebidos de Reglas):**
-   - `EstadoCuentaCopia` (`/usuario`), `BusquedaGuardadaCopia` (`/busqueda` con composición `1` hacia `CriterioBusqueda`), `Alerta` (`/alerta`) y `Notificacion` (con composición `1` hacia `CicloReposicionSnapshot`).
-2. **Capa Física SQL (`SQL Table`):**
-   - `estado_cuenta_copia`: Réplica local ligera del estado del usuario (`ACTIVA`, `INACTIVA`, `SUSPENDIDA`, `ELIMINADA`) actualizada por el evento `UsuarioEstadoCambiado`.
-   - `busquedas_guardadas_copia`: Réplica local de los filtros de búsqueda guardada del usuario actualizada por `BusquedaGuardadaSincronizada`.
-   - `alertas`: Tabla maestra de suscripciones de disponibilidad con control de `ciclo_reposicion_actual`.
-   - `notificaciones`: Tabla histórica y de bandeja de entrada con la restricción única compuesta `CONSTRAINT uk_notificacion_alerta_item_ciclo UNIQUE (alerta_id, item_id, ciclo_reposicion)`.
+### 4.1. Explicación técnica
 
-### 4.2. Justificación Arquitectónica
-- **Ausencia Deliberada de Llaves Foráneas Externas (`NOT-04`):** Ninguna tabla tiene `FOREIGN KEY` hacia `usuarios` ni `items`, ya que esas tablas residen en servidores de base de datos independientes (`ms-identidad` y `ms-item-catalogo`). Para evitar llamadas HTTP en bucle cada vez que llega un evento de stock, se mantienen las copias locales `busquedas_guardadas_copia` y `estado_cuenta_copia` sincronizadas por eventos (CQRS / Event-Carried State Transfer).
-- **Idempotencia en Base de Datos mediante Restricción Única (`NOT-04`, `NOT-11`):** Como RabbitMQ garantiza entrega *At-Least-Once* (un mismo evento `InventarioActualizado` puede llegar duplicado por reintentos de red), la restricción única `(alerta_id, item_id, ciclo_reposicion)` impide físicamente que se dupliquen notificaciones para el mismo ciclo de reposición.
+El esquema relacional de `notificaciones_db` (PostgreSQL 16) lo gestionan las migraciones Flyway `V1__init_schema.sql` y `V2__add_indexes.sql`. Hibernate solo lo valida (`ddl-auto: validate`).
+
+| Tabla | Propósito |
+| :--- | :--- |
+| `alertas` | Alertas por prenda agotada o por búsqueda guardada, con su estado. |
+| `notificaciones` | Bandeja de cada usuario, con estado de lectura y ciclo de reposición. |
+| `busquedas_guardadas_copia` | Copia local de las búsquedas guardadas, actualizada por eventos. |
+| `estados_cuenta_copia` | Copia local del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`). |
+
+La restricción `uk_notificacion_alerta_item_ciclo` impide más de una notificación por alerta, ítem y ciclo de reposición.
+
+### 4.2. Justificación arquitectónica
+
+- **Sin llaves foráneas:** usuarios e ítems pertenecen a otros servicios y no se pueden referenciar entre bases de datos. Las relaciones del diagrama son lógicas.
+- **Copias locales por evento:** evitan llamadas HTTP cada vez que llega un evento y permiten evaluar en memoria.
+- **Idempotencia en la base de datos:** RabbitMQ entrega al menos una vez; la restricción única impide el duplicado aunque dos entregas lleguen a la vez. La que pierde se descarta sin generar notificación.
+- **Columnas tipadas:** los criterios de búsqueda se guardan en columnas propias, no en JSONB.
+
+### 4.3. Planificado
+
+La tabla de preferencias de canal y el envío por correo (GJ-64) aún no existen; se añadirán con una nueva migración.
 
 ---
 
-## 5. Diagrama de Despliegue (CI/CD, Docker Hub y Ambientes Azure QA/PROD)
+## 5. Diagrama de despliegue
 
-- **Archivo versionado en Draw.io:** [`docs/uml/diagrama-despliegue.drawio`](./uml/diagrama-despliegue.drawio)
+<p align="center">
+  <img src="./images/diagrama-despliegue.png" alt="Diagrama de despliegue de GJ-Notification-Service" width="95%" />
+</p>
 
-### 5.1. Explicación Técnica
-Describe la topología física de ejecución y el flujo automatizado de integración y entrega continua (`NOT-18`):
-1. **Flujo CI/CD (`Dispositivo Desarrollador` -> `GitHub` -> `GitHub Actions Runner`):**
-   - El desarrollador sube cambios con `git push` al repositorio `GJ-Notification-Service`.
-   - El runner ejecuta `ci-qa.yml` y `cd-prod.yml` (`mvn clean verify`, validación de cobertura JaCoCo >= 85 % y análisis SonarQube).
-   - Construye la imagen Docker multi-stage (`eclipse-temurin:21-jre-alpine`, usuario sin privilegios `spring:spring`) y la publica en **Docker Hub Registry** (`styleradar/ms-notificaciones:qa` y `:latest`).
-2. **Ambientes `Microsoft Azure — Ambiente QA` y `Microsoft Azure — Ambiente PROD`:**
-   - **Azure App Service** descarga la imagen desde Docker Hub y ejecuta el contenedor en el **puerto oficial `8088`**.
-   - El contenedor se comunica por **JDBC (`:5432`)** con **Azure Database for PostgreSQL 16 (`notificaciones_db`)**, por **AMQP/AMQPS (`:5672` / `:5671`)** con **RabbitMQ 3.13** (incluyendo la cola principal y la Dead Letter Queue `.dlq`), y por **OpenFeign REST/HTTPS (`:8082`)** con `ms-item-catalogo`.
-   - Los clientes externos y el API Gateway consumen el servicio por `HTTPS (443 -> 8088)` tanto para llamadas REST como para el flujo continuo `SSE`.
+### 5.1. Explicación técnica
 
-### 5.2. Justificación Arquitectónica
-- **Imagen OCI Multi-Stage Inmutable:** Compilar con Maven en una primera etapa (`jdk-alpine`) y copiar únicamente el `app.jar` a una segunda etapa (`jre-alpine`) reduce la superficie de ataque y disminuye el tamaño de la imagen en más de un 60 %, acelerando el `docker pull` en Azure App Service.
-- **Separación Estricta de Entornos QA y PROD:** Permite validar las colecciones automatizadas de Postman (`NOT-19`) y los contratos de eventos en QA antes de promover la misma imagen inmutable a Producción con conexiones cifradas TLS (`JDBC TLS` y `AMQPS`).
+El diagrama distingue lo que existe hoy de lo planificado (borde punteado).
+
+**Existe hoy**
+1. **Equipo del desarrollador:** `docker compose` levanta `ms-notificaciones` (`:8300`), PostgreSQL 16, RabbitMQ 3.13.7 y Redis 7.
+2. **GitHub:** repositorio con las ramas `main`, `develop` y `feature/scaffolding`. Los líderes aprueban los pull requests.
+3. **GitHub Actions:** `ci-qa.yml` ejecuta `mvn verify` con JaCoCo de al menos 85 % y comprueba el arranque con `docker compose`. `cd-prod.yml` ejecuta `mvn verify` y construye la imagen.
+
+**Planificado**
+4. **Docker Hub (GJ-92):** publicación de la imagen `styleradar/ms-notificaciones`.
+5. **Azure App Service QA (GJ-92):** el contenedor en el puerto `8300`, con PostgreSQL de Azure por JDBC sobre TLS.
+6. **VM del broker (GJ-91):** RabbitMQ 3.13.7 con TLS y persistencia, administrado por Oscar. El servicio se conecta con AMQP sobre TLS.
+
+### 5.2. Justificación arquitectónica
+
+- **Imagen multi-etapa:** compila con Maven en una etapa y copia solo el JAR a una imagen de ejecución mínima, con usuario sin privilegios.
+- **Un broker compartido en la nube:** lo definió el profesor como infraestructura compartida, sin repositorio propio.
+- **Credenciales fuera del repositorio:** solo se versiona `.env.example`; cada entorno recibe sus secretos por variables.
+
+---
+
+## 6. Diagrama de secuencia 7.8 (eventos)
+
+<p align="center">
+  <img src="./images/diagrama-secuencia.png" alt="Diagrama de secuencia 7.8 con los eventos de ms-notificaciones" width="95%" />
+</p>
+
+### 6.1. Explicación técnica
+
+El diagrama muestra los dos recorridos principales del servicio.
+
+**Fase 1: crear una alerta (síncrono)**
+1. El frontend envía `POST /api/v1/usuarios/me/alertas` con el JWT al `AlertaController`.
+2. El caso de uso consulta a `ms-item-catalogo` por OpenFeign que el ítem esté agotado. Si Catálogo no responde, la respuesta es `503` y no se crea la alerta.
+3. Se guarda la alerta en PostgreSQL, se publica `AlertaCreada` en el broker (la consume `ms-estadisticas`) y el cliente recibe `201 Created`.
+
+**Fase 2: reposición de stock y notificación (asíncrono)**
+1. `ms-inventario` publica `InventarioActualizado` en RabbitMQ y el broker lo entrega a `NotificacionesEventsListener`.
+2. El listener valida el payload y que sea una reposición (stock de cero a mayor que cero). Un payload inválido va a la cola de errores; un fallo transitorio se reintenta 3 veces.
+3. El caso de uso busca las alertas activas, guarda la notificación y, si la restricción única detecta un duplicado, lo descarta sin fallar.
+4. Por último empuja la notificación por SSE a la campana del usuario conectado.
+
+El mismo mecanismo atiende los demás eventos: prenda publicada, estado de cuenta, búsqueda guardada, mensaje, donación, moderación y prenda retirada.
+
+### 6.2. Justificación arquitectónica
+
+- **Una llamada síncrona y el resto por eventos:** solo crear la alerta necesita una respuesta inmediata; la reposición se procesa sin acoplar a Inventario con Notificaciones.
+- **Reintentos y cola de errores:** un fallo transitorio no pierde el evento y un mensaje inválido no bloquea la cola.
+- **Idempotencia:** como el broker puede entregar un evento más de una vez, la restricción única de la base de datos evita notificaciones repetidas.
