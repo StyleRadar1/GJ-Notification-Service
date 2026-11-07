@@ -158,6 +158,43 @@ public interface AlertaApi {
             @Parameter(description = "ID de la alerta a desactivar", example = "501") Long alertaId
     );
 
+    @Operation(summary = "Desactivar alerta (Ruta alternativa PATCH)", description = "Desactiva una alerta existente perteneciente al usuario autenticado mediante metodo PATCH")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Alerta desactivada exitosamente",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AlertaResponse.class),
+                            examples = @ExampleObject(
+                                    name = "AlertaDesactivadaPatch",
+                                    value = "{\"id\":501,\"usuarioId\":101,\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":1045,\"tallaObjetivo\":\"M\",\"busquedaGuardadaId\":null,\"canal\":\"IN_APP\",\"estado\":\"INACTIVA\",\"fechaCreacion\":\"2026-11-02T10:15:30\",\"fechaActualizacion\":\"2026-11-02T12:00:00\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Intento de desactivar alerta de otro usuario",
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ProblemDetail.class),
+                            examples = @ExampleObject(value = "{\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tiene permisos para modificar esta alerta\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Alerta no encontrada",
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ProblemDetail.class),
+                            examples = @ExampleObject(value = "{\"title\":\"Recurso no encontrado\",\"status\":404,\"detail\":\"No se encontro la alerta con ID: 999\"}")
+                    )
+            )
+    })
+    ResponseEntity<AlertaResponse> desactivarAlertaPatch(
+            @Parameter(description = "ID de la alerta a desactivar", example = "501") Long alertaId
+    );
+
     @Operation(summary = "Listar mis notificaciones", description = "Retorna las notificaciones del usuario autenticado con filtro opcional de no leidas")
     @ApiResponses({
             @ApiResponse(
