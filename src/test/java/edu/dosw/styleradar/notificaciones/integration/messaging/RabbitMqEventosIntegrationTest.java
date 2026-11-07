@@ -9,7 +9,9 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import edu.dosw.styleradar.notificaciones.application.dto.event.BusquedaGuardadaSincronizadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.InventarioActualizadoEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaPublicadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaRetiradaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.UsuarioEstadoCambiadoEventPayload;
 import edu.dosw.styleradar.notificaciones.domain.model.Alerta;
@@ -60,6 +62,7 @@ class RabbitMqEventosIntegrationTest {
     private static final String DLQ = "styleradar.notificaciones.dlq";
     private static final long USUARIO_ID = 9901L;
     private static final long ITEM_ID = 99001L;
+    private static final long BUSQUEDA_ID = 77001L;
 
     @Container
     static final RabbitMQContainer RABBIT = new RabbitMQContainer("rabbitmq:3.13.7-management-alpine");
@@ -90,6 +93,7 @@ class RabbitMqEventosIntegrationTest {
         jdbcTemplate.update("DELETE FROM notificaciones WHERE usuario_id = ?", USUARIO_ID);
         jdbcTemplate.update("DELETE FROM alertas WHERE usuario_id = ?", USUARIO_ID);
         jdbcTemplate.update("DELETE FROM estados_cuenta_copia WHERE usuario_id = ?", USUARIO_ID);
+        jdbcTemplate.update("DELETE FROM busquedas_guardadas_copia WHERE usuario_id = ?", USUARIO_ID);
     }
 
     @Test
@@ -182,6 +186,65 @@ class RabbitMqEventosIntegrationTest {
         publicar("styleradar.inventario.actualizado", inventario(ITEM_ID, 0, 5, 2));
         await().atMost(Duration.ofSeconds(20))
                 .untilAsserted(() -> assertThat(ciclosNotificados(alerta)).containsExactly(2));
+    }
+
+    @Test
+    @DisplayName("NOT-06 - Una prenda nueva que coincide con una busqueda guardada genera notificacion y una que no coincide no")
+    void prendaNuevaQueCoincideConUnaBusquedaGuardadaGeneraNotificacion() {
+        publicar("styleradar.usuarios.busqueda.sincronizada", busqueda("ACTIVA"));
+        await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> assertThat(busquedaActiva()).containsExactly(true));
+        Alerta alerta = crearAlertaDeBusqueda();
+
+        publicar("styleradar.catalogo.prenda.publicada", prenda(ITEM_ID + 1, "CALZADO"));
+        publicar("styleradar.catalogo.prenda.publicada", prenda(ITEM_ID + 2, "CHAQUETAS"));
+
+        await().atMost(Duration.ofSeconds(20))
+                .untilAsserted(() -> assertThat(itemsNotificados(alerta)).containsExactly(ITEM_ID + 2));
+    }
+
+    @Test
+    @DisplayName("NOT-08 - Una busqueda guardada se copia por evento y al eliminarla sus alertas quedan inactivas")
+    void busquedaEliminadaDesactivaSusAlertas() {
+        publicar("styleradar.usuarios.busqueda.sincronizada", busqueda("ACTIVA"));
+        await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> assertThat(busquedaActiva()).containsExactly(true));
+        Alerta alerta = crearAlertaDeBusqueda();
+
+        publicar("styleradar.usuarios.busqueda.sincronizada", busqueda("ELIMINADA"));
+
+        await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> {
+            assertThat(busquedaActiva()).containsExactly(false);
+            assertThat(jdbcTemplate.queryForObject(
+                    "SELECT estado FROM alertas WHERE id = ?", String.class, alerta.getId())).isEqualTo("DESACTIVADA");
+        });
+    }
+
+    private Alerta crearAlertaDeBusqueda() {
+        LocalDateTime ahora = LocalDateTime.now();
+        return alertaRepositoryPort.guardar(new Alerta(
+                null, USUARIO_ID, TipoAlerta.BUSQUEDA_GUARDADA, null, null, BUSQUEDA_ID,
+                CanalNotificacion.IN_APP, EstadoAlerta.ACTIVA, ahora, ahora));
+    }
+
+    private BusquedaGuardadaSincronizadaEventPayload busqueda(String accion) {
+        return new BusquedaGuardadaSincronizadaEventPayload(
+                "evt-bus-" + accion, BUSQUEDA_ID, USUARIO_ID, "Chaquetas negras", null, "CHAQUETAS", "NEGRO", "M",
+                null, null, null, new BigDecimal("200000"), null, accion, LocalDateTime.now());
+    }
+
+    private PrendaPublicadaEventPayload prenda(Long itemId, String categoria) {
+        return new PrendaPublicadaEventPayload(
+                "evt-pre-" + itemId, itemId, "Prenda " + itemId, categoria, "NEGRO", List.of("M", "L"),
+                "BogotaStreet", "STREETWEAR", new BigDecimal("185000"), 5, 12L, "CHAPINERO", LocalDateTime.now());
+    }
+
+    private List<Boolean> busquedaActiva() {
+        return jdbcTemplate.queryForList(
+                "SELECT activa FROM busquedas_guardadas_copia WHERE busqueda_id = ?", Boolean.class, BUSQUEDA_ID);
+    }
+
+    private List<Long> itemsNotificados(Alerta alerta) {
+        return jdbcTemplate.queryForList(
+                "SELECT item_id FROM notificaciones WHERE alerta_id = ? ORDER BY item_id", Long.class, alerta.getId());
     }
 
     private void publicar(String routingKey, Object payload) {
