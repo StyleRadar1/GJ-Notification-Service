@@ -1,5 +1,5 @@
 # Documento de Análisis y Justificación de Decisiones Tecnológicas
-## Microservicio de Notificaciones y Alertas (`ms-notificaciones` · Puerto 8088)
+## Microservicio de Notificaciones y Alertas (`ms-notificaciones` · Puerto 8300)
 ### Proyecto StyleRadar · Asignatura: DOSW 2026 · Squad: Guatoque Jiraguas (GJ)
 
 ---
