@@ -49,6 +49,9 @@ buildNumber.properties
 
 # Environment & Secrets
 .env
+*.env
+scratch/
+.env
 .env.local
 .env.*.local
 

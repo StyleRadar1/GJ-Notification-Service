@@ -26,6 +26,12 @@
     <a href="https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml">
       <img src="https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml/badge.svg?branch=develop" alt="CI / QA Pipeline Status" />
     </a>
+    <a href="#4-endpoints-y-enlace-a-swagger">
+      <img src="https://img.shields.io/badge/Swagger_UI-ms--notificaciones_(:8300)-5600EF?style=for-the-badge&logo=swagger&logoColor=white" alt="Swagger UI ms-notificaciones" />
+    </a>
+    <a href="#4-endpoints-y-enlace-a-swagger">
+      <img src="https://img.shields.io/badge/OpenAPI-3.0-16A34A?style=for-the-badge&logo=openapi-initiative&logoColor=white" alt="OpenAPI 3.0" />
+    </a>
     <a href="target/site/jacoco/index.html">
       <img src="https://img.shields.io/badge/JaCoCo_Coverage-%E2%89%A5_85%25-16A34A?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage" />
     </a>
@@ -311,13 +317,16 @@ src/main/java/edu/dosw/styleradar/notificaciones/
 
 La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encuentran desplegados y clasificados por entorno:
 
-### Matriz Oficial de Enlaces por Entorno (PROD, QA, LOCAL)
+> [!IMPORTANT]
+> **Alcance Exclusivo del Microservicio:** Esta documentación Swagger y especificación OpenAPI 3.0 pertenece **única y exclusivamente al Microservicio de Notificaciones y Alertas (`ms-notificaciones` / Puerto 8300)** del equipo **Guatoque Jiraguas (GJ)**. No contiene ni mezcla endpoints de otros microservicios del ecosistema (como autenticación, usuarios, tiendas o catálogo), garantizando el desacoplamiento estricto por servicio (Database-per-Service & API Isolation).
+
+### Matriz Oficial de Enlaces de Swagger para `ms-notificaciones`
 
 | Entorno | Estado | Propósito | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
 | :--- | :---: | :--- | :--- | :--- | :--- |
+| **Desarrollo Local / Docker (DEV)** | Local | Entorno de desarrollo local en máquina | `http://localhost:8300` | [Swagger UI Local](http://localhost:8300/swagger-ui/index.html) | [`/actuator/health`](http://localhost:8300/actuator/health) |
 | **Producción (PROD)** | Pendiente (GJ-92) | Despliegue productivo de StyleRadar | `https://styleradar-backend-prod.azurewebsites.net` | [Swagger UI PROD](https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-backend-prod.azurewebsites.net/actuator/health) |
 | **Calidad / Pruebas (QA)** | Pendiente (GJ-92) | Pruebas integradas de Sprint y QA | `https://styleradar-backend-qa.azurewebsites.net` | [Swagger UI QA](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-backend-qa.azurewebsites.net/actuator/health) |
-| **Desarrollo Local (DEV)** | Local | Entorno de desarrollo local en máquina | `http://localhost:8300` | [Swagger UI Local](http://localhost:8300/swagger-ui/index.html) | [`/actuator/health`](http://localhost:8300/actuator/health) |
 
 * **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8300/v3/api-docs` (o `/v3/api-docs` en los dominios de PROD y QA).
 
@@ -463,6 +472,10 @@ El stack del microservicio cumple con el estándar unificado de arquitectura de 
 | **Métricas de Cobertura** | JaCoCo Plugin | `0.8.11` | Verificación estricta de cobertura mínima (`>= 85%`) como regla obligatoria en `mvn verify`. |
 
 ---
+
+> [!NOTE]
+> **Documento Oficial de Análisis y Justificación Tecnológica:** Para consultar el análisis comparativo formal de alternativas evaluadas y descartadas (PostgreSQL vs NoSQL, RabbitMQ vs Kafka, Java/Spring vs Node/Python, SSE vs WebSockets, JavaMailSender vs SDKs propietarios), visita:
+> **[docs/ANALISIS_DECISIONES_TECNOLOGICAS.md](docs/ANALISIS_DECISIONES_TECNOLOGICAS.md)**.
 
 <a id="7-cómo-ejecutar-local-y-con-docker"></a>
 
@@ -778,6 +791,10 @@ El seguimiento de requerimientos, evidencias y artefactos de entrega se centrali
 * **Proyecto en Jira (GJ):** [https://mail-team-nyjtgqcj.atlassian.net/browse/GJ](https://mail-team-nyjtgqcj.atlassian.net/browse/GJ)
 * **API Swagger en Producción (PROD, pendiente de despliegue):** [https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html](https://styleradar-backend-prod.azurewebsites.net/swagger-ui/index.html)
 * **API Swagger en Calidad (QA, pendiente de despliegue):** [https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html](https://styleradar-backend-qa.azurewebsites.net/swagger-ui/index.html)
+* **Swagger UI Microservicio Notificaciones (:8300):** [http://localhost:8300/swagger-ui/index.html](http://localhost:8300/swagger-ui/index.html)
+* **Especificación OpenAPI 3.0 JSON Schema:** [http://localhost:8300/v3/api-docs](http://localhost:8300/v3/api-docs)
+* **Documento de Análisis y Justificación de Decisiones Tecnológicas:** [docs/ANALISIS_DECISIONES_TECNOLOGICAS.md](docs/ANALISIS_DECISIONES_TECNOLOGICAS.md)
+* **Contratos y Especificación de Eventos Asíncronos (NOT-21):** [docs/CONTRATOS_EVENTOS_NOT21.md](docs/CONTRATOS_EVENTOS_NOT21.md)
 * **Colección de Pruebas Postman:** [postman/styleradar-notificaciones.postman_collection.json](postman/styleradar-notificaciones.postman_collection.json)
 * **Contratos de Eventos Asíncronos (NOT-21):** [docs/CONTRATOS_EVENTOS_NOT21.md](docs/CONTRATOS_EVENTOS_NOT21.md)
 * **Diagramas UML Oficiales en Draw.io:** [docs/uml/](docs/uml/)
