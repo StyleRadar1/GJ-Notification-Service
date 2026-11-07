@@ -5,6 +5,7 @@ on:
     branches: [ "develop", "Scaffolding", "feature/**" ]
   pull_request:
     branches: [ "develop", "main", "Scaffolding" ]
+  workflow_dispatch:
 
 env:
   ACTIONS_SILENCE_NODE20_DEPRECATION_WARNING: 'true'
@@ -27,6 +28,7 @@ jobs:
         run: mvn -B clean verify
 
       - name: Upload JaCoCo Coverage Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
@@ -34,8 +36,29 @@ jobs:
 
   docker-verify-qa:
     needs: build-and-verify
-    if: (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/Scaffolding') && github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      DOCKERHUB_NAMESPACE: ${{ vars.DOCKERHUB_NAMESPACE || 'styleradar' }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_WEBAPP_NAME_QA: ${{ secrets.AZURE_WEBAPP_NAME_QA }}
+      DB_HOST_QA: ${{ secrets.DB_HOST_QA }}
+      DB_PORT_QA: ${{ secrets.DB_PORT_QA || '5432' }}
+      DB_NAME_QA: ${{ secrets.DB_NAME_QA }}
+      DB_USER_QA: ${{ secrets.DB_USER_QA }}
+      DB_PASSWORD_QA: ${{ secrets.DB_PASSWORD_QA }}
+      REDIS_HOST_QA: ${{ secrets.REDIS_HOST_QA || 'localhost' }}
+      REDIS_PORT_QA: ${{ secrets.REDIS_PORT_QA || '6379' }}
+      RABBITMQ_HOST_QA: ${{ secrets.RABBITMQ_HOST_QA }}
+      RABBITMQ_PORT_QA: ${{ secrets.RABBITMQ_PORT_QA || '5671' }}
+      RABBITMQ_USER_QA: ${{ secrets.RABBITMQ_USER_QA }}
+      RABBITMQ_PASSWORD_QA: ${{ secrets.RABBITMQ_PASSWORD_QA }}
+      RABBITMQ_VHOST_QA: ${{ secrets.RABBITMQ_VHOST_QA || '/' }}
+      RABBITMQ_SSL_VERIFY_HOSTNAME_QA: ${{ secrets.RABBITMQ_SSL_VERIFY_HOSTNAME_QA || 'false' }}
+      CATALOG_SERVICE_URL_QA: ${{ secrets.CATALOG_SERVICE_URL_QA || 'http://localhost:8220' }}
+      JWT_SECRET_QA: ${{ secrets.JWT_SECRET_QA }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -46,25 +69,203 @@ jobs:
       - name: Build OCI Docker image for QA
         run: docker build -t styleradar/ms-notificaciones:qa .
 
-      - name: Verify Docker Compose stack health (NOT-18 Evidence)
+      - name: Verify Docker Compose stack health and run Newman Postman collection (GJ-52 / NOT-18)
         run: |
           sudo systemctl stop postgresql redis || true
           cp .env.example .env
+
+          python3 -c "
+          import http.server, socketserver
+          class Handler(http.server.BaseHTTPRequestHandler):
+              def do_GET(self):
+                  self.send_response(200)
+                  self.send_header('Content-Type', 'application/json')
+                  self.end_headers()
+                  self.wfile.write(b'{\"itemId\":1045,\"stockTotal\":0,\"tallasConStock\":[]}')
+              def log_message(self, format, *args):
+                  pass
+          httpd = socketserver.TCPServer(('0.0.0.0', 8220), Handler)
+          httpd.serve_forever()
+          " &
+          MOCK_PID=$!
+
           docker compose up -d
           echo 'Esperando que el servicio responda en /actuator/health...'
+          HEALTH_OK=0
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:8300/actuator/health; then
               echo
               docker compose ps
-              exit 0
+              HEALTH_OK=1
+              break
             fi
             sleep 5
           done
-          echo 'El servicio no respondio correctamente en /actuator/health'
-          docker compose ps
-          docker compose logs --tail=100 ms-notificaciones
-          exit 1
+          if [ "$HEALTH_OK" -ne 1 ]; then
+            echo 'El servicio no respondio correctamente en /actuator/health'
+            docker compose ps
+            docker compose logs --tail=100 ms-notificaciones
+            kill $MOCK_PID || true
+            exit 1
+          fi
+
+          curl -fsS -u guest:guest -H "Content-Type: application/json" \
+            -X POST http://localhost:15672/api/exchanges/%2F/styleradar.exchange/publish \
+            -d '{"properties":{"content_type":"application/json"},"routing_key":"styleradar.chat.mensaje.enviado","payload":"{\"eventoId\":\"evt-ci-1\",\"mensajeId\":1,\"conversacionId\":10,\"remitenteId\":202,\"nombreRemitente\":\"Nora\",\"destinatarioId\":101,\"resumenContenido\":\"Mensaje de prueba CI\",\"fechaEnvio\":\"2026-11-06T12:00:00\"}","payload_encoding":"string"}'
+
+          curl -fsS -u guest:guest -H "Content-Type: application/json" \
+            -X POST http://localhost:15672/api/exchanges/%2F/styleradar.exchange/publish \
+            -d '{"properties":{"content_type":"application/json"},"routing_key":"styleradar.inventario.actualizado","payload":"{}","payload_encoding":"string"}'
+
+          sleep 3
+
+          DLQ_JSON=$(curl -fsS -u guest:guest http://localhost:15672/api/queues/%2F/styleradar.notificaciones.dlq)
+          echo "Estado DLQ styleradar.notificaciones.dlq: $DLQ_JSON"
+          python3 -c 'import json, sys; data = json.loads(sys.argv[1]); assert data.get("messages", 0) >= 1, f"Se esperaba >= 1 mensaje en DLQ, obtenido: {data}"' "$DLQ_JSON"
+
+          JWT_SECRET_VAL=$(grep '^JWT_SECRET=' .env | cut -d'=' -f2-)
+          JWT_TOKEN=$(JWT_SECRET_ENV="$JWT_SECRET_VAL" python3 -c "
+          import os, json, hmac, hashlib, base64, time
+          def b64u(data):
+              return base64.urlsafe_b64encode(data).rstrip(b'=').decode('ascii')
+          secret = os.environ['JWT_SECRET_ENV'].encode('utf-8')
+          if len(secret) < 32:
+              secret = secret.ljust(32, b'\0')
+          now = int(time.time())
+          header = b64u(json.dumps({'alg': 'HS256', 'typ': 'JWT'}, separators=(',', ':')).encode('utf-8'))
+          payload = b64u(json.dumps({'sub': '101', 'userId': 101, 'email': 'oscar@styleradar.co', 'role': 'COMPRADOR', 'iat': now, 'exp': now + 3600}, separators=(',', ':')).encode('utf-8'))
+          sig = b64u(hmac.new(secret, f'{header}.{payload}'.encode('ascii'), hashlib.sha256).digest())
+          print(f'{header}.{payload}.{sig}')
+          ")
+
+          mkdir -p target/newman
+          npx --yes newman@6.2.1 run postman/styleradar-notificaciones.postman_collection.json \
+            --env-var "baseUrl=http://localhost:8300" \
+            --env-var "jwtToken=$JWT_TOKEN" \
+            --reporters cli,json,junit \
+            --reporter-json-export target/newman/newman-report-local.json \
+            --reporter-junit-export target/newman/newman-report-local.xml
+
+          SSE_OUT=$(curl -fsSN --max-time 3 -H "Authorization: Bearer $JWT_TOKEN" http://localhost:8300/api/v1/usuarios/me/notificaciones/stream || true)
+          echo "$SSE_OUT" | grep -q "event:connected"
+
+          kill $MOCK_PID || true
+
+      - name: Upload Newman Postman Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-postman-report
+          path: target/newman/
 
       - name: Stop Docker Compose stack
         if: always()
         run: docker compose down -v
+
+      - name: Log in to Docker Hub
+        if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Publish QA image to Docker Hub (GJ-92)
+        if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          for NS in "$DOCKERHUB_NAMESPACE" "$DOCKERHUB_USERNAME"; do
+            if [ -n "$NS" ]; then
+              docker tag styleradar/ms-notificaciones:qa "${NS}/ms-notificaciones:qa"
+              docker tag styleradar/ms-notificaciones:qa "${NS}/ms-notificaciones:qa-${SHORT_SHA}"
+              docker push "${NS}/ms-notificaciones:qa" || true
+              docker push "${NS}/ms-notificaciones:qa-${SHORT_SHA}" || true
+            fi
+          done
+
+      - name: Log in to Azure
+        if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME_QA != ''
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy and configure Azure App Service QA (GJ-92)
+        if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME_QA != ''
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            SHORT_SHA="${GITHUB_SHA::7}"
+            IMAGE_TAG="${DOCKERHUB_NAMESPACE}/ms-notificaciones:qa-${SHORT_SHA}"
+            RG=$(az webapp list --query "[?name=='${AZURE_WEBAPP_NAME_QA}'].resourceGroup | [0]" -o tsv)
+            az webapp config appsettings set \
+              --name "${AZURE_WEBAPP_NAME_QA}" \
+              --resource-group "$RG" \
+              --output none \
+              --settings \
+                WEBSITES_PORT=8300 \
+                PORT=8300 \
+                SPRING_PROFILES_ACTIVE=prod \
+                DB_HOST="${DB_HOST_QA}" \
+                DB_PORT="${DB_PORT_QA}" \
+                DB_NAME="${DB_NAME_QA}" \
+                SPRING_DATASOURCE_URL="jdbc:postgresql://${DB_HOST_QA}:${DB_PORT_QA}/${DB_NAME_QA}?sslmode=require" \
+                DB_USER="${DB_USER_QA}" \
+                DB_PASSWORD="${DB_PASSWORD_QA}" \
+                REDIS_HOST="${REDIS_HOST_QA}" \
+                REDIS_PORT="${REDIS_PORT_QA}" \
+                RABBITMQ_HOST="${RABBITMQ_HOST_QA}" \
+                RABBITMQ_PORT="${RABBITMQ_PORT_QA}" \
+                RABBITMQ_USER="${RABBITMQ_USER_QA}" \
+                RABBITMQ_PASSWORD="${RABBITMQ_PASSWORD_QA}" \
+                RABBITMQ_VHOST="${RABBITMQ_VHOST_QA}" \
+                RABBITMQ_SSL_ENABLED=true \
+                RABBITMQ_SSL_VERIFY_HOSTNAME="${RABBITMQ_SSL_VERIFY_HOSTNAME_QA}" \
+                CATALOG_SERVICE_URL="${CATALOG_SERVICE_URL_QA}" \
+                JWT_SECRET="${JWT_SECRET_QA}"
+            az webapp config container set \
+              --name "${AZURE_WEBAPP_NAME_QA}" \
+              --resource-group "$RG" \
+              --container-image-name "${IMAGE_TAG}" \
+              --container-registry-url "https://index.docker.io/v1" \
+              --output none
+            az webapp restart --name "${AZURE_WEBAPP_NAME_QA}" --resource-group "$RG"
+
+      - name: Verify QA deployment health check (/actuator/health) and run Newman against QA (GJ-52 / GJ-92)
+        if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME_QA != ''
+        run: |
+          BASE_URL="https://${AZURE_WEBAPP_NAME_QA}.azurewebsites.net"
+          URL="${BASE_URL}/actuator/health"
+          HEALTH_QA=0
+          for i in $(seq 1 30); do
+            if curl -fsS "$URL"; then
+              echo
+              HEALTH_QA=1
+              break
+            fi
+            sleep 15
+          done
+          if [ "$HEALTH_QA" -ne 1 ]; then
+            echo "El servicio en QA no respondio en $URL"
+            exit 1
+          fi
+          if [ -n "$JWT_SECRET_QA" ]; then
+            JWT_TOKEN_QA=$(JWT_SECRET_ENV="$JWT_SECRET_QA" python3 -c "
+            import os, json, hmac, hashlib, base64, time
+            def b64u(data):
+                return base64.urlsafe_b64encode(data).rstrip(b'=').decode('ascii')
+            secret = os.environ['JWT_SECRET_ENV'].encode('utf-8')
+            if len(secret) < 32:
+                secret = secret.ljust(32, b'\0')
+            now = int(time.time())
+            header = b64u(json.dumps({'alg': 'HS256', 'typ': 'JWT'}, separators=(',', ':')).encode('utf-8'))
+            payload = b64u(json.dumps({'sub': '101', 'userId': 101, 'email': 'oscar@styleradar.co', 'role': 'COMPRADOR', 'iat': now, 'exp': now + 3600}, separators=(',', ':')).encode('utf-8'))
+            sig = b64u(hmac.new(secret, f'{header}.{payload}'.encode('ascii'), hashlib.sha256).digest())
+            print(f'{header}.{payload}.{sig}')
+            ")
+            mkdir -p target/newman
+            npx --yes newman@6.2.1 run postman/styleradar-notificaciones.postman_collection.json \
+              --env-var "baseUrl=${BASE_URL}" \
+              --env-var "jwtToken=$JWT_TOKEN_QA" \
+              --reporters cli,json,junit \
+              --reporter-json-export target/newman/newman-report-qa.json \
+              --reporter-junit-export target/newman/newman-report-qa.xml
+          fi
