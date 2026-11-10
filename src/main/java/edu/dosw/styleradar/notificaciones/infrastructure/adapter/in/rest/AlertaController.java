@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -135,8 +136,33 @@ public class AlertaController implements AlertaApi {
     @Override
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = "/notificaciones/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter suscribirCampanaTiempoReal() {
+    public SseEmitter suscribirCampanaTiempoReal(
+            @RequestHeader(value = "Last-Event-ID", required = false) String ultimoEventoId
+    ) {
         Long usuarioId = userExtractor.obtenerUsuarioAutenticadoId();
-        return sseRegistry.registrar(usuarioId);
+        SseEmitter emitter = sseRegistry.registrar(usuarioId);
+        reenviarNotificacionesPerdidas(usuarioId, ultimoEventoId, emitter);
+        return emitter;
+    }
+
+    private void reenviarNotificacionesPerdidas(Long usuarioId, String ultimoEventoId, SseEmitter emitter) {
+        Long ultimoId = interpretarIdDeEvento(ultimoEventoId);
+        if (ultimoId == null) {
+            return;
+        }
+        listarNotificacionesUseCase.listarPosterioresA(usuarioId, ultimoId).forEach(notificacion ->
+                sseRegistry.enviarA(emitter, "notificacion", String.valueOf(notificacion.getId()),
+                        notificacionDtoMapper.toResponse(notificacion)));
+    }
+
+    private Long interpretarIdDeEvento(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.valueOf(valor.trim());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }

@@ -39,18 +39,31 @@ public class SseEmitterRegistry {
         return emitter;
     }
 
-    public void enviar(Long usuarioId, String nombreEvento, Object datos) {
+    /**
+     * Envia un evento a todas las conexiones del usuario. El id del evento permite que el navegador, al
+     * reconectarse, avise con la cabecera Last-Event-ID cual fue el ultimo que recibio.
+     */
+    public void enviar(Long usuarioId, String nombreEvento, String idEvento, Object datos) {
         List<SseEmitter> userEmitters = emittersByUser.get(usuarioId);
         if (userEmitters == null || userEmitters.isEmpty()) {
             return;
         }
         for (SseEmitter emitter : userEmitters) {
             try {
-                emitter.send(SseEmitter.event().name(nombreEvento).data(datos));
+                emitter.send(SseEmitter.event().id(idEvento).name(nombreEvento).data(datos));
             } catch (Exception ex) {
                 log.debug("Cerrando emitter SSE inactivo para el usuario {}", usuarioId);
                 remover(usuarioId, emitter);
             }
+        }
+    }
+
+    /** Envia un evento a una sola conexion; se usa para reenviar lo que el usuario perdio al reconectarse. */
+    public void enviarA(SseEmitter emitter, String nombreEvento, String idEvento, Object datos) {
+        try {
+            emitter.send(SseEmitter.event().id(idEvento).name(nombreEvento).data(datos));
+        } catch (IOException ex) {
+            log.debug("No se pudo reenviar el evento {} a la conexion SSE", idEvento);
         }
     }
 
