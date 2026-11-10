@@ -42,28 +42,27 @@ Para seleccionar el stack tecnológico, el equipo **Guatoque Jiraguas (GJ)** eva
 #### Tipo Seleccionado: Relacional (RDBMS) - PostgreSQL 16
 Tablas principales gestionadas por el servicio:
 1. `alertas`: Registro de alertas activas/desactivadas por usuario, item y talla.
-2. `notificaciones`: Historial de avisos entregados, estado de lectura y fecha de expiración.
-3. `preferencias_avisos`: Configuración de canales (IN_APP, EMAIL) por usuario.
+2. `notificaciones`: Historial de avisos entregados, estado de lectura y fecha de lectura.
+3. `preferencias_avisos`: Configuración de canales (IN_APP, EMAIL) por usuario (prevista en la tarea GJ-64; todavía no existe en el esquema).
 4. `busquedas_guardadas_copia`: Copia local sincronizada por eventos del catálogo/usuarios.
-5. `estados_cuenta_copia`: Cache persistente del estado de cuenta (`ACTIVO`, `BLOQUEADO`).
+5. `estados_cuenta_copia`: Cache persistente del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`).
 
 #### Justificación Técnica ("Por qué PostgreSQL y no otra"):
 1. **Garantía ACID Estricta e Idempotencia:** 
    El caso de uso más crítico del servicio es notificar la reposición de una prenda agotada (`NOT-10`). Si una tienda actualiza el stock varias veces en pocos segundos, una base de datos relacional garantiza mediante una restricción única compuesta:
    ```sql
-   CONSTRAINT uq_alerta_item_ciclo UNIQUE (alerta_id, item_id, ciclo_reposicion)
+   CONSTRAINT uk_notificacion_alerta_item_ciclo UNIQUE (alerta_id, item_id, ciclo_reposicion)
    ```
    que el usuario reciba **exactamente una notificación por ciclo de reposición**, eliminando cualquier riesgo de spam o duplicidad por concurrencia.
-2. **Índices Parciales para la Campana en Tiempo Real:**
-   La consulta más frecuente de la interfaz de usuario es `GET /api/v1/usuarios/me/notificaciones/no-leidas/contador`. PostgreSQL permite definir índices parciales:
+2. **Índice para la campana en tiempo real:**
+   La consulta más frecuente de la interfaz de usuario es `GET /api/v1/usuarios/me/notificaciones/no-leidas/contador`. La migración `V2__add_indexes.sql` crea un índice compuesto:
    ```sql
-   CREATE INDEX idx_notificaciones_usuario_no_leidas 
-   ON notificaciones (usuario_id) 
-   WHERE leida = FALSE;
+   CREATE INDEX idx_notificaciones_usuario_leida
+   ON notificaciones (usuario_id, leida, fecha_creacion DESC);
    ```
-   Este índice solo indexa las filas no leídas, reduciendo el tamaño del índice en disco en más del 80% y permitiendo lecturas en memoria en menos de 2 milisegundos.
-3. **Soporte Híbrido Relacional + JSONB:**
-   Las búsquedas guardadas contienen criterios de filtrado dinámicos (color, precio mínimo, precio máximo, talla, estilo). PostgreSQL permite almacenar estos criterios en columnas de tipo `JSONB`, combinando la integridad relacional de la tabla con la flexibilidad de atributos dinámicos sin requerir una base NoSQL separada.
+   Cubre el contador y el listado de no leídas ordenado por fecha sin recorrer la tabla. Un índice parcial (`WHERE leida = FALSE`) es una mejora posible si el volumen lo justifica; hoy no existe.
+3. **Criterios de búsqueda en columnas tipadas:**
+   Las búsquedas guardadas (color, precio mínimo y máximo, talla, estilo, categoría, marca y localidad) se guardan en columnas propias, no en `JSONB`. Así la base valida tipos y rangos y el servicio las evalúa en memoria contra cada evento. PostgreSQL permitiría `JSONB` si los criterios llegaran a ser dinámicos.
 4. **Control de Versiones y Migraciones con Flyway:**
    PostgreSQL se integra nativamente con Flyway, permitiendo que cada cambio en el esquema esté auditado mediante scripts reproducibles (`V1__init_schema.sql`, `V2__add_indexes.sql`), garantizando entornos idénticos en DEV, QA y PROD.
 
