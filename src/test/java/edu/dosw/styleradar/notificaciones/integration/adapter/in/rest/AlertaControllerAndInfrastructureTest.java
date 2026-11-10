@@ -41,8 +41,8 @@ import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.external.Ca
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.external.CatalogoFeignClient;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.external.dto.CatalogoDisponibilidadItemResponse;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.messaging.RabbitMqEventPublisherAdapter;
-import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.security.JwtTokenService;
-import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.sse.SseRealTimeNotificationAdapter;
+import edu.dosw.styleradar.notificaciones.infrastructure.security.JwtTokenService;
+import edu.dosw.styleradar.notificaciones.infrastructure.sse.SseEmitterRegistry;
 import edu.dosw.styleradar.notificaciones.infrastructure.config.RabbitMqConfig;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -92,7 +92,7 @@ class AlertaControllerAndInfrastructureTest {
     private NotificacionesEventsListener eventsListener;
 
     @Autowired
-    private SseRealTimeNotificationAdapter sseAdapter;
+    private SseEmitterRegistry sseRegistry;
 
     @Autowired
     private RabbitMqConfig rabbitMqConfig;
@@ -247,8 +247,8 @@ class AlertaControllerAndInfrastructureTest {
         BusquedaGuardadaCopia copia = busquedaGuardadaCopiaRepositoryPort.buscarPorId(400L).orElseThrow();
         assertThat(copia.isActiva()).isTrue();
 
-        SseEmitter emitter = sseAdapter.registrarSuscripcion(601L);
-        assertThat(sseAdapter.contarSuscripcionesActivas(601L)).isEqualTo(1);
+        SseEmitter emitter = sseRegistry.registrar(601L);
+        assertThat(sseRegistry.contarSuscripcionesActivas(601L)).isEqualTo(1);
 
         eventsListener.onPrendaPublicada(new PrendaPublicadaEventPayload(
                 "evt-pub-1", 3001L, "Blazer Lino Sastre", "SASTRERIA", "BEIGE", List.of("M"),

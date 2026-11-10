@@ -1,4 +1,4 @@
-package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.security;
+package edu.dosw.styleradar.notificaciones.infrastructure.security;
 
 import edu.dosw.styleradar.notificaciones.domain.exception.AccesoDenegadoException;
 import org.springframework.security.core.Authentication;

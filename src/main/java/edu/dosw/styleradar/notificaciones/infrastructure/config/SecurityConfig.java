@@ -1,6 +1,6 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.config;
 
-import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.security.JwtAuthenticationFilter;
+import edu.dosw.styleradar.notificaciones.infrastructure.security.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
