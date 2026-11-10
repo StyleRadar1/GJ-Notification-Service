@@ -9,6 +9,8 @@ public interface NotificacionApplicationService {
 
     long contarNoLeidas(Long usuarioId);
 
+    List<Notificacion> listarPosterioresA(Long usuarioId, Long ultimoId);
+
     Notificacion marcarComoLeida(Long notificacionId, Long usuarioId);
 
     int marcarTodasComoLeidas(Long usuarioId);
