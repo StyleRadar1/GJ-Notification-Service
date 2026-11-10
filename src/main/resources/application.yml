@@ -45,11 +45,17 @@ application:
       donation-changed: styleradar.notificaciones.donacion-cambiada.q
       moderation-changed: styleradar.notificaciones.moderacion-cambiada.q
       garment-deleted: styleradar.notificaciones.prenda-retirada.q
+      donation-requested: styleradar.notificaciones.solicitud-donacion.q
+      garment-sold: styleradar.notificaciones.prenda-vendida.q
+      payment-confirmed: styleradar.notificaciones.pago-confirmado.q
       dlq: styleradar.notificaciones.dlq
     routing-keys:
       inventory-updated: styleradar.inventario.actualizado
       garment-published: styleradar.catalogo.prenda.publicada
       garment-deleted: styleradar.catalogo.prenda.retirada
+      donation-requested: styleradar.donaciones.solicitud.creada
+      garment-sold: styleradar.segundavida.prenda.vendida
+      payment-confirmed: styleradar.pagos.pago.confirmado
       user-status-changed: styleradar.usuarios.estado.cambiado
       saved-search-synced: styleradar.usuarios.busqueda.sincronizada
       message-sent: styleradar.chat.mensaje.enviado
