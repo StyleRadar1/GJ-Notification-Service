@@ -22,7 +22,7 @@ public class SecurityContextUserExtractor {
             try {
                 return Long.parseLong(userDetails.getUsername());
             } catch (NumberFormatException ex) {
-                return 1L;
+                throw new AccesoDenegadoException("Identificador de usuario invalido en el contexto de seguridad");
             }
         }
         if (principal instanceof String text) {
