@@ -17,6 +17,8 @@ public class Notificacion {
     private boolean leida;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaLectura;
+    /** Evento externo que origino la notificacion; permite descartar entregas repetidas. Puede ser nulo. */
+    private String eventoId;
 
     public Notificacion() {
     }
@@ -160,5 +162,13 @@ public class Notificacion {
 
     public void setFechaLectura(LocalDateTime fechaLectura) {
         this.fechaLectura = fechaLectura;
+    }
+
+    public String getEventoId() {
+        return eventoId;
+    }
+
+    public void setEventoId(String eventoId) {
+        this.eventoId = eventoId;
     }
 }

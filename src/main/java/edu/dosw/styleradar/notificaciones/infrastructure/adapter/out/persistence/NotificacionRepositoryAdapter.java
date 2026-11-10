@@ -83,5 +83,11 @@ public class NotificacionRepositoryAdapter implements NotificacionRepositoryPort
     public boolean existePorAlertaItemYCiclo(Long alertaId, Long itemId, Integer cicloReposicion) {
         return repository.existsByAlertaIdAndItemIdAndCicloReposicion(alertaId, itemId, cicloReposicion);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existePorEventoYUsuario(String eventoId, Long usuarioId) {
+        return repository.existsByEventoIdAndUsuarioId(eventoId, usuarioId);
+    }
 }
 
