@@ -293,19 +293,19 @@ src/main/java/edu/dosw/styleradar/notificaciones/
 │   │   ├── response/                        <-- AlertaResponse, NotificacionResponse, ContadorNoLeidasResponse
 │   │   └── event/                           <-- Payloads de eventos RabbitMQ (Inventario, Prenda, Usuario, Chat, Donación)
 │   └── mapper/
-│       ├── in/                              <-- MapStruct DTO <-> Domain (AlertaDtoMapper, NotificacionDtoMapper)
-│       └── out/                             <-- MapStruct Domain <-> JPA Entity (*EntityMapper)
+│       └── in/                              <-- MapStruct DTO <-> Domain (AlertaDtoMapper, NotificacionDtoMapper)
 └── infrastructure/                          <-- CAPA DE INFRAESTRUCTURA (Adaptadores y Configuración)
     ├── adapter/
     │   ├── in/
     │   │   ├── rest/                        <-- AlertaController y contrato OpenAPI segregado en doc/AlertaApi
     │   │   └── amqp/                        <-- NotificacionesEventsListener (@RabbitListener + manejo hacia DLQ)
     │   └── out/
-    │       ├── persistence/                 <-- Entidades JPA, SpringDataRepositories y Adapters transaccionales
+    │       ├── persistence/                 <-- Entidades JPA, SpringDataRepositories, Adapters transaccionales y mapper/ (MapStruct dominio-entidad)
     │       ├── external/                    <-- CatalogoFeignClient y CatalogoClientAdapter
     │       ├── messaging/                   <-- RabbitMqEventPublisherAdapter
-    │       ├── security/                    <-- JwtTokenService, JwtAuthenticationFilter y SecurityContextUserExtractor
-    │       └── sse/                         <-- SseRealTimeNotificationAdapter (Server-Sent Events)
+    │       └── sse/                         <-- SseRealTimeNotificationAdapter (empuja cada notificación por SSE)
+    ├── security/                            <-- JwtTokenService, JwtAuthenticationFilter y SecurityContextUserExtractor
+    ├── sse/                                 <-- SseEmitterRegistry (conexiones SSE abiertas por usuario)
     └── config/                              <-- BeanConfig, SecurityConfig, RabbitMqConfig, OpenApiConfig, GlobalExceptionHandler
 ```
 
@@ -467,7 +467,7 @@ El stack del microservicio cumple con el estándar unificado de arquitectura de 
 | **Migraciones de BD** | Flyway | `9.22.x` | Control de versiones reproducible de scripts SQL (`V1__init_schema.sql`, `V2__add_indexes.sql`). |
 | **Broker de Mensajería** | RabbitMQ | `3.13` | Desacoplamiento temporal de microservicios mediante Topic Exchanges y Dead Letter Queues. |
 | **Caché en Memoria** | Redis | `7.x` | Soporte de caché y deduplicación rápida de alertas. |
-| **Mapeo de DTOs** | MapStruct | `1.5.5.Final` | Generación de mappers (`in` y `out`) en tiempo de compilación sin sobrecarga de reflexión. |
+| **Mapeo de DTOs** | MapStruct | `1.5.5.Final` | Generación de mappers (DTO en `application`, entidades JPA en `infrastructure`) en tiempo de compilación sin sobrecarga de reflexión. |
 | **Testing Core & Web** | JUnit 5 + Mockito + MockMvc | `5.10.x` | Pruebas unitarias de dominio/casos de uso y pruebas de integración REST/AMQP/JPA con H2 PostgreSQL mode. |
 | **Métricas de Cobertura** | JaCoCo Plugin | `0.8.11` | Verificación estricta de cobertura mínima (`>= 85%`) como regla obligatoria en `mvn verify`. |
 
