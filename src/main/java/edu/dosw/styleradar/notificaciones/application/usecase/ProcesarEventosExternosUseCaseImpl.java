@@ -10,6 +10,7 @@ import edu.dosw.styleradar.notificaciones.domain.model.EstadoCuentaCopia;
 import edu.dosw.styleradar.notificaciones.domain.model.Notificacion;
 import edu.dosw.styleradar.notificaciones.domain.model.TipoAlerta;
 import edu.dosw.styleradar.notificaciones.domain.model.TipoNotificacion;
+import edu.dosw.styleradar.notificaciones.domain.port.in.EnviarAvisoPorCorreoUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ProcesarEventosExternosUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.out.AlertaRepositoryPort;
 import edu.dosw.styleradar.notificaciones.domain.port.out.BusquedaGuardadaCopiaRepositoryPort;
@@ -32,6 +33,7 @@ public class ProcesarEventosExternosUseCaseImpl implements ProcesarEventosExtern
     private final EstadoCuentaCopiaRepositoryPort estadoCuentaCopiaRepositoryPort;
     private final RealTimeNotificationPort realTimeNotificationPort;
     private final EvaluadorCriteriosMatcher evaluadorCriteriosMatcher;
+    private final EnviarAvisoPorCorreoUseCase enviarAvisoPorCorreoUseCase;
 
     @Override
     public List<Notificacion> procesarDisponibilidadPrenda(DatosPrendaVO datosPrenda) {
@@ -118,6 +120,7 @@ public class ProcesarEventosExternosUseCaseImpl implements ProcesarEventosExtern
             return;
         }
         realTimeNotificationPort.emitirNotificacionTiempoReal(guardada.getUsuarioId(), guardada);
+        enviarAvisoPorCorreoUseCase.enviarSiCorresponde(guardada);
         generadas.add(guardada);
     }
 
@@ -201,6 +204,7 @@ public class ProcesarEventosExternosUseCaseImpl implements ProcesarEventosExtern
             return null;
         }
         realTimeNotificationPort.emitirNotificacionTiempoReal(usuarioId, guardada);
+        enviarAvisoPorCorreoUseCase.enviarSiCorresponde(guardada);
         return guardada;
     }
 

@@ -24,6 +24,11 @@ spring:
     locations: classpath:db/migration
 
 application:
+  mail:
+    from: ${MAIL_FROM:no-reply@styleradar.co}
+    retry:
+      max-attempts: 3
+      initial-interval-ms: 1000
   security:
     jwt:
       secret-key: ${JWT_SECRET}
