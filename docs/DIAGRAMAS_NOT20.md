@@ -46,11 +46,13 @@ Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archi
 El diagrama muestra la frontera de `ms-notificaciones` (puerto `8300`) y los sistemas con los que se comunica.
 
 1. **Frontend y API Gateway (`api-gateway`, `:8080`):** el usuario llega por HTTPS a través del gateway. Las rutas REST de `/api/v1/usuarios/me` y la suscripción SSE de la campana exigen un JWT Bearer.
-2. **Broker de eventos (RabbitMQ, `:5672`):** el servicio consume 8 colas durables sobre el exchange `styleradar.exchange`:
+2. **Broker de eventos (RabbitMQ, `:5672`):** el servicio consume 11 colas durables sobre el exchange `styleradar.exchange`:
    - `ms-inventario` (`:8200`) publica `InventarioActualizado`.
    - `ms-usuarios` (`:8120`) publica el estado de cuenta y las búsquedas guardadas.
    - `ms-chat` (`:8320`) publica `MensajeEnviado`.
    - `ms-segunda-vida-donaciones` (`:8520`) publica `DonacionEstadoCambiado`.
+   - `ms-segunda-vida-donaciones` (`:8520`) publica además `SolicitudDonacionCreada` y `PrendaVendida` (nombres propuestos, por confirmar).
+   - `ms-pagos` publica `PagoConfirmado` (nombre propuesto, por confirmar).
    - `ms-item-catalogo` (`:8220`) publica prenda publicada, prenda retirada y cambios de moderación.
 3. **Publicación de `AlertaCreada`:** cada alerta nueva se publica en el broker y la consume `ms-estadisticas` (`:8420`).
 4. **Catálogo por OpenFeign:** al crear una alerta sobre una prenda, el servicio consulta la disponibilidad en `ms-item-catalogo`. Si Catálogo no responde, el cliente recibe `503` y no se crea la alerta.
@@ -78,7 +80,7 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 
 1. **Adaptadores de entrada (`infrastructure/adapter/in`):**
    - `AlertaController` implementa `AlertaApi` (documentación Swagger) y expone 9 endpoints, incluida la suscripción SSE.
-   - `NotificacionesEventsListener` consume las 8 colas. Un payload inválido va directo a la cola de errores; un fallo transitorio se reintenta 3 veces antes de llegar a ella (`RabbitRetryConfig`).
+   - `NotificacionesEventsListener` consume las 11 colas. Un payload inválido va directo a la cola de errores; un fallo transitorio se reintenta 3 veces antes de llegar a ella (`RabbitRetryConfig`).
    - `JwtAuthenticationFilter` y `SecurityConfig` validan el JWT sin estado. Solo `/actuator/health` y la documentación Swagger son públicos.
    - `GlobalExceptionHandler` responde con `ProblemDetail` (RFC 7807).
 2. **Aplicación (`application`):** los seis puertos de entrada (`domain/port/in`) son interfaces de casos de uso. Cada una tiene su implementación `*UseCaseImpl`, que delega en `AlertaApplicationService` y `NotificacionApplicationService` (también interfaz más implementación). Los DTO son `records` y el mapeo usa MapStruct.
