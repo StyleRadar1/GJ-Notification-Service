@@ -98,7 +98,8 @@ class NotificacionesUseCasesTest {
                 busquedaGuardadaCopiaRepositoryPort,
                 estadoCuentaCopiaRepositoryPort,
                 realTimeNotificationPort,
-                matcher
+                matcher,
+                org.mockito.Mockito.mock(edu.dosw.styleradar.notificaciones.domain.port.in.EnviarAvisoPorCorreoUseCase.class)
         );
     }
 
