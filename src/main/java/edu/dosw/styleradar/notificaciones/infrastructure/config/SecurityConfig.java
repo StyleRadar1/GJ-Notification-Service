@@ -1,7 +1,7 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.config;
 
 import edu.dosw.styleradar.notificaciones.infrastructure.security.JwtAuthenticationFilter;
-import jakarta.servlet.http.HttpServletResponse;
+import edu.dosw.styleradar.notificaciones.infrastructure.security.ProblemDetailSecurityHandlers;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +26,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ProblemDetailSecurityHandlers securityHandlers;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -34,10 +35,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No autenticado"))
-                        .accessDeniedHandler((request, response, accessDeniedException) ->
-                                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Acceso denegado"))
+                        .authenticationEntryPoint(securityHandlers.authenticationEntryPoint())
+                        .accessDeniedHandler(securityHandlers.accessDeniedHandler())
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
