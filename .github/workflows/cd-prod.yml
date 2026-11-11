@@ -1,0 +1,134 @@
+name: CD / PROD Pipeline - ms-notificaciones
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  ACTIONS_SILENCE_NODE20_DEPRECATION_WARNING: 'true'
+
+jobs:
+  verify-and-release:
+    runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      DOCKERHUB_NAMESPACE: ${{ vars.DOCKERHUB_NAMESPACE || 'styleradar' }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_WEBAPP_NAME_PROD: ${{ secrets.AZURE_WEBAPP_NAME_PROD }}
+      DB_HOST_PROD: ${{ secrets.DB_HOST_PROD }}
+      DB_PORT_PROD: ${{ secrets.DB_PORT_PROD || '5432' }}
+      DB_NAME_PROD: ${{ secrets.DB_NAME_PROD }}
+      DB_USER_PROD: ${{ secrets.DB_USER_PROD }}
+      DB_PASSWORD_PROD: ${{ secrets.DB_PASSWORD_PROD }}
+      REDIS_HOST_PROD: ${{ secrets.REDIS_HOST_PROD || 'localhost' }}
+      REDIS_PORT_PROD: ${{ secrets.REDIS_PORT_PROD || '6379' }}
+      RABBITMQ_HOST_PROD: ${{ secrets.RABBITMQ_HOST_PROD }}
+      RABBITMQ_PORT_PROD: ${{ secrets.RABBITMQ_PORT_PROD || '5671' }}
+      RABBITMQ_USER_PROD: ${{ secrets.RABBITMQ_USER_PROD }}
+      RABBITMQ_PASSWORD_PROD: ${{ secrets.RABBITMQ_PASSWORD_PROD }}
+      RABBITMQ_VHOST_PROD: ${{ secrets.RABBITMQ_VHOST_PROD || '/' }}
+      RABBITMQ_SSL_VERIFY_HOSTNAME_PROD: ${{ secrets.RABBITMQ_SSL_VERIFY_HOSTNAME_PROD || 'false' }}
+      CATALOG_SERVICE_URL_PROD: ${{ secrets.CATALOG_SERVICE_URL_PROD || 'http://localhost:8220' }}
+      JWT_SECRET_PROD: ${{ secrets.JWT_SECRET_PROD }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Verify tests and JaCoCo >= 85%
+        run: mvn -B clean verify
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Production OCI Image
+        run: docker build -t styleradar/ms-notificaciones:latest .
+
+      - name: Log in to Docker Hub
+        if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Publish PROD image to Docker Hub
+        if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          for NS in "$DOCKERHUB_NAMESPACE" "$DOCKERHUB_USERNAME"; do
+            if [ -n "$NS" ]; then
+              docker tag styleradar/ms-notificaciones:latest "${NS}/ms-notificaciones:latest"
+              docker tag styleradar/ms-notificaciones:latest "${NS}/ms-notificaciones:prod-${SHORT_SHA}"
+              docker push "${NS}/ms-notificaciones:latest" || true
+              docker push "${NS}/ms-notificaciones:prod-${SHORT_SHA}" || true
+            fi
+          done
+
+      - name: Log in to Azure
+        if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME_PROD != ''
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy and configure Azure App Service PROD
+        if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME_PROD != ''
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            SHORT_SHA="${GITHUB_SHA::7}"
+            IMAGE_TAG="${DOCKERHUB_NAMESPACE}/ms-notificaciones:prod-${SHORT_SHA}"
+            RG=$(az webapp list --query "[?name=='${AZURE_WEBAPP_NAME_PROD}'].resourceGroup | [0]" -o tsv)
+            az webapp config appsettings set \
+              --name "${AZURE_WEBAPP_NAME_PROD}" \
+              --resource-group "$RG" \
+              --output none \
+              --settings \
+                WEBSITES_PORT=8300 \
+                PORT=8300 \
+                SPRING_PROFILES_ACTIVE=prod \
+                DB_HOST="${DB_HOST_PROD}" \
+                DB_PORT="${DB_PORT_PROD}" \
+                DB_NAME="${DB_NAME_PROD}" \
+                SPRING_DATASOURCE_URL="jdbc:postgresql://${DB_HOST_PROD}:${DB_PORT_PROD}/${DB_NAME_PROD}?sslmode=require" \
+                DB_USER="${DB_USER_PROD}" \
+                DB_PASSWORD="${DB_PASSWORD_PROD}" \
+                REDIS_HOST="${REDIS_HOST_PROD}" \
+                REDIS_PORT="${REDIS_PORT_PROD}" \
+                RABBITMQ_HOST="${RABBITMQ_HOST_PROD}" \
+                RABBITMQ_PORT="${RABBITMQ_PORT_PROD}" \
+                RABBITMQ_USER="${RABBITMQ_USER_PROD}" \
+                RABBITMQ_PASSWORD="${RABBITMQ_PASSWORD_PROD}" \
+                RABBITMQ_VHOST="${RABBITMQ_VHOST_PROD}" \
+                RABBITMQ_SSL_ENABLED=true \
+                RABBITMQ_SSL_VERIFY_HOSTNAME="${RABBITMQ_SSL_VERIFY_HOSTNAME_PROD}" \
+                CATALOG_SERVICE_URL="${CATALOG_SERVICE_URL_PROD}" \
+                JWT_SECRET="${JWT_SECRET_PROD}"
+            az webapp config container set \
+              --name "${AZURE_WEBAPP_NAME_PROD}" \
+              --resource-group "$RG" \
+              --container-image-name "${IMAGE_TAG}" \
+              --container-registry-url "https://index.docker.io/v1" \
+              --output none
+            az webapp restart --name "${AZURE_WEBAPP_NAME_PROD}" --resource-group "$RG"
+
+      - name: Verify PROD deployment health check (/actuator/health)
+        if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME_PROD != ''
+        run: |
+          URL="https://${AZURE_WEBAPP_NAME_PROD}.azurewebsites.net/actuator/health"
+          for i in $(seq 1 30); do
+            if curl -fsS "$URL"; then
+              echo
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "El servicio en PROD no respondio en $URL"
+          exit 1
