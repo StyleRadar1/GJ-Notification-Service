@@ -87,8 +87,8 @@ Este microservicio encapsula exclusivamente la lógica de negocio correspondient
 | • Gestiona alertas de prendas agotadas (`ITEM_AGOTADO`) y búsquedas guardadas (`BUSQUEDA_GUARDADA`) validando stock contra `ms-item-catalogo`. | • NO autentica credenciales ni emite tokens iniciales (delegado a `ms-auth` en `:8100`). |
 | • Evalúa en memoria coincidencias entre eventos (`InventarioActualizado`, `PrendaPublicada`) y copias locales de búsquedas guardadas sin hacer SQL cruzado. | • NO gestiona transacciones monetarias ni pasarelas (delegado a `ms-pagos-suscripciones` en `:8400`). |
 | • Sincroniza copias locales de búsquedas guardadas y estados de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`) mediante eventos asíncronos. | • NO persiste conversaciones ni historial de mensajes STOMP (delegado a `ms-chat` en `:8320`). |
-| • Entrega notificaciones generalizadas (stock, mensajes, donaciones, moderación) y emite actualizaciones en tiempo real mediante Server-Sent Events (SSE). | • NO accede directamente a tablas ni bases de datos de otros microservicios (cero llaves foráneas externas). |
-| • Garantiza persistencia ACID e idempotencia mediante la restricción única `(alerta_id, item_id, ciclo_reposicion)` y desvío de fallos a Dead Letter Queue (`SR-RNF-15`). | • NO modifica el inventario ni el catálogo maestro de prendas. |
+| • Entrega notificaciones generalizadas (stock, mensajes, donaciones, moderación, solicitudes de donación, prendas vendidas y pagos confirmados), las empuja en tiempo real por Server-Sent Events (SSE) con reconexión (`Last-Event-ID`) y las envía además por correo si el usuario lo eligió por tipo de aviso. | • NO accede directamente a tablas ni bases de datos de otros microservicios (cero llaves foráneas externas). |
+| • Garantiza persistencia ACID e idempotencia mediante las restricciones únicas `(alerta_id, item_id, ciclo_reposicion)` y `(evento_id, usuario_id)`, y desvío de fallos a Dead Letter Queue (`SR-RNF-15`). | • NO modifica el inventario ni el catálogo maestro de prendas. |
 
 ### Arquetipos de Moda y Personajes de StyleRadar (Pendiente actualizaciones de front)
 
@@ -219,7 +219,7 @@ flowchart LR
 #### 1. Diagrama de Componentes con Arquitectura Hexagonal (Especifico)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-componentes-especifico.drawio`](docs/uml/diagrama-componentes-especifico.drawio)
 * **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 2)](docs/DIAGRAMAS_NOT20.md#2-diagrama-de-componentes-específico-arquitectura-hexagonal)
-* **Descripcion:** Modela adaptadores de entrada (Driving: REST Controller, RabbitMQ Listener), la capa de aplicacion (Input Ports, Use Cases, Application Services, DTOs, Mappers), el nucleo de dominio puro (Modelos, Value Objects, Domain Events, Validadores) y adaptadores de salida (Driven: JPA Repositories, Feign Client, Event Publisher, SSE Adapter).
+* **Descripcion:** Modela adaptadores de entrada (Driving: REST Controller, RabbitMQ Listener), la capa de aplicacion (Input Ports, Use Cases, Application Services, DTOs, Mappers), el nucleo de dominio puro (Modelos, Value Objects, Domain Events, Validadores) y adaptadores de salida (Driven: JPA Repositories, Feign Client, Event Publisher, SSE Adapter, SMTP Adapter). Incluye los controladores de alertas y de preferencias de avisos y los 11 consumidores de eventos.
 
 <p align="center">
   <a href="docs/images/diagrama-componentes-especifico.png" target="_blank">
@@ -232,7 +232,7 @@ flowchart LR
 #### 2. Diagrama de Clases (Modelo de Dominio y Patrones de Diseno)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-clases.drawio`](docs/uml/diagrama-clases.drawio)
 * **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 3)](docs/DIAGRAMAS_NOT20.md#3-diagrama-de-clases-modelo-de-dominio)
-* **Descripcion:** Modela las entidades de dominio (`Alerta`, `Notificacion`, `BusquedaGuardadaCopia`, `EstadoCuentaCopia`), Value Objects (`CriterioBusquedaVO`, `DatosPrendaVO`), Enumeraciones (`TipoAlerta`, `TipoNotificacion`, `CanalNotificacion`, `EstadoAlerta`, `EstadoNotificacion`) y los 3 patrones de diseno implementados (Cadena de Responsabilidad para validaciones, Strategy para matching de criterios y Factory para creacion de notificaciones).
+* **Descripcion:** Modela las entidades de dominio (`Alerta`, `Notificacion`, `PreferenciaAviso`, `BusquedaGuardadaCopia`, `EstadoCuentaCopia`), Value Objects (`CriterioBusquedaVO`, `DatosPrendaVO`), Enumeraciones (`TipoAlerta`, `TipoNotificacion`, `CanalNotificacion`, `CanalAviso`, `EstadoAlerta`, `EstadoCuenta`) y las reglas del dominio (`AlertaValidator` para las validaciones y `EvaluadorCriteriosMatcher` para el matching en memoria). El dominio no depende de Spring ni de JPA.
 
 <p align="center">
   <a href="docs/images/diagrama-clases.png" target="_blank">
@@ -245,7 +245,7 @@ flowchart LR
 #### 3. Diagrama de Base de Datos (Modelo Relacional / ER - PostgreSQL 16)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-base-datos.drawio`](docs/uml/diagrama-base-datos.drawio)
 * **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 4)](docs/DIAGRAMAS_NOT20.md#4-diagrama-de-base-de-datos-metamodelo-conceptual-y-físico)
-* **Descripcion:** Modela el metamodelo conceptual hibrido (entidades de dominio frente a Value Objects embebidos vs referenciados por UUID) y el esquema relacional fisico de PostgreSQL 16 gestionado por Flyway (`alertas`, `notificaciones`, `busquedas_guardadas_copia`, `estados_cuenta_copia`, indices B-Tree y restricciones FK/Unique).
+* **Descripcion:** Modela el esquema relacional fisico de PostgreSQL 16 gestionado por Flyway (migraciones V1 a V4): `alertas`, `notificaciones`, `preferencias_avisos`, `busquedas_guardadas_copia` y `estados_cuenta_copia`, con sus indices y las restricciones unicas que dan la idempotencia. No hay llaves foraneas: los usuarios e items viven en otros servicios (Database-per-Service).
 
 <p align="center">
   <a href="docs/images/diagrama-base-datos.png" target="_blank">
@@ -258,7 +258,7 @@ flowchart LR
 #### 4. Diagrama de Contexto del Sistema (C4 L1)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-contexto.drawio`](docs/uml/diagrama-contexto.drawio)
 * **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 1)](docs/DIAGRAMAS_NOT20.md#1-diagrama-de-contexto-del-sistema-nivel-c4---l1)
-* **Descripcion:** Delimita la frontera del microservicio y sus interacciones con API Gateway, frontend SPA, broker RabbitMQ (`styleradar.domain.events`), microservicio de catalogo (via OpenFeign), microservicio de identidad, donaciones, mensajes y microservicio de estadisticas.
+* **Descripcion:** Delimita la frontera del microservicio y sus interacciones con API Gateway, frontend SPA, broker RabbitMQ (exchange `styleradar.exchange`), microservicio de catalogo (via OpenFeign), identidad, donaciones, chat, pagos, estadisticas y el servidor SMTP de los avisos por correo.
 
 <p align="center">
   <a href="docs/images/diagrama-contexto.png" target="_blank">
@@ -271,7 +271,7 @@ flowchart LR
 #### 5. Diagrama de Despliegue (Topologia Azure & Docker Hub)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-despliegue.drawio`](docs/uml/diagrama-despliegue.drawio)
 * **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 5)](docs/DIAGRAMAS_NOT20.md#5-diagrama-de-despliegue)
-* **Descripcion:** Modela la topologia de ejecucion y despliegue continuo: estacion de desarrollo, pipeline de CI/CD en GitHub Actions, repositorio de imagenes en Docker Hub (`styleradar/ms-notificaciones`), y ambientes de ejecucion en Azure App Service (QA en Linux B1ms y Produccion en cluster P1v3 con autoscaling y replicas PostgreSQL).
+* **Descripcion:** Modela la topologia de ejecucion y despliegue continuo: estacion de desarrollo, pipeline de CI/CD en GitHub Actions, repositorio de imagenes en Docker Hub (`styleradar/ms-notificaciones`), y el ambiente de ejecucion planificado en Azure App Service QA (GJ-92). Lo que todavia no esta desplegado aparece con borde punteado.
 
 ### Estructura Oficial de Paquetes en `src/main/java/`
 
@@ -279,34 +279,35 @@ flowchart LR
 src/main/java/edu/dosw/styleradar/notificaciones/
 ├── NotificacionesApplication.java           <-- Punto de entrada Spring Boot + @EnableFeignClients
 ├── domain/                                  <-- NÚCLEO DE DOMINIO (Cero dependencias de Spring/JPA)
-│   ├── model/                               <-- Alerta, Notificacion, BusquedaGuardadaCopia, EstadoCuentaCopia, VO y Enums
+│   ├── model/                               <-- Alerta, Notificacion, PreferenciaAviso, BusquedaGuardadaCopia, EstadoCuentaCopia, VO y Enums
 │   ├── validator/                           <-- AlertaValidator y EvaluadorCriteriosMatcher (matching en memoria)
 │   ├── event/                               <-- AlertaCreadaDomainEvent
 │   ├── exception/                           <-- Excepciones semánticas de negocio
 │   └── port/
-│       ├── in/                              <-- Interfaces de Casos de Uso (CrearAlerta, Listar, Desactivar, ProcesarEventos)
-│       └── out/                             <-- Interfaces SPI (Repositorios, CatalogoClientPort, EventPublisherPort, SSE)
+│       ├── in/                              <-- Interfaces de Casos de Uso (CrearAlerta, Listar, Desactivar, MarcarLeida, ProcesarEventos, PreferenciasAvisos, EnviarAvisoPorCorreo)
+│       └── out/                             <-- Interfaces SPI (Repositorios, CatalogoClientPort, EventPublisherPort, RealTimeNotificationPort, CorreoPort)
 ├── application/                             <-- CAPA DE APLICACIÓN (Casos de Uso y Mappers)
 │   ├── usecase/                             <-- Implementaciones puras de casos de uso (*UseCaseImpl)
 │   ├── dto/
-│   │   ├── request/                         <-- CrearAlertaRequest (Java Record)
-│   │   ├── response/                        <-- AlertaResponse, NotificacionResponse, ContadorNoLeidasResponse
-│   │   └── event/                           <-- Payloads de eventos RabbitMQ (Inventario, Prenda, Usuario, Chat, Donación)
+│   │   ├── request/                         <-- CrearAlertaRequest y PreferenciaAvisoRequest (Java Record)
+│   │   ├── response/                        <-- AlertaResponse, NotificacionResponse, ContadorNoLeidasResponse, PreferenciaAvisoResponse
+│   │   └── event/                           <-- Payloads de eventos RabbitMQ (Inventario, Prenda, Usuario, Chat, Donación, Pago)
 │   └── mapper/
 │       └── in/                              <-- MapStruct DTO <-> Domain (AlertaDtoMapper, NotificacionDtoMapper)
 └── infrastructure/                          <-- CAPA DE INFRAESTRUCTURA (Adaptadores y Configuración)
     ├── adapter/
     │   ├── in/
-    │   │   ├── rest/                        <-- AlertaController y contrato OpenAPI segregado en doc/AlertaApi
+    │   │   ├── rest/                        <-- AlertaController, PreferenciaAvisoController y contratos OpenAPI segregados en doc/
     │   │   └── amqp/                        <-- NotificacionesEventsListener (@RabbitListener + manejo hacia DLQ)
     │   └── out/
     │       ├── persistence/                 <-- Entidades JPA, SpringDataRepositories, Adapters transaccionales y mapper/ (MapStruct dominio-entidad)
     │       ├── external/                    <-- CatalogoFeignClient y CatalogoClientAdapter
     │       ├── messaging/                   <-- RabbitMqEventPublisherAdapter
+│       ├── mail/                        <-- CorreoSmtpAdapter (JavaMailSender, hilo aparte, 3 intentos con espera creciente)
     │       └── sse/                         <-- SseRealTimeNotificationAdapter (empuja cada notificación por SSE)
     ├── security/                            <-- JwtTokenService, JwtAuthenticationFilter y SecurityContextUserExtractor
     ├── sse/                                 <-- SseEmitterRegistry (conexiones SSE abiertas por usuario)
-    └── config/                              <-- BeanConfig, SecurityConfig, RabbitMqConfig, OpenApiConfig, GlobalExceptionHandler
+    └── config/                              <-- BeanConfig, SecurityConfig, RabbitMqConfig, RabbitRetryConfig, CorreoConfig, OpenApiConfig, GlobalExceptionHandler
 ```
 
 ---
@@ -365,7 +366,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 | `PATCH` | `/api/v1/usuarios/me/notificaciones/{notificacionId}/leer` | Marca una notificación específica como leída (NOT-13) | Propietario (`JWT`) | `200`, `403`, `404` |
 | `PATCH` | `/api/v1/usuarios/me/notificaciones/leer-todas` | Marca todas las notificaciones del usuario como leídas (NOT-13) | Autenticado (`JWT`) | `200`, `401` |
 |  `GET`  | `/api/v1/usuarios/me/notificaciones/no-leidas/contador` | Obtiene el contador de notificaciones sin leer para la campana (NOT-13) | Autenticado (`JWT`) | `200`, `401` |
-|  `GET`  | `/api/v1/usuarios/me/notificaciones/stream` | Suscripción Server-Sent Events (`text/event-stream`) para campana en tiempo real (NOT-15) | Autenticado (`JWT`) | `200`, `401` |
+|  `GET`  | `/api/v1/usuarios/me/notificaciones/stream` | Suscripción Server-Sent Events (`text/event-stream`) para campana en tiempo real; con la cabecera `Last-Event-ID` reenvía lo perdido al reconectar (NOT-15, GJ-62) | Autenticado (`JWT`) | `200`, `401` |
 |  `GET`  | `/api/v1/usuarios/me/preferencias-avisos` | Lista el canal elegido por tipo de aviso; los no configurados salen como `SOLO_PLATAFORMA` (GJ-64) | Autenticado (`JWT`) | `200`, `401` |
 |  `PUT`  | `/api/v1/usuarios/me/preferencias-avisos/{tipo}` | Elige `SOLO_PLATAFORMA` o `CORREO_Y_PLATAFORMA` para un tipo de aviso (GJ-64) | Autenticado (`JWT`) | `200`, `400`, `401` |
 
@@ -431,6 +432,12 @@ La comunicación asíncrona entre microservicios se orquesta a través de **Rabb
 | **CONSUME** | `styleradar.chat.mensaje.enviado` | `styleradar.notificaciones.mensaje-enviado.q` | `ms-chat` &rarr; `ms-notificaciones` | Genera notificación `MENSAJE_NUEVO` con enlace a `/chat/conversaciones/{id}` y push SSE (NOT-14). |
 | **CONSUME** | `styleradar.donaciones.estado.cambiado` | `styleradar.notificaciones.donacion-cambiada.q` | `ms-segunda-vida-donaciones` &rarr; `ms-notificaciones` | Genera notificación `CAMBIO_DONACION` con enlace a `/donaciones/{id}` (NOT-14). |
 | **CONSUME** | `styleradar.catalogo.moderacion.cambiada` | `styleradar.notificaciones.moderacion-cambiada.q` | `ms-item-catalogo` &rarr; `ms-notificaciones` | Genera notificación `MODERACION_PRENDA` y desactiva alertas si la prenda fue retirada (NOT-08, NOT-14). |
+| **CONSUME** | `styleradar.catalogo.prenda.retirada` | `styleradar.notificaciones.prenda-retirada.q` | `ms-item-catalogo` &rarr; `ms-notificaciones` | Desactiva las alertas activas de la prenda retirada (NOT-08). |
+| **CONSUME** | `styleradar.donaciones.solicitud.creada` *(nombre propuesto)* | `styleradar.notificaciones.solicitud-donacion.q` | `ms-segunda-vida-donaciones` &rarr; `ms-notificaciones` | Genera notificación `SOLICITUD_DONACION` para la fundación destinataria (GJ-61). |
+| **CONSUME** | `styleradar.segundavida.prenda.vendida` *(nombre propuesto)* | `styleradar.notificaciones.prenda-vendida.q` | `ms-segunda-vida-donaciones` &rarr; `ms-notificaciones` | Genera notificación `PRENDA_VENDIDA` para cada interesado, menos el comprador (GJ-65). |
+| **CONSUME** | `styleradar.pagos.pago.confirmado` *(nombre propuesto)* | `styleradar.notificaciones.pago-confirmado.q` | `ms-pagos` &rarr; `ms-notificaciones` | Genera notificación `PAGO_CONFIRMADO`; si el usuario no existe en la copia local, el mensaje va a la DLQ (GJ-65). |
+
+> **Nombres propuestos:** las tres últimas routing keys las definió `ms-notificaciones` y están pendientes de confirmar con los equipos emisores; cambiarlas solo requiere editar `application.messaging.routing-keys`. La especificación de cada payload está en [docs/CONTRATOS_EVENTOS_NOT21.md](docs/CONTRATOS_EVENTOS_NOT21.md). Todos los consumidores son idempotentes por `eventoId`.
 
 <details>
 <summary><b>Click para ver Esquema JSON del Evento Publicado (AlertaCreada - NOT-16)</b></summary>
@@ -466,11 +473,15 @@ El stack del microservicio cumple con el estándar unificado de arquitectura de 
 | **Framework Empresarial** | Spring Boot | `3.2.5` | Gestión declarativa de configuración, ecosistema nativo Spring Web, Security, Data JPA y AMQP. |
 | **Cliente HTTP Declarativo** | Spring Cloud OpenFeign | `2023.0.1` | Validación síncrona de prenda agotada contra `ms-item-catalogo` (NOT-10). |
 | **Base de Datos** | PostgreSQL | `16` | Integridad transaccional ACID y restricción única `(alerta_id, item_id, ciclo_reposicion)`. |
-| **Migraciones de BD** | Flyway | `9.22.x` | Control de versiones reproducible de scripts SQL (`V1__init_schema.sql`, `V2__add_indexes.sql`). |
+| **Migraciones de BD** | Flyway | `9.22.x` | Control de versiones reproducible de scripts SQL (`V1` esquema, `V2` índices, `V3` `evento_id` de idempotencia, `V4` `preferencias_avisos`). |
 | **Broker de Mensajería** | RabbitMQ | `3.13` | Desacoplamiento temporal de microservicios mediante Topic Exchanges y Dead Letter Queues. |
-| **Caché en Memoria** | Redis | `7.x` | Soporte de caché y deduplicación rápida de alertas. |
+| **Caché en Memoria** | Redis | `7.x` | Declarado en `docker-compose`; el servicio todavía no lo usa. |
+| **Correo** | Spring Boot Starter Mail (`JavaMailSender`) | `3.2.5` | Avisos por correo cuando el usuario lo elige. Se activa con `SPRING_MAIL_HOST`; sin él no se envía correo. |
+| **Seguridad** | Spring Security + JJWT | `0.11.5` | JWT HS256 sin estado; la clave se comparte con `ms-auth`. |
+| **Documentación de API** | springdoc-openapi | `2.5.0` | OpenAPI 3 y Swagger UI. |
 | **Mapeo de DTOs** | MapStruct | `1.5.5.Final` | Generación de mappers (DTO en `application`, entidades JPA en `infrastructure`) en tiempo de compilación sin sobrecarga de reflexión. |
 | **Testing Core & Web** | JUnit 5 + Mockito + MockMvc | `5.10.x` | Pruebas unitarias de dominio/casos de uso y pruebas de integración REST/AMQP/JPA con H2 PostgreSQL mode. |
+| **Pruebas de integración** | Testcontainers · WireMock · GreenMail | `1.21.4` · `3.5.4` · `2.0.1` | RabbitMQ real, Catálogo simulado y servidor SMTP de prueba. |
 | **Métricas de Cobertura** | JaCoCo Plugin | `0.8.11` | Verificación estricta de cobertura mínima (`>= 85%`) como regla obligatoria en `mvn verify`. |
 
 ---
@@ -675,8 +686,11 @@ mvn jacoco:report
 | Nivel de Prueba | Alcance | Tecnologías Utilizadas | Ubicación en el Código | Cobertura Meta |
 | :--- | :--- | :--- | :--- | :---: |
 | **Pruebas Unitarias de Dominio** | `AlertaValidator`, `EvaluadorCriteriosMatcher` y modelos puros | JUnit 5, AssertJ | `src/test/java/.../unit/domain/` | ≥ 90% |
-| **Pruebas Unitarias de Aplicación** | Casos de uso aislados (`CrearAlerta`, `Listar`, `Desactivar`, `ProcesarEventos`) | JUnit 5, Mockito, AssertJ | `src/test/java/.../unit/application/` | ≥ 90% |
-| **Pruebas de Integración y Contrato** | Controladores REST, Seguridad JWT, Flyway, Repositorios JPA, Consumidores AMQP y SSE | Spring Boot Test, MockMvc, H2 PostgreSQL Mode | `src/test/java/.../integration/adapter/in/rest/` | ≥ 85% |
+| **Pruebas Unitarias de Aplicación** | Casos de uso aislados (`CrearAlerta`, `Listar`, `Desactivar`, `ProcesarEventos`, `PreferenciasAvisos`, `EnviarAvisoPorCorreo`) y adaptador de correo con reintentos | JUnit 5, Mockito, AssertJ | `src/test/java/.../unit/application/` | ≥ 90% |
+| **Pruebas de Integración y Contrato** | Controladores REST, Seguridad JWT, Flyway, Repositorios JPA, Consumidores AMQP, SSE y correo | Spring Boot Test, MockMvc, H2 PostgreSQL Mode, GreenMail | `src/test/java/.../integration/` | ≥ 85% |
+| **Pruebas con RabbitMQ real** | Publicación de `AlertaCreada` y consumo de eventos contra un broker real | Testcontainers (requieren Docker; en un equipo sin Docker se omiten y las corre el CI) | `src/test/java/.../integration/messaging/` | — |
+
+Estado actual: **119 pruebas, 0 fallos, cobertura de líneas 92,8 %** (11 pruebas con Docker omitidas en un equipo sin Docker).
 
 > [!IMPORTANT]
 > **Criterio de Fallo en CI:** El archivo `pom.xml` contiene la regla `<limit><minimum>0.85</minimum></limit>`. Si la cobertura total consolidada es inferior al 85%, el comando `mvn verify` fallará con error y el pipeline bloqueará el Pull Request.
@@ -693,7 +707,7 @@ El ciclo de vida del software implementa integración continua y entrega continu
 
 | Pipeline | Entorno Destino | Desencadenador (Trigger) | Quality Gate Exigido | Badge de Estado |
 | :--- | :--- | :--- | :--- | :---: |
-| **CI - Staging / QA** | Calidad (`QA`) | Pull Request o Push a rama `develop` | Build OK + Tests Unitarios/Integración + JaCoCo ≥ 85% + Docker Build | [![CI / QA Pipeline](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml/badge.svg?branch=develop)](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml) |
+| **CI - Staging / QA** | Calidad (`QA`) | Push a `develop` o a ramas `feature/**` | Build OK + Tests Unitarios/Integración + JaCoCo ≥ 85% + Docker Build | [![CI / QA Pipeline](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml/badge.svg?branch=develop)](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml) |
 | **CD - Producción (PROD)** | Producción (`PROD`) | Merge a rama `main` tras validación QA | Verificación completa + Imagen OCI lista para despliegue | [![CD / PROD Pipeline](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/cd-prod.yml/badge.svg?branch=main)](https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/cd-prod.yml) |
 | **Análisis estático (SonarQube)** | Transversal | Pendiente de configurar en el CI | Meta: 0 Vulnerabilidades, 0 Bugs, Deuda Técnica &lt; 5% | Pendiente |
 
@@ -834,8 +848,9 @@ El seguimiento de requerimientos, evidencias y artefactos de entrega se centrali
 | Código RF / RNF | Nombre del Requerimiento | Actor Principal | Criterio de Aceptación Clave |
 | :---: | :--- | :--- | :--- |
 | `SR-RF-28` | Configuración de alertas sobre prendas agotadas | Comprador | Valida mediante OpenFeign que la prenda esté sin stock en `ms-item-catalogo` antes de activar la alerta (NOT-10). |
+| `SR-RF-28` | Preferencias de canal de aviso (GJ-64) | Comprador | Elige por tipo de aviso «solo plataforma» o «correo y plataforma»; sin preferencia se aplica solo plataforma; si el correo falla, el aviso en plataforma se crea igual y el correo se reintenta. |
 | `SR-RF-29` | Alertas sobre búsquedas guardadas | Comprador | Permite activar y desactivar alertas vinculadas a copias locales de búsquedas guardadas (NOT-03, NOT-08). |
 | `SR-RF-30` | Detección reactiva de reposición y nuevas prendas | Sistema / Eventos | Evalúa criterios en memoria al recibir `InventarioActualizado` y `PrendaPublicada` respetando idempotencia por ciclo (NOT-06, NOT-07, NOT-11). |
-| `SR-RF-31` | Notificaciones de mensajes, donaciones y moderación | Comprador / Donante / Tienda | Genera notificaciones con enlaces específicos al recibir eventos de `ms-chat`, `ms-segunda-vida-donaciones` y `ms-item-catalogo` (NOT-12, NOT-14). |
+| `SR-RF-31` | Notificaciones de mensajes, donaciones y moderación | Comprador / Donante / Tienda | Genera notificaciones con enlaces específicos al recibir eventos de `ms-chat`, `ms-segunda-vida-donaciones`, `ms-item-catalogo` y `ms-pagos` (NOT-12, NOT-14, GJ-61, GJ-65). |
 | `SR-RF-32` | Bandeja de notificaciones, contador y campana SSE | Usuario Autenticado | Permite listar, contar no leídas, marcar como leída (individual/todas) y recibir eventos en tiempo real por SSE (NOT-13, NOT-15). |
-| `SR-RNF-15` | Resiliencia e idempotencia en consumidores de eventos | Sistema / Broker | Descarta eventos duplicados con la restricción única `(alerta_id, item_id, ciclo_reposicion)` y envía fallos a la Dead Letter Queue `styleradar.notificaciones.dlq` (NOT-11). |
+| `SR-RNF-15` | Resiliencia e idempotencia en consumidores de eventos | Sistema / Broker | Descarta eventos duplicados con las restricciones únicas `(alerta_id, item_id, ciclo_reposicion)` y `(evento_id, usuario_id)`, y envía fallos a la Dead Letter Queue `styleradar.notificaciones.dlq` (NOT-11). |

@@ -79,13 +79,13 @@ El diagrama muestra la frontera de `ms-notificaciones` (puerto `8300`) y los sis
 El servicio se organiza en puertos y adaptadores, con las dependencias apuntando hacia el dominio.
 
 1. **Adaptadores de entrada (`infrastructure/adapter/in`):**
-   - `AlertaController` implementa `AlertaApi` (documentación Swagger) y expone 9 endpoints, incluida la suscripción SSE.
+   - `AlertaController` implementa `AlertaApi` (documentación Swagger) y expone 9 endpoints, incluida la suscripción SSE con reconexión por `Last-Event-ID`. `PreferenciaAvisoController` expone 2 más: listar y elegir el canal de cada tipo de aviso.
    - `NotificacionesEventsListener` consume las 11 colas. Un payload inválido va directo a la cola de errores; un fallo transitorio se reintenta 3 veces antes de llegar a ella (`RabbitRetryConfig`).
    - `JwtAuthenticationFilter` y `SecurityConfig` validan el JWT sin estado. Solo `/actuator/health` y la documentación Swagger son públicos.
    - `GlobalExceptionHandler` responde con `ProblemDetail` (RFC 7807).
-2. **Aplicación (`application`):** los seis puertos de entrada (`domain/port/in`) son interfaces de casos de uso. Cada una tiene su implementación `*UseCaseImpl`, que delega en `AlertaApplicationService` y `NotificacionApplicationService` (también interfaz más implementación). Los DTO son `records` y el mapeo usa MapStruct.
+2. **Aplicación (`application`):** los ocho puertos de entrada (`domain/port/in`) son interfaces de casos de uso. Cada una tiene su implementación `*UseCaseImpl`, que delega en `AlertaApplicationService` y `NotificacionApplicationService` (también interfaz más implementación). Los DTO son `records` y el mapeo usa MapStruct.
 3. **Dominio (`domain`):** modelos, objetos de valor, reglas (`AlertaValidator`, `EvaluadorCriteriosMatcher`), evento y excepciones, sin Spring, JPA ni Lombok. Los puertos de salida son interfaces del dominio.
-4. **Adaptadores de salida (`infrastructure/adapter/out`):** implementan los puertos de salida: JPA sobre PostgreSQL, cliente OpenFeign de Catálogo, publicador de `AlertaCreada` y `SseEmitter` por usuario.
+4. **Adaptadores de salida (`infrastructure/adapter/out`):** implementan los puertos de salida: JPA sobre PostgreSQL, cliente OpenFeign de Catálogo, publicador de `AlertaCreada`, `SseEmitter` por usuario y `CorreoSmtpAdapter`, que envía los avisos por correo con `JavaMailSender` en un hilo aparte, con 3 intentos y espera creciente.
 
 ### 2.2. Justificación arquitectónica
 
@@ -109,10 +109,10 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 
 ### 3.1. Explicación técnica
 
-1. **Entidades:** `Notificacion`, `Alerta`, `BusquedaGuardadaCopia` y `EstadoCuentaCopia`. Los identificadores de usuario, ítem y búsqueda son `Long` y apuntan a otros servicios, por lo que no hay referencias a sus clases.
+1. **Entidades:** `Notificacion`, `Alerta`, `PreferenciaAviso`, `BusquedaGuardadaCopia` y `EstadoCuentaCopia`. Los identificadores de usuario, ítem y búsqueda son `Long` y apuntan a otros servicios, por lo que no hay referencias a sus clases.
 2. **Relaciones por id:** `Notificacion` referencia a `Alerta` por `alertaId`, y `Alerta` referencia a `BusquedaGuardadaCopia` por `busquedaGuardadaId`. Son relaciones lógicas, no objetos enlazados.
 3. **Objetos de valor:** `CriterioBusquedaVO` (composición de la búsqueda guardada) y `DatosPrendaVO` (datos del evento de prenda).
-4. **Enumeraciones:** `TipoNotificacion`, `CanalNotificacion`, `TipoAlerta`, `EstadoAlerta` y `EstadoCuenta`.
+4. **Enumeraciones:** `TipoNotificacion` (9 tipos), `CanalNotificacion`, `CanalAviso` (`SOLO_PLATAFORMA` o `CORREO_Y_PLATAFORMA`), `TipoAlerta`, `EstadoAlerta` y `EstadoCuenta`.
 5. **Reglas:** `AlertaValidator` valida la creación, la propiedad y los duplicados de una alerta. `EvaluadorCriteriosMatcher` compara una búsqueda guardada o una alerta contra los datos de un evento, en memoria.
 6. **Evento de dominio:** `AlertaCreadaDomainEvent`, que el servicio publica al registrar una alerta.
 
@@ -132,16 +132,17 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 
 ### 4.1. Explicación técnica
 
-El esquema relacional de `notificaciones_db` (PostgreSQL 16) lo gestionan las migraciones Flyway `V1__init_schema.sql` y `V2__add_indexes.sql`. Hibernate solo lo valida (`ddl-auto: validate`).
+El esquema relacional de `notificaciones_db` (PostgreSQL 16) lo gestionan las migraciones Flyway `V1__init_schema.sql`, `V2__add_indexes.sql`, `V3__add_evento_id_notificaciones.sql` y `V4__create_preferencias_avisos.sql`. Hibernate solo lo valida (`ddl-auto: validate`).
 
 | Tabla | Propósito |
 | :--- | :--- |
 | `alertas` | Alertas por prenda agotada o por búsqueda guardada, con su estado. |
-| `notificaciones` | Bandeja de cada usuario, con estado de lectura y ciclo de reposición. |
+| `notificaciones` | Bandeja de cada usuario, con estado de lectura, ciclo de reposición y `evento_id` del evento que la originó. |
+| `preferencias_avisos` | Canal elegido por usuario y tipo de aviso. Sin fila se aplica solo plataforma. |
 | `busquedas_guardadas_copia` | Copia local de las búsquedas guardadas, actualizada por eventos. |
 | `estados_cuenta_copia` | Copia local del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`). |
 
-La restricción `uk_notificacion_alerta_item_ciclo` impide más de una notificación por alerta, ítem y ciclo de reposición.
+Dos restricciones únicas dan la idempotencia: `uk_notificacion_alerta_item_ciclo` impide más de una notificación por alerta, ítem y ciclo de reposición, y `uk_notificacion_evento_usuario` (`evento_id`, `usuario_id`) impide que un evento repetido genere una segunda notificación directa. `preferencias_avisos` es única por `(usuario_id, tipo)`.
 
 ### 4.2. Justificación arquitectónica
 
