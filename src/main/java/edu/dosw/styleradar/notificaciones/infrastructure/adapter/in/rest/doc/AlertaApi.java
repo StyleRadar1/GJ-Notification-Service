@@ -206,7 +206,7 @@ public interface AlertaApi {
                             array = @ArraySchema(schema = @Schema(implementation = NotificacionResponse.class)),
                             examples = @ExampleObject(
                                     name = "ListaNotificaciones",
-                                    value = "[{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":1045,\"cicloReposicion\":1,\"tipo\":\"STOCK_REPUESTO\",\"canal\":\"IN_APP\",\"titulo\":\"Stock Disponible\",\"mensaje\":\"Chaqueta Denim Vintage vuelve a tener stock.\",\"enlace\":\"/prendas/1045\",\"leida\":false,\"fechaCreacion\":\"2026-11-02T12:00:00\",\"fechaLectura\":null}]"
+                                    value = "[{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":1045,\"cicloReposicion\":1,\"tipo\":\"REPOSICION_STOCK\",\"canal\":\"IN_APP\",\"titulo\":\"Stock Disponible\",\"mensaje\":\"Chaqueta Denim Vintage vuelve a tener stock.\",\"enlace\":\"/catalogo/prendas/1045\",\"leida\":false,\"fechaCreacion\":\"2026-11-02T12:00:00\",\"fechaLectura\":null}]"
                             )
                     )
             ),
@@ -234,7 +234,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = NotificacionResponse.class),
                             examples = @ExampleObject(
                                     name = "NotificacionLeida",
-                                    value = "{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":1045,\"cicloReposicion\":1,\"tipo\":\"STOCK_REPUESTO\",\"canal\":\"IN_APP\",\"titulo\":\"Stock Disponible\",\"mensaje\":\"Chaqueta Denim Vintage vuelve a tener stock.\",\"enlace\":\"/prendas/1045\",\"leida\":true,\"fechaCreacion\":\"2026-11-02T12:00:00\",\"fechaLectura\":\"2026-11-02T12:05:00\"}"
+                                    value = "{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":1045,\"cicloReposicion\":1,\"tipo\":\"REPOSICION_STOCK\",\"canal\":\"IN_APP\",\"titulo\":\"Stock Disponible\",\"mensaje\":\"Chaqueta Denim Vintage vuelve a tener stock.\",\"enlace\":\"/catalogo/prendas/1045\",\"leida\":true,\"fechaCreacion\":\"2026-11-02T12:00:00\",\"fechaLectura\":\"2026-11-02T12:05:00\"}"
                             )
                     )
             ),
