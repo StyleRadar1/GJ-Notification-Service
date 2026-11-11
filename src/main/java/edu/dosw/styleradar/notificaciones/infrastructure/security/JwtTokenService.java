@@ -1,4 +1,4 @@
-package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.security;
+package edu.dosw.styleradar.notificaciones.infrastructure.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

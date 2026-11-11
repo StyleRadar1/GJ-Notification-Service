@@ -91,10 +91,11 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 - **Tecnologías intercambiables:** cambiar PostgreSQL, RabbitMQ o el cliente de Catálogo implica cambiar solo su adaptador.
 - **Interfaz más implementación:** casos de uso y servicios siempre tienen interfaz, como exige la estructura votada por el curso.
 
-### 2.3. Deuda arquitectónica conocida
+### 2.3. Deuda arquitectónica (resuelta en GJ-93)
 
-- Los mapeadores de persistencia (`application/mapper/out`) importan entidades JPA de `infrastructure`. Deben moverse a `adapter/out/persistence`.
-- `AlertaController` usa directamente `SseRealTimeNotificationAdapter` y `SecurityContextUserExtractor`. Deben exponerse mediante puertos.
+- Los mapeadores de persistencia ahora viven en `infrastructure/adapter/out/persistence/mapper`. El paquete `application` ya no importa nada de `infrastructure`.
+- `AlertaController` solo conoce los casos de uso, los mapeadores de DTO, el extractor de usuario (`infrastructure/security`) y el registro SSE compartido (`infrastructure/sse`). Ya no usa ningún adaptador de salida.
+- `SecurityContextUserExtractor` ya no asume el usuario 1 cuando el identificador no es numérico: responde acceso denegado.
 
 ---
 

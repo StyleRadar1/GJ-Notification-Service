@@ -14,8 +14,8 @@ import edu.dosw.styleradar.notificaciones.domain.port.in.ListarAlertasUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ListarNotificacionesUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.MarcarNotificacionLeidaUseCase;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.in.rest.doc.AlertaApi;
-import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.security.SecurityContextUserExtractor;
-import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.sse.SseRealTimeNotificationAdapter;
+import edu.dosw.styleradar.notificaciones.infrastructure.security.SecurityContextUserExtractor;
+import edu.dosw.styleradar.notificaciones.infrastructure.sse.SseEmitterRegistry;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +47,7 @@ public class AlertaController implements AlertaApi {
     private final AlertaDtoMapper alertaDtoMapper;
     private final NotificacionDtoMapper notificacionDtoMapper;
     private final SecurityContextUserExtractor userExtractor;
-    private final SseRealTimeNotificationAdapter sseAdapter;
+    private final SseEmitterRegistry sseRegistry;
 
     @Override
     @PreAuthorize("isAuthenticated()")
@@ -137,6 +137,6 @@ public class AlertaController implements AlertaApi {
     @GetMapping(value = "/notificaciones/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter suscribirCampanaTiempoReal() {
         Long usuarioId = userExtractor.obtenerUsuarioAutenticadoId();
-        return sseAdapter.registrarSuscripcion(usuarioId);
+        return sseRegistry.registrar(usuarioId);
     }
 }

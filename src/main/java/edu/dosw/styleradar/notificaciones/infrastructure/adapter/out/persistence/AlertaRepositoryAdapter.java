@@ -1,6 +1,6 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence;
 
-import edu.dosw.styleradar.notificaciones.application.mapper.out.AlertaEntityMapper;
+import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.mapper.AlertaEntityMapper;
 import edu.dosw.styleradar.notificaciones.domain.model.Alerta;
 import edu.dosw.styleradar.notificaciones.domain.model.EstadoAlerta;
 import edu.dosw.styleradar.notificaciones.domain.model.TipoAlerta;

@@ -1,4 +1,4 @@
-package edu.dosw.styleradar.notificaciones.application.mapper.out;
+package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.mapper;
 
 import edu.dosw.styleradar.notificaciones.domain.model.Notificacion;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.entity.NotificacionJpaEntity;
