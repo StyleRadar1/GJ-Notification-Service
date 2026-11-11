@@ -6,6 +6,7 @@ import edu.dosw.styleradar.notificaciones.application.dto.response.ContadorNoLei
 import edu.dosw.styleradar.notificaciones.application.dto.response.NotificacionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -329,5 +330,14 @@ public interface AlertaApi {
                     )
             )
     })
-    SseEmitter suscribirCampanaTiempoReal();
+    SseEmitter suscribirCampanaTiempoReal(
+            @Parameter(
+                    in = ParameterIn.HEADER,
+                    name = "Last-Event-ID",
+                    description = "Id del ultimo evento recibido. El navegador lo envia solo al reconectarse y el servicio "
+                            + "reenvia las notificaciones posteriores (hasta 200, las mas recientes).",
+                    required = false,
+                    example = "42"
+            ) String ultimoEventoId
+    );
 }

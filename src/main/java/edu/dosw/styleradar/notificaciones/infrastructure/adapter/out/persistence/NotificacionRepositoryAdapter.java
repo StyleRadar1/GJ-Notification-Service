@@ -61,6 +61,13 @@ public class NotificacionRepositoryAdapter implements NotificacionRepositoryPort
 
     @Override
     @Transactional(readOnly = true)
+    public List<Notificacion> listarPosterioresA(Long usuarioId, Long ultimoId) {
+        return repository.findByUsuarioIdAndIdGreaterThanOrderByIdAsc(usuarioId, ultimoId)
+                .stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long contarNoLeidasPorUsuario(Long usuarioId) {
         return repository.countByUsuarioIdAndLeidaFalse(usuarioId);
     }
