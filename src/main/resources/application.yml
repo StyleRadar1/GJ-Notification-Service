@@ -24,6 +24,8 @@ spring:
     locations: classpath:db/migration
 
 application:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   mail:
     from: ${MAIL_FROM:no-reply@styleradar.co}
     retry:
