@@ -590,6 +590,7 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 | `REDIS_HOST` | Hostname del servidor de caché Redis | `localhost` | No |
 | `CATALOG_SERVICE_URL` | URL base de `ms-item-catalogo` para OpenFeign | `http://localhost:8220` | Sí |
 | `JWT_SECRET` | Clave secreta HMAC-SHA256 (mínimo 256 bits) para validar JWT | `clave_secreta_minimo_256_bits...` | Sí |
+| `CORS_ALLOWED_ORIGINS` | Orígenes del frontend permitidos por CORS, separados por comas | `http://localhost:5173` | No |
 | `SPRING_MAIL_HOST` | Servidor SMTP para los avisos por correo. Sin esta variable no se envían correos (los avisos en plataforma siguen funcionando) | `smtp.ejemplo.co` | No |
 | `SPRING_MAIL_PORT` | Puerto del servidor SMTP | `587` | No |
 | `SPRING_MAIL_USERNAME` / `SPRING_MAIL_PASSWORD` | Credenciales del SMTP. Se inyectan como variables de entorno o secretos; no se guardan en el repositorio | — | No |
@@ -690,7 +691,7 @@ mvn jacoco:report
 | **Pruebas de Integración y Contrato** | Controladores REST, Seguridad JWT, Flyway, Repositorios JPA, Consumidores AMQP, SSE y correo | Spring Boot Test, MockMvc, H2 PostgreSQL Mode, GreenMail | `src/test/java/.../integration/` | ≥ 85% |
 | **Pruebas con RabbitMQ real** | Publicación de `AlertaCreada` y consumo de eventos contra un broker real | Testcontainers (requieren Docker; en un equipo sin Docker se omiten y las corre el CI) | `src/test/java/.../integration/messaging/` | — |
 
-Estado actual: **119 pruebas, 0 fallos, cobertura de líneas 92,8 %** (11 pruebas con Docker omitidas en un equipo sin Docker).
+Estado actual: **122 pruebas, 0 fallos, cobertura de líneas 92,9 %** (11 pruebas con Docker omitidas en un equipo sin Docker).
 
 > [!IMPORTANT]
 > **Criterio de Fallo en CI:** El archivo `pom.xml` contiene la regla `<limit><minimum>0.85</minimum></limit>`. Si la cobertura total consolidada es inferior al 85%, el comando `mvn verify` fallará con error y el pipeline bloqueará el Pull Request.
