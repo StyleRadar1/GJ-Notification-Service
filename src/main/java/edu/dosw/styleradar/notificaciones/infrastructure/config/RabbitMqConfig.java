@@ -45,6 +45,15 @@ public class RabbitMqConfig {
     @Value("${application.messaging.queues.garment-deleted:styleradar.notificaciones.prenda-retirada.q}")
     private String garmentDeletedQueueName;
 
+    @Value("${application.messaging.queues.donation-requested:styleradar.notificaciones.solicitud-donacion.q}")
+    private String donationRequestedQueueName;
+
+    @Value("${application.messaging.queues.garment-sold:styleradar.notificaciones.prenda-vendida.q}")
+    private String garmentSoldQueueName;
+
+    @Value("${application.messaging.queues.payment-confirmed:styleradar.notificaciones.pago-confirmado.q}")
+    private String paymentConfirmedQueueName;
+
     @Value("${application.messaging.queues.dlq:styleradar.notificaciones.dlq}")
     private String dlqName;
 
@@ -71,6 +80,15 @@ public class RabbitMqConfig {
 
     @Value("${application.messaging.routing-keys.garment-deleted:styleradar.catalogo.prenda.retirada}")
     private String garmentDeletedKey;
+
+    @Value("${application.messaging.routing-keys.donation-requested:styleradar.donaciones.solicitud.creada}")
+    private String donationRequestedKey;
+
+    @Value("${application.messaging.routing-keys.garment-sold:styleradar.segundavida.prenda.vendida}")
+    private String garmentSoldKey;
+
+    @Value("${application.messaging.routing-keys.payment-confirmed:styleradar.pagos.pago.confirmado}")
+    private String paymentConfirmedKey;
 
     @Value("${application.messaging.routing-keys.dlq:styleradar.notificaciones.error}")
     private String dlqRoutingKey;
@@ -173,6 +191,36 @@ public class RabbitMqConfig {
     @Bean
     public Binding garmentDeletedBinding(Queue garmentDeletedQueue, TopicExchange styleradarExchange) {
         return BindingBuilder.bind(garmentDeletedQueue).to(styleradarExchange).with(garmentDeletedKey);
+    }
+
+    @Bean
+    public Queue donationRequestedQueue() {
+        return buildDurableQueueWithDlq(donationRequestedQueueName);
+    }
+
+    @Bean
+    public Queue garmentSoldQueue() {
+        return buildDurableQueueWithDlq(garmentSoldQueueName);
+    }
+
+    @Bean
+    public Queue paymentConfirmedQueue() {
+        return buildDurableQueueWithDlq(paymentConfirmedQueueName);
+    }
+
+    @Bean
+    public Binding donationRequestedBinding(Queue donationRequestedQueue, TopicExchange styleradarExchange) {
+        return BindingBuilder.bind(donationRequestedQueue).to(styleradarExchange).with(donationRequestedKey);
+    }
+
+    @Bean
+    public Binding garmentSoldBinding(Queue garmentSoldQueue, TopicExchange styleradarExchange) {
+        return BindingBuilder.bind(garmentSoldQueue).to(styleradarExchange).with(garmentSoldKey);
+    }
+
+    @Bean
+    public Binding paymentConfirmedBinding(Queue paymentConfirmedQueue, TopicExchange styleradarExchange) {
+        return BindingBuilder.bind(paymentConfirmedQueue).to(styleradarExchange).with(paymentConfirmedKey);
     }
 
     @Bean

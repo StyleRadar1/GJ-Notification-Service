@@ -17,12 +17,34 @@ public interface ProcesarEventosExternosUseCase {
 
     void actualizarEstadoCuenta(Long usuarioId, String email, EstadoCuenta nuevoEstado);
 
-    Notificacion generarNotificacionDirecta(
+    default Notificacion generarNotificacionDirecta(
             Long usuarioId,
             TipoNotificacion tipo,
             String titulo,
             String mensaje,
             String enlace,
             Long itemId
+    ) {
+        return generarNotificacionDirecta(usuarioId, tipo, titulo, mensaje, enlace, itemId, null);
+    }
+
+    /**
+     * Genera una notificacion para el usuario. Si se indica el evento que la origino, una entrega repetida
+     * del mismo evento no genera una segunda notificacion para ese usuario (devuelve null).
+     */
+    Notificacion generarNotificacionDirecta(
+            Long usuarioId,
+            TipoNotificacion tipo,
+            String titulo,
+            String mensaje,
+            String enlace,
+            Long itemId,
+            String eventoId
     );
+
+    /**
+     * Notifica un pago confirmado. El usuario debe existir en la copia local de cuentas; si no existe se
+     * lanza RecursoNoEncontradoException y el mensaje debe ir a la cola de errores.
+     */
+    Notificacion generarNotificacionPagoConfirmado(Long usuarioId, String plan, String eventoId);
 }
