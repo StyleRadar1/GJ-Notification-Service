@@ -22,7 +22,7 @@ public record NotificacionResponse(
         @Schema(description = "Ciclo de reposicion de stock (idempotencia)", example = "1")
         Integer cicloReposicion,
 
-        @Schema(description = "Tipo de notificacion", example = "STOCK_REPUESTO")
+        @Schema(description = "Tipo de notificacion", example = "REPOSICION_STOCK")
         TipoNotificacion tipo,
 
         @Schema(description = "Canal de emision", example = "IN_APP")
@@ -34,7 +34,7 @@ public record NotificacionResponse(
         @Schema(description = "Cuerpo descriptivo del mensaje", example = "La prenda Chaqueta Denim Vintage vuelve a tener stock.")
         String mensaje,
 
-        @Schema(description = "Enlace deep-link a la vista frontend", example = "/prendas/1045")
+        @Schema(description = "Enlace deep-link a la vista frontend", example = "/catalogo/prendas/1045")
         String enlace,
 
         @Schema(description = "Indica si la notificacion ya fue leida", example = "false")
