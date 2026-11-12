@@ -56,7 +56,7 @@ jobs:
       RABBITMQ_USER_QA: ${{ secrets.RABBITMQ_USER_QA }}
       RABBITMQ_PASSWORD_QA: ${{ secrets.RABBITMQ_PASSWORD_QA }}
       RABBITMQ_VHOST_QA: ${{ secrets.RABBITMQ_VHOST_QA || '/' }}
-      RABBITMQ_SSL_VERIFY_HOSTNAME_QA: ${{ secrets.RABBITMQ_SSL_VERIFY_HOSTNAME_QA || 'false' }}
+      RABBITMQ_SSL_VERIFY_HOSTNAME_QA: ${{ secrets.RABBITMQ_SSL_VERIFY_HOSTNAME_QA || 'true' }}
       CATALOG_SERVICE_URL_QA: ${{ secrets.CATALOG_SERVICE_URL_QA || 'http://localhost:8220' }}
       JWT_SECRET_QA: ${{ secrets.JWT_SECRET_QA }}
     steps:
@@ -285,10 +285,30 @@ jobs:
             print(f'{header}.{payload}.{sig}')
             ")
             mkdir -p target/newman
+            echo "Ejecutando carpeta de pruebas independientes..."
             npx --yes newman@6.2.1 run postman/styleradar-notificaciones.postman_collection.json \
+              --folder "Pruebas Independientes ms-notificaciones" \
               --env-var "baseUrl=${BASE_URL}" \
               --env-var "jwtToken=$JWT_TOKEN_QA" \
               --reporters cli,json,junit \
-              --reporter-json-export target/newman/newman-report-qa.json \
-              --reporter-junit-export target/newman/newman-report-qa.xml
+              --reporter-json-export target/newman/newman-report-qa-independientes.json \
+              --reporter-junit-export target/newman/newman-report-qa-independientes.xml
+
+            CATALOG_HEALTH_OK=0
+            if curl -fsS --max-time 5 "${CATALOG_SERVICE_URL_QA}/actuator/health" > /dev/null 2>&1; then
+              CATALOG_HEALTH_OK=1
+            fi
+
+            if [ "$CATALOG_HEALTH_OK" -eq 1 ]; then
+              echo "ms-item-catalogo respondio en QA (${CATALOG_SERVICE_URL_QA}). Ejecutando pruebas dependientes de catalogo..."
+              npx --yes newman@6.2.1 run postman/styleradar-notificaciones.postman_collection.json \
+                --folder "Pruebas Dependientes ms-item-catalogo" \
+                --env-var "baseUrl=${BASE_URL}" \
+                --env-var "jwtToken=$JWT_TOKEN_QA" \
+                --reporters cli,json,junit \
+                --reporter-json-export target/newman/newman-report-qa-dependientes.json \
+                --reporter-junit-export target/newman/newman-report-qa-dependientes.xml
+            else
+              echo "ms-item-catalogo NO esta disponible en QA (${CATALOG_SERVICE_URL_QA}). Pruebas de catalogo omitidas por dependencia externa."
+            fi
           fi
