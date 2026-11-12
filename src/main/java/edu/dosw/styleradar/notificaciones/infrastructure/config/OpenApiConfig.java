@@ -29,8 +29,7 @@ public class OpenApiConfig {
                                 .email("notificaciones@styleradar.co")))
                 .servers(java.util.List.of(
                         new io.swagger.v3.oas.models.servers.Server().url("http://localhost:8300").description("Entorno Local / Docker Compose (ms-notificaciones :8300)"),
-                        new io.swagger.v3.oas.models.servers.Server().url("https://styleradar-notificaciones-qa.azurewebsites.net").description("Entorno de Calidad QA (ms-notificaciones)"),
-                        new io.swagger.v3.oas.models.servers.Server().url("https://styleradar-notificaciones-prod.azurewebsites.net").description("Entorno de Produccion PROD (ms-notificaciones)")
+                        new io.swagger.v3.oas.models.servers.Server().url("https://styleradar-notificaciones-qa.azurewebsites.net").description("Entorno de Calidad QA (ms-notificaciones)")
                 ));
     }
 }
