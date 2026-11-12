@@ -29,266 +29,570 @@
   ],
   "item": [
     {
-      "name": "1. Crear Alerta de Item Agotado",
-      "event": [
+      "name": "Pruebas Independientes ms-notificaciones",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Estado HTTP 201 Created', function () {",
-              "    pm.response.to.have.status(201);",
-              "});",
-              "pm.test('Alerta creada con estado ACTIVA', function () {",
-              "    const body = pm.response.json();",
-              "    pm.expect(body).to.have.property('id');",
-              "    pm.expect(body.estado).to.eql('ACTIVA');",
-              "    pm.expect(body.tipoAlerta).to.eql('ITEM_AGOTADO');",
-              "    pm.collectionVariables.set('alertaId', String(body.id));",
-              "});"
-            ]
+          "name": "4. Listar Mis Notificaciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna listado de notificaciones del usuario', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "    if (body.length > 0) {",
+                  "        pm.collectionVariables.set('notificacionId', String(body[0].id));",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones?soloNoLeidas=false",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "me",
+                "notificaciones"
+              ],
+              "query": [
+                {
+                  "key": "soloNoLeidas",
+                  "value": "false"
+                }
+              ]
+            }
           }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}" },
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"tipoAlerta\": \"ITEM_AGOTADO\",\n  \"itemId\": 1045,\n  \"tallaObjetivo\": \"M\",\n  \"canal\": \"IN_APP\"\n}"
         },
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/usuarios/me/alertas",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "usuarios", "me", "alertas"]
-        }
-      }
-    },
-    {
-      "name": "2. Listar Mis Alertas",
-      "event": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Estado HTTP 200 OK', function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "pm.test('Retorna listado de alertas del usuario', function () {",
-              "    const body = pm.response.json();",
-              "    pm.expect(body).to.be.an('array');",
-              "    pm.expect(body.length).to.be.above(0);",
-              "    pm.collectionVariables.set('alertaId', String(body[0].id));",
-              "});"
-            ]
+          "name": "5. Contador de Notificaciones No Leidas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna contador de no leidas', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('usuarioId');",
+                  "    pm.expect(body).to.have.property('cantidadNoLeidas');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/no-leidas/contador",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "me",
+                "notificaciones",
+                "no-leidas",
+                "contador"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6. Marcar Notificacion Como Leida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Notificacion queda marcada como leida', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.leida).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/{{notificacionId}}/leer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "me",
+                "notificaciones",
+                "{{notificacionId}}",
+                "leer"
+              ]
+            }
+          }
+        },
+        {
+          "name": "7. Marcar Todas Como Leidas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Contador de notificaciones no leidas queda en 0', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.cantidadNoLeidas).to.eql(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/leer-todas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "me",
+                "notificaciones",
+                "leer-todas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "8. Suscripcion Campana Tiempo Real (SSE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Endpoint SSE autenticado responde 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const allowHeader = pm.response.headers.get('Allow') || '';",
+                  "    pm.expect(allowHeader).to.include('GET');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/stream",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "me",
+                "notificaciones",
+                "stream"
+              ]
+            }
+          }
+        },
+        {
+          "name": "9. Listar Preferencias de Avisos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna listado de 9 preferencias de avisos', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "    pm.expect(body.length).to.eql(9);",
+                  "    pm.expect(body[0]).to.have.property('tipo');",
+                  "    pm.expect(body[0]).to.have.property('canal');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/me/preferencias-avisos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "me",
+                "preferencias-avisos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "10. Guardar Preferencia de Aviso Valida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Preferencia actualizada correctamente', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.tipo).to.eql('MENSAJE_NUEVO');",
+                  "    pm.expect(body.canal).to.eql('CORREO_Y_PLATAFORMA');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"canal\": \"CORREO_Y_PLATAFORMA\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/me/preferencias-avisos/MENSAJE_NUEVO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "me",
+                "preferencias-avisos",
+                "MENSAJE_NUEVO"
+              ]
+            }
+          }
+        },
+        {
+          "name": "11. Guardar Preferencia de Aviso Invalida (Tipo Invalido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Retorna ProblemDetail con error de parametro', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('status', 400);",
+                  "    pm.expect(body).to.have.property('mensaje');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"canal\": \"CORREO_Y_PLATAFORMA\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/me/preferencias-avisos/TIPO_INVALIDO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "me",
+                "preferencias-avisos",
+                "TIPO_INVALIDO"
+              ]
+            }
+          }
+        },
+        {
+          "name": "12. Validar Seguridad 401 ProblemDetail Sin Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Retorna RFC 7807 ProblemDetail con campo mensaje', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('status', 401);",
+                  "    pm.expect(body).to.have.property('mensaje');",
+                  "    pm.expect(body.mensaje).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "me",
+                "notificaciones"
+              ]
+            }
           }
         }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/usuarios/me/alertas",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "usuarios", "me", "alertas"]
-        }
-      }
+      ]
     },
     {
-      "name": "3. Desactivar Alerta",
-      "event": [
+      "name": "Pruebas Dependientes ms-item-catalogo",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Estado HTTP 200 OK', function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "pm.test('Alerta cambia a estado DESACTIVADA', function () {",
-              "    const body = pm.response.json();",
-              "    pm.expect(body.estado).to.eql('DESACTIVADA');",
-              "});"
-            ]
+          "name": "1. Crear Alerta de Item Agotado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Alerta creada con estado ACTIVA', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body.estado).to.eql('ACTIVA');",
+                  "    pm.expect(body.tipoAlerta).to.eql('ITEM_AGOTADO');",
+                  "    pm.collectionVariables.set('alertaId', String(body.id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoAlerta\": \"ITEM_AGOTADO\",\n  \"itemId\": 1045,\n  \"tallaObjetivo\": \"M\",\n  \"canal\": \"IN_APP\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/me/alertas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "me",
+                "alertas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Listar Mis Alertas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna listado de alertas del usuario', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "    pm.expect(body.length).to.be.above(0);",
+                  "    pm.collectionVariables.set('alertaId', String(body[0].id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/me/alertas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "me",
+                "alertas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Desactivar Alerta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Alerta cambia a estado DESACTIVADA', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.estado).to.eql('DESACTIVADA');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/me/alertas/{{alertaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "me",
+                "alertas",
+                "{{alertaId}}"
+              ]
+            }
           }
         }
-      ],
-      "request": {
-        "method": "DELETE",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/usuarios/me/alertas/{{alertaId}}",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "usuarios", "me", "alertas", "{{alertaId}}"]
-        }
-      }
-    },
-    {
-      "name": "4. Listar Mis Notificaciones",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Estado HTTP 200 OK', function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "pm.test('Retorna listado de notificaciones del usuario', function () {",
-              "    const body = pm.response.json();",
-              "    pm.expect(body).to.be.an('array');",
-              "    if (body.length > 0) {",
-              "        pm.collectionVariables.set('notificacionId', String(body[0].id));",
-              "    }",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones?soloNoLeidas=false",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "usuarios", "me", "notificaciones"],
-          "query": [{ "key": "soloNoLeidas", "value": "false" }]
-        }
-      }
-    },
-    {
-      "name": "5. Contador de Notificaciones No Leidas",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Estado HTTP 200 OK', function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "pm.test('Retorna contador de no leidas', function () {",
-              "    const body = pm.response.json();",
-              "    pm.expect(body).to.have.property('usuarioId');",
-              "    pm.expect(body).to.have.property('cantidadNoLeidas');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/no-leidas/contador",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "usuarios", "me", "notificaciones", "no-leidas", "contador"]
-        }
-      }
-    },
-    {
-      "name": "6. Marcar Notificacion Como Leida",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Estado HTTP 200 OK', function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "pm.test('Notificacion queda marcada como leida', function () {",
-              "    const body = pm.response.json();",
-              "    pm.expect(body.leida).to.eql(true);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "PATCH",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/{{notificacionId}}/leer",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "usuarios", "me", "notificaciones", "{{notificacionId}}", "leer"]
-        }
-      }
-    },
-    {
-      "name": "7. Marcar Todas Como Leidas",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Estado HTTP 200 OK', function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "pm.test('Contador de notificaciones no leidas queda en 0', function () {",
-              "    const body = pm.response.json();",
-              "    pm.expect(body.cantidadNoLeidas).to.eql(0);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "PATCH",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/leer-todas",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "usuarios", "me", "notificaciones", "leer-todas"]
-        }
-      }
-    },
-    {
-      "name": "8. Suscripcion Campana Tiempo Real (SSE)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Endpoint SSE autenticado responde 200 OK', function () {",
-              "    pm.response.to.have.status(200);",
-              "    const allowHeader = pm.response.headers.get('Allow') || '';",
-              "    pm.expect(allowHeader).to.include('GET');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "OPTIONS",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{jwtToken}}" },
-          { "key": "Accept", "value": "text/event-stream" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/stream",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "usuarios", "me", "notificaciones", "stream"]
-        }
-      }
+      ]
     }
   ]
 }
