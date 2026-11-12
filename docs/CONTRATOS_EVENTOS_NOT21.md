@@ -181,6 +181,86 @@
 }
 ```
 
+### 1.7 `SolicitudDonacionCreada` (Emisor: `ms-donaciones`) — GJ-61
+> **Nombre propuesto, pendiente de confirmar con el equipo de Donaciones.**
+- **Routing Key:** `styleradar.donaciones.solicitud.creada`
+- **Cola Destino:** `styleradar.notificaciones.solicitud-donacion.q`
+- **Propósito:** Avisar a la fundación destinataria de que le llegó una solicitud de donación. Genera una notificación `SOLICITUD_DONACION` con enlace `/donaciones/{donacionId}`.
+
+| Campo | Tipo | Obligatorio | Descripción |
+| :--- | :--- | :---: | :--- |
+| `eventoId` | `String` | Sí | Identificador del evento (clave de idempotencia) |
+| `donacionId` | `Long` | Sí | ID de la donación |
+| `fundacionUsuarioId` | `Long` | Sí | ID del usuario de la fundación que recibe el aviso |
+| `nombreDonante` | `String` | No | Nombre visible de quien dona |
+| `resumen` | `String` | No | Descripción corta de lo que se dona |
+| `fechaEvento` | `LocalDateTime` | No | Fecha y hora de la solicitud |
+
+```json
+{
+  "eventoId": "evt-don-7001",
+  "donacionId": 40,
+  "fundacionUsuarioId": 620,
+  "nombreDonante": "Carlos",
+  "resumen": "5 camisas",
+  "fechaEvento": "2026-11-12T09:00:00"
+}
+```
+
+### 1.8 `PrendaVendida` (Emisor: `ms-segunda-vida`) — GJ-65
+> **Nombre propuesto, pendiente de confirmar con el equipo de Segunda Vida.**
+- **Routing Key:** `styleradar.segundavida.prenda.vendida`
+- **Cola Destino:** `styleradar.notificaciones.prenda-vendida.q`
+- **Propósito:** Avisar a los demás interesados en una prenda de segunda mano de que ya se vendió. Se genera una notificación `PRENDA_VENDIDA` por cada interesado, excepto el comprador, con enlace `/segunda-mano/{publicacionId}`.
+
+| Campo | Tipo | Obligatorio | Descripción |
+| :--- | :--- | :---: | :--- |
+| `eventoId` | `String` | Sí | Identificador del evento (clave de idempotencia) |
+| `publicacionId` | `Long` | Sí | ID de la publicación vendida |
+| `nombrePrenda` | `String` | No | Nombre de la prenda |
+| `compradorId` | `Long` | No | Usuario que compró (no recibe el aviso) |
+| `interesadosIds` | `List<Long>` | No | Usuarios con conversación abierta sobre la prenda |
+| `fechaEvento` | `LocalDateTime` | No | Fecha y hora de la venta |
+
+```json
+{
+  "eventoId": "evt-vta-8001",
+  "publicacionId": 70,
+  "nombrePrenda": "Chaqueta bomber",
+  "compradorId": 505,
+  "interesadosIds": [501, 502, 505],
+  "fechaEvento": "2026-11-12T10:00:00"
+}
+```
+
+### 1.9 `PagoConfirmado` (Emisor: `ms-pagos`) — GJ-65
+> **Nombre propuesto, pendiente de confirmar con el equipo de Pagos.**
+- **Routing Key:** `styleradar.pagos.pago.confirmado`
+- **Cola Destino:** `styleradar.notificaciones.pago-confirmado.q`
+- **Propósito:** Confirmar al usuario que su pago (plan Radar+ o cupos de almacén aliado) quedó aprobado. Genera una notificación `PAGO_CONFIRMADO` con enlace `/planes/mi-plan`.
+- **Usuario desconocido:** si `usuarioId` no existe en la copia local de cuentas (`estados_cuenta_copia`), el mensaje se rechaza y va a la DLQ para revisarlo, en vez de perderse.
+
+| Campo | Tipo | Obligatorio | Descripción |
+| :--- | :--- | :---: | :--- |
+| `eventoId` | `String` | Sí | Identificador del evento (clave de idempotencia) |
+| `pagoId` | `Long` | No | ID del pago |
+| `usuarioId` | `Long` | Sí | Usuario que pagó |
+| `plan` | `String` | No | Plan o producto pagado |
+| `fechaConfirmacion` | `LocalDateTime` | No | Fecha y hora de la confirmación |
+
+```json
+{
+  "eventoId": "evt-pago-9001",
+  "pagoId": 900,
+  "usuarioId": 501,
+  "plan": "Radar+",
+  "fechaConfirmacion": "2026-11-12T11:00:00"
+}
+```
+
+### 1.10 Mensajes de la donación según el estado
+`DonacionEstadoCambiado` genera un texto distinto según `nuevoEstado`: contiene `APROB` → "fue aprobada"; `RECHAZ` → "fue rechazada"; `CITA` → "se programó una cita"; cualquier otro → "cambió a estado X". Si viene `motivo`, se agrega al final.
+
 ---
 
 ## 2. Eventos Publicados por `ms-notificaciones`
@@ -210,7 +290,7 @@
 | Exchange | `styleradar.exchange` (tipo `topic`, durable) |
 | Dead Letter Exchange | `styleradar.dlx` |
 | Cola de errores (DLQ) | `styleradar.notificaciones.dlq` (routing key `styleradar.notificaciones.error`) |
-| Colas consumidas | 8, todas durables y con la DLX configurada |
+| Colas consumidas | 11, todas durables y con la DLX configurada |
 | Formato del mensaje | JSON (`application/json`), fechas en ISO-8601 |
 | Virtual host | `RABBITMQ_VHOST` (por defecto `/`) |
 | TLS | `RABBITMQ_SSL_ENABLED` (puerto `5671` cuando está activo) |
@@ -219,7 +299,7 @@
 
 - **Payload inválido** (campo obligatorio ausente, estado de cuenta desconocido o JSON que no se puede convertir): el mensaje va directo a la DLQ, sin reintentos.
 - **Fallo transitorio** (por ejemplo, la base de datos no responde): se reintenta hasta 3 veces con espera exponencial (1 s, 2 s, hasta 10 s) y después va a la DLQ.
-- **Duplicados:** el consumidor es idempotente; una entrega repetida del mismo evento no genera una segunda notificación.
+- **Duplicados:** el consumidor es idempotente. Las notificaciones directas (mensaje, donación, moderación, solicitud de donación, prenda vendida y pago) guardan el `eventoId` y la base de datos tiene una restricción única `(evento_id, usuario_id)`: una entrega repetida del mismo evento no genera una segunda notificación, ni siquiera si dos consumidores lo procesan a la vez. Por eso **`eventoId` debe ser estable en los reintentos del emisor**. Los eventos que no traen `eventoId` no se pueden deduplicar.
 
 ### Nombres de eventos pendientes de confirmar
 

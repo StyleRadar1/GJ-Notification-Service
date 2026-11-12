@@ -11,11 +11,21 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NotificacionApplicationServiceImpl implements NotificacionApplicationService {
 
+    /** Tope de notificaciones que se reenvian al reconectar la campana: las mas recientes. */
+    private static final int MAX_NOTIFICACIONES_A_REENVIAR = 200;
+
     private final NotificacionRepositoryPort notificacionRepositoryPort;
 
     @Override
     public List<Notificacion> listarNotificacionesPorUsuario(Long usuarioId, Boolean soloNoLeidas) {
         return notificacionRepositoryPort.listarPorUsuario(usuarioId, soloNoLeidas);
+    }
+
+    @Override
+    public List<Notificacion> listarPosterioresA(Long usuarioId, Long ultimoId) {
+        List<Notificacion> perdidas = notificacionRepositoryPort.listarPosterioresA(usuarioId, ultimoId);
+        int desde = Math.max(0, perdidas.size() - MAX_NOTIFICACIONES_A_REENVIAR);
+        return perdidas.subList(desde, perdidas.size());
     }
 
     @Override

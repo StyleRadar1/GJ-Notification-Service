@@ -16,9 +16,13 @@ public interface SpringDataNotificacionRepository extends JpaRepository<Notifica
 
     List<NotificacionJpaEntity> findByUsuarioIdAndLeidaOrderByFechaCreacionDesc(Long usuarioId, boolean leida);
 
+    List<NotificacionJpaEntity> findByUsuarioIdAndIdGreaterThanOrderByIdAsc(Long usuarioId, Long id);
+
     long countByUsuarioIdAndLeidaFalse(Long usuarioId);
 
     boolean existsByAlertaIdAndItemIdAndCicloReposicion(Long alertaId, Long itemId, Integer cicloReposicion);
+
+    boolean existsByEventoIdAndUsuarioId(String eventoId, Long usuarioId);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE NotificacionJpaEntity n SET n.leida = true, n.fechaLectura = :fechaLectura " +

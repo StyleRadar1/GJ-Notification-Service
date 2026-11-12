@@ -6,6 +6,7 @@ import edu.dosw.styleradar.notificaciones.application.dto.response.ContadorNoLei
 import edu.dosw.styleradar.notificaciones.application.dto.response.NotificacionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -205,7 +206,7 @@ public interface AlertaApi {
                             array = @ArraySchema(schema = @Schema(implementation = NotificacionResponse.class)),
                             examples = @ExampleObject(
                                     name = "ListaNotificaciones",
-                                    value = "[{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":1045,\"cicloReposicion\":1,\"tipo\":\"STOCK_REPUESTO\",\"canal\":\"IN_APP\",\"titulo\":\"Stock Disponible\",\"mensaje\":\"Chaqueta Denim Vintage vuelve a tener stock.\",\"enlace\":\"/prendas/1045\",\"leida\":false,\"fechaCreacion\":\"2026-11-02T12:00:00\",\"fechaLectura\":null}]"
+                                    value = "[{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":1045,\"cicloReposicion\":1,\"tipo\":\"REPOSICION_STOCK\",\"canal\":\"IN_APP\",\"titulo\":\"Stock Disponible\",\"mensaje\":\"Chaqueta Denim Vintage vuelve a tener stock.\",\"enlace\":\"/catalogo/prendas/1045\",\"leida\":false,\"fechaCreacion\":\"2026-11-02T12:00:00\",\"fechaLectura\":null}]"
                             )
                     )
             ),
@@ -233,7 +234,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = NotificacionResponse.class),
                             examples = @ExampleObject(
                                     name = "NotificacionLeida",
-                                    value = "{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":1045,\"cicloReposicion\":1,\"tipo\":\"STOCK_REPUESTO\",\"canal\":\"IN_APP\",\"titulo\":\"Stock Disponible\",\"mensaje\":\"Chaqueta Denim Vintage vuelve a tener stock.\",\"enlace\":\"/prendas/1045\",\"leida\":true,\"fechaCreacion\":\"2026-11-02T12:00:00\",\"fechaLectura\":\"2026-11-02T12:05:00\"}"
+                                    value = "{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":1045,\"cicloReposicion\":1,\"tipo\":\"REPOSICION_STOCK\",\"canal\":\"IN_APP\",\"titulo\":\"Stock Disponible\",\"mensaje\":\"Chaqueta Denim Vintage vuelve a tener stock.\",\"enlace\":\"/catalogo/prendas/1045\",\"leida\":true,\"fechaCreacion\":\"2026-11-02T12:00:00\",\"fechaLectura\":\"2026-11-02T12:05:00\"}"
                             )
                     )
             ),
@@ -329,5 +330,14 @@ public interface AlertaApi {
                     )
             )
     })
-    SseEmitter suscribirCampanaTiempoReal();
+    SseEmitter suscribirCampanaTiempoReal(
+            @Parameter(
+                    in = ParameterIn.HEADER,
+                    name = "Last-Event-ID",
+                    description = "Id del ultimo evento recibido. El navegador lo envia solo al reconectarse y el servicio "
+                            + "reenvia las notificaciones posteriores (hasta 200, las mas recientes).",
+                    required = false,
+                    example = "42"
+            ) String ultimoEventoId
+    );
 }

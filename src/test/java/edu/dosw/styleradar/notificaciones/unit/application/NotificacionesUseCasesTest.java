@@ -98,7 +98,8 @@ class NotificacionesUseCasesTest {
                 busquedaGuardadaCopiaRepositoryPort,
                 estadoCuentaCopiaRepositoryPort,
                 realTimeNotificationPort,
-                matcher
+                matcher,
+                org.mockito.Mockito.mock(edu.dosw.styleradar.notificaciones.domain.port.in.EnviarAvisoPorCorreoUseCase.class)
         );
     }
 
@@ -276,7 +277,11 @@ class NotificacionesUseCasesTest {
         // Arrange
         BusquedaGuardadaCopia copia = new BusquedaGuardadaCopia(300L, 501L, "Busqueda", null, true, LocalDateTime.now());
         when(estadoCuentaCopiaRepositoryPort.buscarPorUsuarioId(501L)).thenReturn(Optional.empty());
-        when(notificacionRepositoryPort.guardar(any(Notificacion.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(notificacionRepositoryPort.guardar(any(Notificacion.class))).thenAnswer(inv -> {
+            Notificacion n = inv.getArgument(0);
+            n.setId(7L);
+            return n;
+        });
 
         // Act
         procesarEventosExternosUseCase.sincronizarBusquedaGuardada(copia, false);
@@ -292,5 +297,31 @@ class NotificacionesUseCasesTest {
         verify(alertaRepositoryPort).desactivarPorBusquedaGuardada(300L);
         verify(alertaRepositoryPort).desactivarPorItem(1045L);
         verify(estadoCuentaCopiaRepositoryPort).guardar(any(EstadoCuentaCopia.class));
+    }
+
+    @Test
+    @DisplayName("GJ-65 - Un evento ya procesado para el usuario no genera otra notificacion ni emite en tiempo real")
+    void eventoYaProcesadoNoDuplica() {
+        when(notificacionRepositoryPort.existePorEventoYUsuario("evt-1", 501L)).thenReturn(true);
+
+        Notificacion resultado = procesarEventosExternosUseCase.generarNotificacionDirecta(
+                501L, TipoNotificacion.MENSAJE_NUEVO, "Chat", "Hola", "/chat/1", null, "evt-1");
+
+        assertThat(resultado).isNull();
+        verify(notificacionRepositoryPort, never()).guardar(any(Notificacion.class));
+        verify(realTimeNotificationPort, never()).emitirNotificacionTiempoReal(any(), any());
+    }
+
+    @Test
+    @DisplayName("GJ-65 - Si la base rechaza el duplicado (carrera entre dos consumidores) no se emite en tiempo real")
+    void duplicadoRechazadoPorLaBaseNoEmite() {
+        when(notificacionRepositoryPort.existePorEventoYUsuario("evt-2", 501L)).thenReturn(false);
+        when(notificacionRepositoryPort.guardar(any(Notificacion.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Notificacion resultado = procesarEventosExternosUseCase.generarNotificacionDirecta(
+                501L, TipoNotificacion.MENSAJE_NUEVO, "Chat", "Hola", "/chat/1", null, "evt-2");
+
+        assertThat(resultado).isNull();
+        verify(realTimeNotificationPort, never()).emitirNotificacionTiempoReal(any(), any());
     }
 }

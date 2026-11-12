@@ -366,6 +366,8 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 | `PATCH` | `/api/v1/usuarios/me/notificaciones/leer-todas` | Marca todas las notificaciones del usuario como leídas (NOT-13) | Autenticado (`JWT`) | `200`, `401` |
 |  `GET`  | `/api/v1/usuarios/me/notificaciones/no-leidas/contador` | Obtiene el contador de notificaciones sin leer para la campana (NOT-13) | Autenticado (`JWT`) | `200`, `401` |
 |  `GET`  | `/api/v1/usuarios/me/notificaciones/stream` | Suscripción Server-Sent Events (`text/event-stream`) para campana en tiempo real (NOT-15) | Autenticado (`JWT`) | `200`, `401` |
+|  `GET`  | `/api/v1/usuarios/me/preferencias-avisos` | Lista el canal elegido por tipo de aviso; los no configurados salen como `SOLO_PLATAFORMA` (GJ-64) | Autenticado (`JWT`) | `200`, `401` |
+|  `PUT`  | `/api/v1/usuarios/me/preferencias-avisos/{tipo}` | Elige `SOLO_PLATAFORMA` o `CORREO_Y_PLATAFORMA` para un tipo de aviso (GJ-64) | Autenticado (`JWT`) | `200`, `400`, `401` |
 
 <details>
 <summary><b>Click para ver Ejemplos Interactivos de Request y Response JSON (Payloads)</b></summary>
@@ -577,6 +579,10 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 | `REDIS_HOST` | Hostname del servidor de caché Redis | `localhost` | No |
 | `CATALOG_SERVICE_URL` | URL base de `ms-item-catalogo` para OpenFeign | `http://localhost:8220` | Sí |
 | `JWT_SECRET` | Clave secreta HMAC-SHA256 (mínimo 256 bits) para validar JWT | `clave_secreta_minimo_256_bits...` | Sí |
+| `SPRING_MAIL_HOST` | Servidor SMTP para los avisos por correo. Sin esta variable no se envían correos (los avisos en plataforma siguen funcionando) | `smtp.ejemplo.co` | No |
+| `SPRING_MAIL_PORT` | Puerto del servidor SMTP | `587` | No |
+| `SPRING_MAIL_USERNAME` / `SPRING_MAIL_PASSWORD` | Credenciales del SMTP. Se inyectan como variables de entorno o secretos; no se guardan en el repositorio | — | No |
+| `MAIL_FROM` | Dirección remitente de los correos | `no-reply@styleradar.co` | No |
 
 <details>
 <summary><b>Click para copiar la Plantilla de Archivo .env.example</b></summary>

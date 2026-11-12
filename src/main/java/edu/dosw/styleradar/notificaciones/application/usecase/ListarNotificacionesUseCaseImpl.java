@@ -23,6 +23,11 @@ public class ListarNotificacionesUseCaseImpl implements ListarNotificacionesUseC
     }
 
     @Override
+    public List<Notificacion> listarPosterioresA(Long usuarioId, Long ultimoId) {
+        return notificacionApplicationService.listarPosterioresA(usuarioId, ultimoId);
+    }
+
+    @Override
     public long contarNoLeidas(Long usuarioId) {
         return notificacionApplicationService.contarNoLeidas(usuarioId);
     }

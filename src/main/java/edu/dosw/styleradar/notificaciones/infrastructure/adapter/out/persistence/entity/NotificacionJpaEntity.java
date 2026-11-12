@@ -27,6 +27,10 @@ import lombok.ToString;
                 @UniqueConstraint(
                         name = "uk_notificacion_alerta_item_ciclo",
                         columnNames = {"alerta_id", "item_id", "ciclo_reposicion"}
+                ),
+                @UniqueConstraint(
+                        name = "uk_notificacion_evento_usuario",
+                        columnNames = {"evento_id", "usuario_id"}
                 )
         }
 )
@@ -81,4 +85,7 @@ public class NotificacionJpaEntity {
 
     @Column(name = "fecha_lectura")
     private LocalDateTime fechaLectura;
+
+    @Column(name = "evento_id", length = 64)
+    private String eventoId;
 }

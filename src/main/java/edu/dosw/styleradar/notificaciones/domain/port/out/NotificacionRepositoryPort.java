@@ -12,9 +12,14 @@ public interface NotificacionRepositoryPort {
 
     List<Notificacion> listarPorUsuario(Long usuarioId, Boolean soloNoLeidas);
 
+    /** Notificaciones del usuario con id mayor al indicado, de la mas antigua a la mas reciente. */
+    List<Notificacion> listarPosterioresA(Long usuarioId, Long ultimoId);
+
     long contarNoLeidasPorUsuario(Long usuarioId);
 
     int marcarTodasComoLeidasPorUsuario(Long usuarioId);
 
     boolean existePorAlertaItemYCiclo(Long alertaId, Long itemId, Integer cicloReposicion);
+
+    boolean existePorEventoYUsuario(String eventoId, Long usuarioId);
 }

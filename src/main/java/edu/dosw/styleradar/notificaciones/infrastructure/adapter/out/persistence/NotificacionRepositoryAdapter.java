@@ -61,6 +61,13 @@ public class NotificacionRepositoryAdapter implements NotificacionRepositoryPort
 
     @Override
     @Transactional(readOnly = true)
+    public List<Notificacion> listarPosterioresA(Long usuarioId, Long ultimoId) {
+        return repository.findByUsuarioIdAndIdGreaterThanOrderByIdAsc(usuarioId, ultimoId)
+                .stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long contarNoLeidasPorUsuario(Long usuarioId) {
         return repository.countByUsuarioIdAndLeidaFalse(usuarioId);
     }
@@ -75,6 +82,12 @@ public class NotificacionRepositoryAdapter implements NotificacionRepositoryPort
     @Transactional(readOnly = true)
     public boolean existePorAlertaItemYCiclo(Long alertaId, Long itemId, Integer cicloReposicion) {
         return repository.existsByAlertaIdAndItemIdAndCicloReposicion(alertaId, itemId, cicloReposicion);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existePorEventoYUsuario(String eventoId, Long usuarioId) {
+        return repository.existsByEventoIdAndUsuarioId(eventoId, usuarioId);
     }
 }
 
