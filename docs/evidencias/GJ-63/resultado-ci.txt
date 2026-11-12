@@ -1,0 +1,8 @@
+Corrida del CI en develop: https://github.com/StyleRadar1/GJ-Notification-Service/actions/runs/43264088755
+Commit 6773a4f0 · 12 de noviembre de 2026 · job build-and-verify (con Docker, Testcontainers y RabbitMQ real)
+
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.78 s -- in edu.dosw.styleradar.notificaciones.integration.messaging.AlertaCreadaPublicacionIntegrationTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.655 s -- in edu.dosw.styleradar.notificaciones.integration.messaging.RabbitMqEventosIntegrationTest
+[INFO] Tests run: 124, Failures: 0, Errors: 0, Skipped: 0
+[INFO] All coverage checks have been met.
+[INFO] BUILD SUCCESS
