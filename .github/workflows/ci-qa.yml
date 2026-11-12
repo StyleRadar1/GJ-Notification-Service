@@ -232,7 +232,12 @@ jobs:
                 RABBITMQ_SSL_ENABLED=true \
                 RABBITMQ_SSL_VERIFY_HOSTNAME="${RABBITMQ_SSL_VERIFY_HOSTNAME_QA}" \
                 CATALOG_SERVICE_URL="${CATALOG_SERVICE_URL_QA}" \
-                JWT_SECRET="${JWT_SECRET_QA}"
+                JWT_SECRET="${JWT_SECRET_QA}" \
+                WEBSITES_CONTAINER_START_TIME_LIMIT=1800 \
+                MANAGEMENT_HEALTH_REDIS_ENABLED=false \
+                MANAGEMENT_HEALTH_MAIL_ENABLED=false \
+                SPRING_AUTOCONFIGURE_EXCLUDE="org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration" \
+                CORS_ALLOWED_ORIGINS="http://localhost:5173"
             REGISTRY_URL="https://index.docker.io/v1"
             if echo "$DOCKERHUB_NAMESPACE" | grep -q "azurecr.io"; then
               REGISTRY_URL="https://${DOCKERHUB_NAMESPACE}"
