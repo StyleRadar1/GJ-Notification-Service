@@ -117,11 +117,22 @@ jobs:
             -X POST http://localhost:15672/api/exchanges/%2F/styleradar.exchange/publish \
             -d '{"properties":{"content_type":"application/json"},"routing_key":"styleradar.inventario.actualizado","payload":"{}","payload_encoding":"string"}'
 
-          sleep 3
-
-          DLQ_JSON=$(curl -fsS -u guest:guest http://localhost:15672/api/queues/%2F/styleradar.notificaciones.dlq)
-          echo "Estado DLQ styleradar.notificaciones.dlq: $DLQ_JSON"
-          python3 -c 'import json, sys; data = json.loads(sys.argv[1]); assert data.get("messages", 0) >= 1, f"Se esperaba >= 1 mensaje en DLQ, obtenido: {data}"' "$DLQ_JSON"
+          DLQ_OK=0
+          for i in $(seq 1 10); do
+            DLQ_JSON=$(curl -fsS -u guest:guest http://localhost:15672/api/queues/%2F/styleradar.notificaciones.dlq || true)
+            MSG_COUNT=$(python3 -c 'import json, sys; data = json.loads(sys.argv[1]); print(data.get("messages", 0))' "$DLQ_JSON" 2>/dev/null || echo 0)
+            if [ "$MSG_COUNT" -ge 1 ]; then
+              echo "Mensaje detectado en DLQ: $MSG_COUNT mensaje(s)"
+              DLQ_OK=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$DLQ_OK" -ne 1 ]; then
+            echo "Estado DLQ styleradar.notificaciones.dlq: $DLQ_JSON"
+            docker compose logs --tail=100 ms-notificaciones
+            exit 1
+          fi
 
           JWT_SECRET_VAL=$(grep '^JWT_SECRET=' .env | cut -d'=' -f2-)
           JWT_TOKEN=$(JWT_SECRET_ENV="$JWT_SECRET_VAL" python3 -c "
