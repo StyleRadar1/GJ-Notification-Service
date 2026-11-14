@@ -6,16 +6,18 @@ Además se usó una página de demostración servida en `http://localhost:5173` 
 
 | Archivo | Qué muestra |
 | :--- | :--- |
-| `GJ-62_campana_en_vivo_y_reconexion.gif` | Los 7 cuadros siguientes en secuencia |
+| `GJ-62_campana_en_vivo_y_reconexion.gif` y `.webm` | Los 7 cuadros siguientes en secuencia (el `.webm` es el video, con leyendas) |
 | `GJ-62_f1_conectada.png` | Conexión abierta (evento `connected`) |
 | `GJ-62_f2_llega_una_notificacion_en_vivo.png` y `GJ-62_f3_llega_otra.png` | Cada notificación nueva llega a la campana apenas se crea, con su id de evento |
 | `GJ-62_f4_conexion_cortada.png` y `GJ-62_f5_desconectado_el_contador_no_cambia.png` | Se corta la conexión y llegan 2 notificaciones mientras el usuario está desconectado |
 | `GJ-62_f6_reconecta_y_recibe_lo_perdido.png` | Al reconectar con `Last-Event-ID` (ver el registro) se reciben, en orden, las 2 notificaciones perdidas |
 | `GJ-62_f7_de_nuevo_en_vivo.png` | Después de reconectar, las nuevas siguen llegando en vivo |
 
-## Falta el video
+## Video
 
-Esta carpeta tiene un GIF, no un video. Para grabar el video final (con el servicio levantado y un JWT válido):
+`GJ-62_campana_en_vivo_y_reconexion.webm` (23 s) reúne los mismos siete cuadros, con una leyenda en cada uno. Se armó con las capturas reales de arriba, no es una grabación continua de pantalla: sirve para mostrar el recorrido completo (conexión, avisos en vivo, corte, reconexión con `Last-Event-ID` y avisos nuevos) en un solo archivo.
+
+Si el líder pide una grabación continua, se hace con el servicio levantado y un JWT válido:
 
 1. Abre el Swagger y autoriza con un JWT.
 2. Conecta un cliente al stream: `curl -N -H "Authorization: Bearer $TOKEN" http://localhost:8300/api/v1/usuarios/me/notificaciones/stream`.
