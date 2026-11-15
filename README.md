@@ -232,7 +232,7 @@ flowchart LR
 #### 2. Diagrama de Clases (Modelo de Dominio y Patrones de Diseno)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-clases.drawio`](docs/uml/diagrama-clases.drawio)
 * **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 3)](docs/DIAGRAMAS_NOT20.md#3-diagrama-de-clases-modelo-de-dominio)
-* **Descripcion:** Modela las entidades de dominio (`Alerta`, `Notificacion`, `PreferenciaAviso`, `BusquedaGuardadaCopia`, `EstadoCuentaCopia`), Value Objects (`CriterioBusquedaVO`, `DatosPrendaVO`), Enumeraciones (`TipoAlerta`, `TipoNotificacion`, `CanalNotificacion`, `CanalAviso`, `EstadoAlerta`, `EstadoCuenta`) y las reglas del dominio (`AlertaValidator` para las validaciones y `EvaluadorCriteriosMatcher` para el matching en memoria). El dominio no depende de Spring ni de JPA.
+* **Descripcion:** Modela las entidades de dominio (`Alerta`, `Notificacion`, `PreferenciaAviso`, `BusquedaGuardadaCopia`, `EstadoCuentaCopia`), Value Objects (`CriterioBusquedaVO`, `DatosPrendaVO`), Enumeraciones (`TipoAlerta`, `TipoNotificacion`, `CanalNotificacion`, `CanalAviso`, `EstadoAlerta`, `EstadoCuenta`) y las reglas del dominio (`AlertaValidator` para las validaciones y `EvaluadorCriteriosMatcher` para el matching en memoria) y las cinco excepciones de dominio (`AccesoDenegadoException`, `ConflictoException`, `RecursoNoEncontradoException`, `ReglaDeNegocioException` y `ServicioExternoNoDisponibleException`, todas hijas de `RuntimeException`), cada una con el codigo HTTP al que se traduce. El dominio no depende de Spring ni de JPA.
 
 <p align="center">
   <a href="docs/images/diagrama-clases.png" target="_blank">
