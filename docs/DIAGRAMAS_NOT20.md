@@ -115,6 +115,7 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 4. **Enumeraciones:** `TipoNotificacion` (9 tipos), `CanalNotificacion`, `CanalAviso` (`SOLO_PLATAFORMA` o `CORREO_Y_PLATAFORMA`), `TipoAlerta`, `EstadoAlerta` y `EstadoCuenta`.
 5. **Reglas:** `AlertaValidator` valida la creación, la propiedad y los duplicados de una alerta. `EvaluadorCriteriosMatcher` compara una búsqueda guardada o una alerta contra los datos de un evento, en memoria.
 6. **Evento de dominio:** `AlertaCreadaDomainEvent`, que el servicio publica al registrar una alerta.
+7. **Excepciones de dominio:** cinco clases hijas de `RuntimeException` que `AlertaValidator`, los casos de uso y los adaptadores lanzan: `AccesoDenegadoException` (403), `RecursoNoEncontradoException` (404), `ConflictoException` (409), `ReglaDeNegocioException` (422) y `ServicioExternoNoDisponibleException` (503). `GlobalExceptionHandler` las traduce a respuestas `ProblemDetail`.
 
 ### 3.2. Justificación arquitectónica
 
