@@ -456,6 +456,26 @@
           "name": "1. Crear Alerta de Item Agotado",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Deja el escenario limpio: desactiva alertas ACTIVAS previas de la misma prenda y talla,",
+                  "// para que la coleccion se pueda ejecutar varias veces contra una base persistente (QA) sin 409.",
+                  "const base = pm.variables.get('baseUrl');",
+                  "const cab = { Authorization: 'Bearer ' + pm.variables.get('jwtToken') };",
+                  "pm.sendRequest({ url: base + '/api/v1/usuarios/me/alertas', method: 'GET', header: cab }, function (err, res) {",
+                  "  if (err || res.code !== 200) { return; }",
+                  "  res.json()",
+                  "    .filter(function (a) { return a.estado === 'ACTIVA' && a.itemId === 1045 && a.tallaObjetivo === 'M'; })",
+                  "    .forEach(function (a) {",
+                  "      pm.sendRequest({ url: base + '/api/v1/usuarios/me/alertas/' + a.id, method: 'DELETE', header: cab }, function () {});",
+                  "    });",
+                  "});"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -520,7 +540,12 @@
                   "    const body = pm.response.json();",
                   "    pm.expect(body).to.be.an('array');",
                   "    pm.expect(body.length).to.be.above(0);",
-                  "    pm.collectionVariables.set('alertaId', String(body[0].id));",
+                  "});",
+                  "pm.test('La alerta creada en el paso anterior aparece en la lista', function () {",
+                  "    const body = pm.response.json();",
+                  "    const creada = body.find(function (a) { return String(a.id) === pm.collectionVariables.get('alertaId'); });",
+                  "    pm.expect(creada, 'alerta creada en el paso 1').to.not.be.undefined;",
+                  "    pm.expect(creada.estado).to.eql('ACTIVA');",
                   "});"
                 ]
               }
