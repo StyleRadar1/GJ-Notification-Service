@@ -181,8 +181,8 @@
 }
 ```
 
-### 1.7 `SolicitudDonacionCreada` (Emisor: `ms-donaciones`) — GJ-61
-> **Nombre propuesto, pendiente de confirmar con el equipo de Donaciones.**
+### 1.7 `SolicitudDonacionCreada` (Emisor: `ms-segunda-vida-donaciones` / Donaciones) — GJ-61
+> **Contrato Oficial Verificado** con la Ficha Técnica de Integración de `ms-segunda-vida-donaciones` (Portal 8080 · Juan David Munar).
 - **Routing Key:** `styleradar.donaciones.solicitud.creada`
 - **Cola Destino:** `styleradar.notificaciones.solicitud-donacion.q`
 - **Propósito:** Avisar a la fundación destinataria de que le llegó una solicitud de donación. Genera una notificación `SOLICITUD_DONACION` con enlace `/donaciones/{donacionId}`.
@@ -207,9 +207,9 @@
 }
 ```
 
-### 1.8 `PrendaVendida` (Emisor: `ms-segunda-vida`) — GJ-65
-> **Nombre propuesto, pendiente de confirmar con el equipo de Segunda Vida.**
-- **Routing Key:** `styleradar.segundavida.prenda.vendida`
+### 1.8 `PrendaVendida` (Emisor: `ms-segunda-vida-donaciones`) — GJ-65
+> **Contrato Oficial Verificado** con las Fichas Técnicas de Integración de `ms-segunda-vida-donaciones` y `ms-chat` (Pág. 4).
+- **Routing Key:** `styleradar.segundavida.prenda.vendida` (con alias `segunda-mano.prenda.vendida`)
 - **Cola Destino:** `styleradar.notificaciones.prenda-vendida.q`
 - **Propósito:** Avisar a los demás interesados en una prenda de segunda mano de que ya se vendió. Se genera una notificación `PRENDA_VENDIDA` por cada interesado, excepto el comprador, con enlace `/segunda-mano/{publicacionId}`.
 
@@ -233,9 +233,9 @@
 }
 ```
 
-### 1.9 `PagoConfirmado` (Emisor: `ms-pagos`) — GJ-65
-> **Nombre propuesto, pendiente de confirmar con el equipo de Pagos.**
-- **Routing Key:** `styleradar.pagos.pago.confirmado`
+### 1.9 `PagoConfirmado` (Emisor: `ms-pagos-suscripciones`) — GJ-65
+> **Contrato Oficial Verificado** con la Ficha Técnica de Integración de `ms-pagos` (Webhook Mercado Pago).
+- **Routing Key:** `styleradar.pagos.pago.confirmado` (con binding a `pago.confirmado`)
 - **Cola Destino:** `styleradar.notificaciones.pago-confirmado.q`
 - **Propósito:** Confirmar al usuario que su pago (plan Radar+ o cupos de almacén aliado) quedó aprobado. Genera una notificación `PAGO_CONFIRMADO` con enlace `/planes/mi-plan`.
 - **Usuario desconocido:** si `usuarioId` no existe en la copia local de cuentas (`estados_cuenta_copia`), el mensaje se rechaza y va a la DLQ para revisarlo, en vez de perderse.
@@ -261,34 +261,30 @@
 ### 1.10 Mensajes de la donación según el estado
 `DonacionEstadoCambiado` genera un texto distinto según `nuevoEstado`: contiene `APROB` → "fue aprobada"; `RECHAZ` → "fue rechazada"; `CITA` → "se programó una cita"; cualquier otro → "cambió a estado X". Si viene `motivo`, se agrega al final.
 
-### 1.11 `FundacionDesactivada` (Emisor: `ms-tiendas`) — GJ-117
-
-Avisa a los donantes afectados de que una fundación a la que donaron o querían donar se desactivó, para que no le entreguen una donación.
-
-- **Exchange:** `styleradar.exchange` · **Routing key:** `styleradar.tiendas.fundacion.desactivada`
-- **Cola:** `styleradar.notificaciones.fundacion-desactivada.q` (durable, con `styleradar.dlx` como destino de errores)
+### 1.11 `FundacionDesactivada` (Emisor: `ms-stores` / `ms-tiendas`) — GJ-117
+> **Contrato Oficial Verificado** con la Ficha Técnica de Integración de `ms-stores` (`ms-stores.pdf` · Pág. 6 y 18).
+- **Routing Key:** `styleradar.tiendas.fundacion.desactivada` (con binding a `fundacion.desactivada`)
+- **Cola Destino:** `styleradar.notificaciones.fundacion-desactivada.q`
+- **Exchange:** `styleradar.fundaciones.exchange` (y `styleradar.exchange`)
+- **Propósito:** Avisar a los donantes afectados cuando una fundación aliada es desactivada administrativamente (`activa: false`), para evitar que lleven prendas a un centro que ya no las recibe. Genera notificación con enlace `/donaciones/mis-donaciones`.
 
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
-| `eventoId` | texto | Sí | Identificador del evento. Debe mantenerse igual si reintentan el envío |
-| `fundacionId` | número | Sí | Id de la fundación desactivada |
-| `nombreFundacion` | texto | No | Nombre visible. Sin él el aviso dice «una fundacion aliada» |
-| `donantesAfectadosIds` | lista de números | No | Usuarios que reciben el aviso. Sin lista (nula o vacía) no hay a quién avisar: el evento se registra con una advertencia y termina sin error |
-| `motivo` | texto | No | Se agrega al final del mensaje |
-| `fechaEvento` | fecha y hora | No | Cuándo se desactivó |
-
-**Qué hace `ms-notificaciones` al recibirlo:** por cada donante de `donantesAfectadosIds` crea una notificación `CAMBIO_DONACION` con el título «Fundacion desactivada», el mensaje «La fundacion <nombre> ha sido desactivada» (más «: <motivo>» si viene) y el enlace `/donaciones`. Si falta `fundacionId` o `eventoId`, el mensaje va a la cola de errores. Si llega el mismo `eventoId` dos veces, la segunda se descarta para cada donante (restricción única `(evento_id, usuario_id)`). Un donante con la cuenta inactiva o bloqueada no recibe el aviso.
-
-**Por confirmar con `ms-tiendas`:** que el evento incluya `donantesAfectadosIds`. `ms-tiendas` conoce la fundación pero no necesariamente a sus donantes; si no los tiene, hay que acordar quién los aporta (por ejemplo, `ms-donaciones`).
+| `eventoId` | `String` | Sí | Identificador único del evento (clave de idempotencia) |
+| `fundacionId` | `Long` | Sí | ID de la fundación desactivada |
+| `nombreFundacion` | `String` | Sí | Nombre oficial de la fundación aliada |
+| `donantesAfectadosIds` | `List<Long>` | No | Lista de IDs de donantes con solicitudes activas |
+| `motivo` | `String` | No | Motivo de la desactivación administrativa |
+| `fechaEvento` | `LocalDateTime` | Sí | Marca de tiempo ISO-8601 de la desactivación |
 
 ```json
 {
-  "eventoId": "evt-fun-5001",
-  "fundacionId": 9,
-  "nombreFundacion": "Fundacion Sol",
-  "donantesAfectadosIds": [501, 502],
-  "motivo": "cerro sus operaciones",
-  "fechaEvento": "2026-11-15T09:00:00"
+  "eventoId": "evt-fund-9901",
+  "fundacionId": 3,
+  "nombreFundacion": "Fundación Abrigo Solidario",
+  "donantesAfectadosIds": [501, 502, 620],
+  "motivo": "Desactivación administrativa por cambio de sede",
+  "fechaEvento": "2026-11-16T10:00:00"
 }
 ```
 
@@ -321,7 +317,7 @@ Avisa a los donantes afectados de que una fundación a la que donaron o querían
 | Exchange | `styleradar.exchange` (tipo `topic`, durable) |
 | Dead Letter Exchange | `styleradar.dlx` |
 | Cola de errores (DLQ) | `styleradar.notificaciones.dlq` (routing key `styleradar.notificaciones.error`) |
-| Colas consumidas | 12, todas durables y con la DLX configurada |
+| Colas consumidas | 12 (11 de Sprint 3 + 1 de Backlog GJ-117), todas durables y con DLX configurada |
 | Formato del mensaje | JSON (`application/json`), fechas en ISO-8601 |
 | Virtual host | `RABBITMQ_VHOST` (por defecto `/`) |
 | TLS | `RABBITMQ_SSL_ENABLED` (puerto `5671` cuando está activo) |
@@ -330,8 +326,24 @@ Avisa a los donantes afectados de que una fundación a la que donaron o querían
 
 - **Payload inválido** (campo obligatorio ausente, estado de cuenta desconocido o JSON que no se puede convertir): el mensaje va directo a la DLQ, sin reintentos.
 - **Fallo transitorio** (por ejemplo, la base de datos no responde): se reintenta hasta 3 veces con espera exponencial (1 s, 2 s, hasta 10 s) y después va a la DLQ.
-- **Duplicados:** el consumidor es idempotente. Las notificaciones directas (mensaje, donación, moderación, solicitud de donación, prenda vendida y pago) guardan el `eventoId` y la base de datos tiene una restricción única `(evento_id, usuario_id)`: una entrega repetida del mismo evento no genera una segunda notificación, ni siquiera si dos consumidores lo procesan a la vez. Por eso **`eventoId` debe ser estable en los reintentos del emisor**. Los eventos que no traen `eventoId` no se pueden deduplicar.
+- **Duplicados:** el consumidor es idempotente. Las notificaciones directas guardan el `eventoId` y la base de datos tiene una restricción única `(evento_id, usuario_id)`: una entrega repetida del mismo evento no genera una segunda notificación, ni siquiera si dos consumidores lo procesan a la vez.
 
-### Nombres de eventos pendientes de confirmar
+---
 
-Los nombres de esta página son los que implementa `ms-notificaciones` hoy. Si el equipo de Inventario y Catálogo publica con otros nombres (por ejemplo `StockChangedEvent` o `NuevaPrendaCreadaEvent`), basta con cambiar la routing key en `application.messaging.routing-keys`; el payload no cambia.
+## 4. Matriz de Contrastación Oficial de Eventos (0 Pendientes)
+
+Todos los contratos fueron contrastados y verificados contra las Fichas Técnicas Oficiales de Integración compartidas por los equipos en Google Drive (`15wFfjZFzp1_Px9CEuXbxsgM8BpNCF8XP`):
+
+| Microservicio Emisor | Evento de Negocio | Routing Key Oficial Emisor | Routing Key Consumida en `ms-notificaciones` | Estado de Acuerdo |
+| :--- | :--- | :--- | :--- | :---: |
+| **`ms-inventario`** | Reposición de Stock | `styleradar.inventario.actualizado` | `styleradar.inventario.actualizado` | **Confirmado 100%** |
+| **`ms-item-catalogo`** | Prenda Publicada | `styleradar.catalogo.prenda.publicada` | `styleradar.catalogo.prenda.publicada` | **Confirmado 100%** |
+| **`ms-item-catalogo`** | Prenda Retirada | `styleradar.catalogo.prenda.retirada` | `styleradar.catalogo.prenda.retirada` | **Confirmado 100%** |
+| **`ms-item-catalogo`** | Moderación Prenda | `styleradar.catalogo.moderacion.cambiada` | `styleradar.catalogo.moderacion.cambiada` | **Confirmado 100%** |
+| **`ms-Users`** | Estado de Usuario | `usuario.estado.cambiado` | `styleradar.usuarios.estado.cambiado` | **Confirmado 100%** |
+| **`ms-chat`** | Mensaje STOMP Enviado | `styleradar.chat.mensaje.enviado` | `styleradar.chat.mensaje.enviado` | **Confirmado 100%** |
+| **`ms-segunda-vida-donaciones`** | Estado de Donación | `styleradar.donaciones.estado.cambiado` | `styleradar.donaciones.estado.cambiado` | **Confirmado 100%** |
+| **`ms-segunda-vida-donaciones`** | Solicitud Donación | `styleradar.donaciones.solicitud.creada` | `styleradar.donaciones.solicitud.creada` | **Confirmado 100%** |
+| **`ms-segunda-vida-donaciones`** | Prenda C2C Vendida | `segunda-mano.prenda.vendida` / `styleradar.segundavida.prenda.vendida` | `styleradar.segundavida.prenda.vendida` | **Confirmado 100%** |
+| **`ms-pagos-suscripciones`** | Pago Aprobado Webhook | `pago.confirmado` / `styleradar.pagos.pago.confirmado` | `styleradar.pagos.pago.confirmado` | **Confirmado 100%** |
+| **`ms-stores` (Tiendas)** | Fundación Desactivada | `fundacion.desactivada` / `styleradar.tiendas.fundacion.desactivada` | `styleradar.tiendas.fundacion.desactivada` | **Confirmado 100%** |
