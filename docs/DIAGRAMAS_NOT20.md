@@ -45,8 +45,8 @@ Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archi
 
 El diagrama muestra la frontera de `ms-notificaciones` (puerto `8300`) y los sistemas con los que se comunica.
 
-1. **Frontend y API Gateway (`api-gateway`, `:8080`):** el usuario llega por HTTPS a través del gateway. Las rutas REST de `/api/v1/usuarios/me` y la suscripción SSE de la campana exigen un JWT Bearer.
-2. **Broker de eventos (RabbitMQ, `:5672`):** el servicio consume 11 colas durables sobre el exchange `styleradar.exchange`:
+1. **Frontend y API Gateway (`api-gateway`, `:8080`):** el usuario llega por HTTPS a través del gateway. Las rutas REST de `/api/v1/usuarios/{usuarioId}` y la suscripción SSE de la campana exigen un JWT Bearer.
+2. **Broker de eventos (RabbitMQ, `:5672`):** el servicio consume 12 colas durables sobre el exchange `styleradar.exchange`:
    - `ms-inventario` (`:8200`) publica `InventarioActualizado`.
    - `ms-usuarios` (`:8120`) publica el estado de cuenta y las búsquedas guardadas.
    - `ms-chat` (`:8320`) publica `MensajeEnviado`.
@@ -54,6 +54,7 @@ El diagrama muestra la frontera de `ms-notificaciones` (puerto `8300`) y los sis
    - `ms-segunda-vida-donaciones` (`:8520`) publica además `SolicitudDonacionCreada` y `PrendaVendida` (nombres propuestos, por confirmar).
    - `ms-pagos` publica `PagoConfirmado` (nombre propuesto, por confirmar).
    - `ms-item-catalogo` (`:8220`) publica prenda publicada, prenda retirada y cambios de moderación.
+   - `ms-tiendas` (`:8140`) publica `FundacionDesactivada` (GJ-117), que avisa a los donantes afectados.
 3. **Publicación de `AlertaCreada`:** cada alerta nueva se publica en el broker y la consume `ms-estadisticas` (`:8420`).
 4. **Catálogo por OpenFeign:** al crear una alerta sobre una prenda, el servicio consulta la disponibilidad en `ms-item-catalogo`. Si Catálogo no responde, el cliente recibe `503` y no se crea la alerta.
 5. **Autenticación (`ms-auth`, `:8100`):** emite el JWT. `ms-notificaciones` no lo consulta: valida la firma HS256 con la clave compartida.
@@ -80,12 +81,13 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 
 1. **Adaptadores de entrada (`infrastructure/adapter/in`):**
    - `AlertaController` implementa `AlertaApi` (documentación Swagger) y expone 9 endpoints, incluida la suscripción SSE con reconexión por `Last-Event-ID`. `PreferenciaAvisoController` expone 2 más: listar y elegir el canal de cada tipo de aviso.
-   - `NotificacionesEventsListener` consume las 11 colas. Un payload inválido va directo a la cola de errores; un fallo transitorio se reintenta 3 veces antes de llegar a ella (`RabbitRetryConfig`).
+   - `NotificacionesEventsListener` consume las 12 colas. Un payload inválido va directo a la cola de errores; un fallo transitorio se reintenta 3 veces antes de llegar a ella (`RabbitRetryConfig`).
    - `JwtAuthenticationFilter` y `SecurityConfig` validan el JWT sin estado. Solo `/actuator/health` y la documentación Swagger son públicos.
    - `GlobalExceptionHandler` responde con `ProblemDetail` (RFC 7807).
-2. **Aplicación (`application`):** los ocho puertos de entrada (`domain/port/in`) son interfaces de casos de uso. Cada una tiene su implementación `*UseCaseImpl`, que delega en `AlertaApplicationService` y `NotificacionApplicationService` (también interfaz más implementación). Los DTO son `records` y el mapeo usa MapStruct.
+   - `CorreoPendienteRecuperador` (`adapter/in/scheduler`) reintenta los correos pendientes al arrancar el servicio y cada 60 s (GJ-119).
+2. **Aplicación (`application`):** los nueve puertos de entrada (`domain/port/in`) son interfaces de casos de uso. Cada una tiene su implementación `*UseCaseImpl`, que delega en `AlertaApplicationService` y `NotificacionApplicationService` (también interfaz más implementación). Los DTO son `records` y el mapeo usa MapStruct.
 3. **Dominio (`domain`):** modelos, objetos de valor, reglas (`AlertaValidator`, `EvaluadorCriteriosMatcher`), evento y excepciones, sin Spring, JPA ni Lombok. Los puertos de salida son interfaces del dominio.
-4. **Adaptadores de salida (`infrastructure/adapter/out`):** implementan los puertos de salida: JPA sobre PostgreSQL, cliente OpenFeign de Catálogo, publicador de `AlertaCreada`, `SseEmitter` por usuario y `CorreoSmtpAdapter`, que envía los avisos por correo con `JavaMailSender` en un hilo aparte, con 3 intentos y espera creciente.
+4. **Adaptadores de salida (`infrastructure/adapter/out`):** implementan los puertos de salida: JPA sobre PostgreSQL, cliente OpenFeign de Catálogo, publicador de `AlertaCreada`, `SseEmitter` por usuario y `CorreoSmtpAdapter`, que envía los avisos por correo con `JavaMailSender` en un hilo aparte, con 3 intentos y espera creciente; si se agotan, guarda el correo como pendiente (`CorreoPendienteRepositoryAdapter`). El mismo adaptador implementa `EnvioCorreoPort`, el envío inmediato que usa el reintento.
 
 ### 2.2. Justificación arquitectónica
 
@@ -116,6 +118,7 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 5. **Reglas:** `AlertaValidator` valida la creación, la propiedad y los duplicados de una alerta. `EvaluadorCriteriosMatcher` compara una búsqueda guardada o una alerta contra los datos de un evento, en memoria.
 6. **Evento de dominio:** `AlertaCreadaDomainEvent`, que el servicio publica al registrar una alerta.
 7. **Excepciones de dominio:** cinco clases hijas de `RuntimeException` que `AlertaValidator`, los casos de uso y los adaptadores lanzan: `AccesoDenegadoException` (403), `RecursoNoEncontradoException` (404), `ConflictoException` (409), `ReglaDeNegocioException` (422) y `ServicioExternoNoDisponibleException` (503). `GlobalExceptionHandler` las traduce a respuestas `ProblemDetail`.
+8. **Reintento de correos y paginación:** `CorreoPendiente` es el correo que no se pudo enviar (con sus intentos y su `EstadoCorreo`: `PENDIENTE`, `ENVIADO` o `FALLIDO`) y `Pagina<T>` es la página de resultados de la bandeja, sin depender de Spring Data.
 
 ### 3.2. Justificación arquitectónica
 
@@ -133,7 +136,7 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 
 ### 4.1. Explicación técnica
 
-El esquema relacional de `notificaciones_db` (PostgreSQL 16) lo gestionan las migraciones Flyway `V1__init_schema.sql`, `V2__add_indexes.sql`, `V3__add_evento_id_notificaciones.sql` y `V4__create_preferencias_avisos.sql`. Hibernate solo lo valida (`ddl-auto: validate`).
+El esquema relacional de `notificaciones_db` (PostgreSQL 16) lo gestionan las migraciones Flyway `V1__init_schema.sql`, `V2__add_indexes.sql`, `V3__add_evento_id_notificaciones.sql`, `V4__create_preferencias_avisos.sql` y `V5__create_correos_pendientes.sql`. Hibernate solo lo valida (`ddl-auto: validate`).
 
 | Tabla | Propósito |
 | :--- | :--- |
@@ -142,6 +145,7 @@ El esquema relacional de `notificaciones_db` (PostgreSQL 16) lo gestionan las mi
 | `preferencias_avisos` | Canal elegido por usuario y tipo de aviso. Sin fila se aplica solo plataforma. |
 | `busquedas_guardadas_copia` | Copia local de las búsquedas guardadas, actualizada por eventos. |
 | `estados_cuenta_copia` | Copia local del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`). |
+| `correos_pendientes` | Correos que no se pudieron enviar tras los reintentos inmediatos, con sus intentos y su estado (`PENDIENTE`, `ENVIADO` o `FALLIDO`). Se reintentan al arrancar el servicio y cada 60 s. |
 
 Dos restricciones únicas dan la idempotencia: `uk_notificacion_alerta_item_ciclo` impide más de una notificación por alerta, ítem y ciclo de reposición, y `uk_notificacion_evento_usuario` (`evento_id`, `usuario_id`) impide que un evento repetido genere una segunda notificación directa. `preferencias_avisos` es única por `(usuario_id, tipo)`.
 
@@ -152,9 +156,10 @@ Dos restricciones únicas dan la idempotencia: `uk_notificacion_alerta_item_cicl
 - **Idempotencia en la base de datos:** RabbitMQ entrega al menos una vez; la restricción única impide el duplicado aunque dos entregas lleguen a la vez. La que pierde se descarta sin generar notificación.
 - **Columnas tipadas:** los criterios de búsqueda se guardan en columnas propias, no en JSONB.
 
-### 4.3. Planificado
+### 4.3. Limitaciones conocidas
 
-La tabla de preferencias de canal y el envío por correo (GJ-64) aún no existen; se añadirán con una nueva migración.
+- `correos_pendientes.cuerpo_html` guarda el texto del correo tal como se envía, que hoy es texto plano.
+- Con varias instancias del servicio, el recuperador podría reintentar el mismo correo en dos de ellas; hoy cada entorno corre con una sola instancia.
 
 ---
 
@@ -166,17 +171,19 @@ La tabla de preferencias de canal y el envío por correo (GJ-64) aún no existen
 
 ### 5.1. Explicación técnica
 
-El diagrama distingue lo que existe hoy de lo planificado (borde punteado).
+El diagrama muestra el equipo de desarrollo, GitHub y los dos entornos de Azure.
 
-**Existe hoy**
+**Equipo y GitHub**
 1. **Equipo del desarrollador:** `docker compose` levanta `ms-notificaciones` (`:8300`), PostgreSQL 16, RabbitMQ 3.13.7 y Redis 7.
-2. **GitHub:** repositorio con las ramas `main`, `develop` y `feature/scaffolding`. Los líderes aprueban los pull requests.
-3. **GitHub Actions:** `ci-qa.yml` ejecuta `mvn verify` con JaCoCo de al menos 85 % y comprueba el arranque con `docker compose`. `cd-prod.yml` ejecuta `mvn verify` y construye la imagen.
+2. **GitHub:** repositorio con las ramas `main` y `develop`. Los líderes aprueban los pull requests.
+3. **GitHub Actions:** `ci-qa.yml` ejecuta `mvn verify` con JaCoCo de al menos 85 %, comprueba el arranque con `docker compose`, publica la imagen y despliega en QA, y corre Newman contra QA. `cd-prod.yml` ejecuta `mvn verify`, construye la imagen y despliega en PROD.
 
-**Planificado**
-4. **Docker Hub (GJ-92):** publicación de la imagen `styleradar/ms-notificaciones`.
-5. **Azure App Service QA (GJ-92):** el contenedor en el puerto `8300`, con PostgreSQL de Azure por JDBC sobre TLS.
-6. **VM del broker (GJ-91):** RabbitMQ 3.13.7 con TLS y persistencia, administrado por Oscar. El servicio se conecta con AMQP sobre TLS.
+**Azure**
+4. **Azure Container Registry:** guarda la imagen `ms-notificaciones` que publican los pipelines.
+5. **App Service QA y App Service PROD:** el contenedor en el puerto `8300`, con Always On. QA comparte plan B1 con otro proyecto; PROD tiene plan propio.
+6. **Servidor PostgreSQL 16:** una sola instancia con dos bases separadas (`styleradar_notificaciones_qa` y `styleradar_notificaciones_prod`), por JDBC sobre TLS.
+7. **VM del broker:** RabbitMQ 3.13.7 con TLS y persistencia, administrado por Oscar. QA usa el vhost `/` y PROD el vhost `prod`; el servicio se conecta con AMQP sobre TLS.
+8. **Servidor SMTP (opcional):** solo se usa si el entorno define `SPRING_MAIL_HOST`.
 
 ### 5.2. Justificación arquitectónica
 
@@ -197,7 +204,7 @@ El diagrama distingue lo que existe hoy de lo planificado (borde punteado).
 El diagrama muestra los dos recorridos principales del servicio.
 
 **Fase 1: crear una alerta (síncrono)**
-1. El frontend envía `POST /api/v1/usuarios/me/alertas` con el JWT al `AlertaController`.
+1. El frontend envía `POST /api/v1/usuarios/{usuarioId}/alertas` con el JWT al `AlertaController`.
 2. El caso de uso consulta a `ms-item-catalogo` por OpenFeign que el ítem esté agotado. Si Catálogo no responde, la respuesta es `503` y no se crea la alerta.
 3. Se guarda la alerta en PostgreSQL, se publica `AlertaCreada` en el broker (la consume `ms-estadisticas`) y el cliente recibe `201 Created`.
 
