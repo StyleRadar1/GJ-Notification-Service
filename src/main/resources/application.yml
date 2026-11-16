@@ -55,6 +55,7 @@ application:
       donation-requested: styleradar.notificaciones.solicitud-donacion.q
       garment-sold: styleradar.notificaciones.prenda-vendida.q
       payment-confirmed: styleradar.notificaciones.pago-confirmado.q
+      foundation-deactivated: styleradar.notificaciones.fundacion-desactivada.q
       dlq: styleradar.notificaciones.dlq
     routing-keys:
       inventory-updated: styleradar.inventario.actualizado
@@ -63,6 +64,7 @@ application:
       donation-requested: styleradar.donaciones.solicitud.creada
       garment-sold: styleradar.segundavida.prenda.vendida
       payment-confirmed: styleradar.pagos.pago.confirmado
+      foundation-deactivated: styleradar.tiendas.fundacion.desactivada
       user-status-changed: styleradar.usuarios.estado.cambiado
       saved-search-synced: styleradar.usuarios.busqueda.sincronizada
       message-sent: styleradar.chat.mensaje.enviado

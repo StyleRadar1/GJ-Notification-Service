@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import edu.dosw.styleradar.notificaciones.application.dto.event.DonacionEstadoCambiadoEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.FundacionDesactivadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.MensajeEnviadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.PagoConfirmadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaVendidaEventPayload;
@@ -180,6 +181,52 @@ class ConsumidoresEventosExternosTest {
         for (String[] caso : casos) {
             assertThat(resultado).anyMatch(n -> n.getMensaje().contains(caso[1]));
         }
+    }
+
+    @Test
+    @DisplayName("GJ-117 - Una fundacion desactivada avisa a los donantes y un evento repetido no duplica el aviso")
+    void fundacionDesactivadaAvisaALosDonantesSinDuplicar() {
+        long donanteA = 6_511L;
+        long donanteB = 6_512L;
+        FundacionDesactivadaEventPayload evento = new FundacionDesactivadaEventPayload(
+                "evt-fun-117-1", 9L, "Fundacion Sol", List.of(donanteA, donanteB), "cerro", LocalDateTime.now());
+
+        listener.onFundacionDesactivada(evento);
+        listener.onFundacionDesactivada(evento);
+
+        List<Notificacion> deA = deTipo(donanteA, TipoNotificacion.CAMBIO_DONACION);
+        assertThat(deA).hasSize(1);
+        assertThat(deA.get(0).getTitulo()).isEqualTo("Fundacion desactivada");
+        assertThat(deA.get(0).getMensaje()).isEqualTo("La fundacion Fundacion Sol ha sido desactivada: cerro");
+        assertThat(deA.get(0).getEnlace()).isEqualTo("/donaciones");
+        assertThat(deTipo(donanteB, TipoNotificacion.CAMBIO_DONACION)).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("GJ-117 - Un donante inactivo no recibe el aviso y los demas si")
+    void fundacionDesactivadaNoAvisaACuentasInactivas() {
+        long activo = 6_513L;
+        long inactivo = 6_514L;
+        cuentas.guardar(new EstadoCuentaCopia(inactivo, "i@styleradar.co", EstadoCuenta.INACTIVO, LocalDateTime.now()));
+
+        listener.onFundacionDesactivada(new FundacionDesactivadaEventPayload(
+                "evt-fun-117-2", 9L, "Fundacion Sol", List.of(activo, inactivo), null, null));
+
+        assertThat(deTipo(activo, TipoNotificacion.CAMBIO_DONACION)).hasSize(1);
+        assertThat(deTipo(inactivo, TipoNotificacion.CAMBIO_DONACION)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("GJ-117 - Una fundacion desactivada sin fundacionId o sin eventoId va a la cola de errores")
+    void fundacionDesactivadaIncompletaEsInvalida() {
+        assertThatThrownBy(() -> listener.onFundacionDesactivada(new FundacionDesactivadaEventPayload(
+                "evt-fun-117-3", null, "Fundacion Sol", List.of(6_515L), null, null)))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+        assertThatThrownBy(() -> listener.onFundacionDesactivada(new FundacionDesactivadaEventPayload(
+                null, 9L, "Fundacion Sol", List.of(6_515L), null, null)))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+
+        assertThat(deTipo(6_515L, TipoNotificacion.CAMBIO_DONACION)).isEmpty();
     }
 
     private List<Notificacion> deTipo(long usuarioId, TipoNotificacion tipo) {

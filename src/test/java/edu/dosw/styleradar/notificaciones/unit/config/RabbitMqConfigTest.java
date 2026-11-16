@@ -12,6 +12,29 @@ import org.springframework.test.util.ReflectionTestUtils;
 class RabbitMqConfigTest {
 
     @Test
+    @DisplayName("GJ-117 - La cola de fundaciones desactivadas es durable, enruta por su routing key y falla hacia la DLQ")
+    void colaDeFundacionesDesactivadasEstaEnlazadaYConDlq() {
+        RabbitMqConfig config = new RabbitMqConfig();
+        ReflectionTestUtils.setField(config, "exchangeName", "styleradar.exchange");
+        ReflectionTestUtils.setField(config, "dlxName", "styleradar.dlx");
+        ReflectionTestUtils.setField(config, "dlqRoutingKey", "styleradar.notificaciones.error");
+        ReflectionTestUtils.setField(config, "foundationDeactivatedQueueName",
+                "styleradar.notificaciones.fundacion-desactivada.q");
+        ReflectionTestUtils.setField(config, "foundationDeactivatedKey", "styleradar.tiendas.fundacion.desactivada");
+
+        Queue cola = config.foundationDeactivatedQueue();
+        Binding enlace = config.foundationDeactivatedBinding(cola, config.styleradarExchange());
+
+        assertThat(cola.isDurable()).isTrue();
+        assertThat(cola.getArguments())
+                .containsEntry("x-dead-letter-exchange", "styleradar.dlx")
+                .containsEntry("x-dead-letter-routing-key", "styleradar.notificaciones.error");
+        assertThat(enlace.getExchange()).isEqualTo("styleradar.exchange");
+        assertThat(enlace.getRoutingKey()).isEqualTo("styleradar.tiendas.fundacion.desactivada");
+        assertThat(enlace.getDestination()).isEqualTo("styleradar.notificaciones.fundacion-desactivada.q");
+    }
+
+    @Test
     @DisplayName("NOT-08 - La cola de prendas retiradas es durable, enruta por su routing key y falla hacia la DLQ")
     void colaDePrendasRetiradasEstaEnlazadaYConDlq() {
         RabbitMqConfig config = new RabbitMqConfig();
