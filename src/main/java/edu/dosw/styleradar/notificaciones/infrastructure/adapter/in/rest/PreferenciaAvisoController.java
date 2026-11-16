@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/usuarios/me/preferencias-avisos")
+@RequestMapping("/api/v1/usuarios/{usuarioId}/preferencias-avisos")
 @RequiredArgsConstructor
 public class PreferenciaAvisoController implements PreferenciaAvisoApi {
 
@@ -30,9 +30,11 @@ public class PreferenciaAvisoController implements PreferenciaAvisoApi {
     @Override
     @PreAuthorize("isAuthenticated()")
     @GetMapping
-    public ResponseEntity<List<PreferenciaAvisoResponse>> listarMisPreferencias() {
-        Long usuarioId = userExtractor.obtenerUsuarioAutenticadoId();
-        return ResponseEntity.ok(preferenciasAvisosUseCase.obtenerPreferencias(usuarioId).stream()
+    public ResponseEntity<List<PreferenciaAvisoResponse>> listarMisPreferencias(
+            @PathVariable("usuarioId") String usuarioId
+    ) {
+        Long targetId = userExtractor.validarAccesoUsuario(usuarioId);
+        return ResponseEntity.ok(preferenciasAvisosUseCase.obtenerPreferencias(targetId).stream()
                 .map(this::toResponse)
                 .toList());
     }
@@ -41,11 +43,12 @@ public class PreferenciaAvisoController implements PreferenciaAvisoApi {
     @PreAuthorize("isAuthenticated()")
     @PutMapping("/{tipo}")
     public ResponseEntity<PreferenciaAvisoResponse> guardarPreferencia(
+            @PathVariable("usuarioId") String usuarioId,
             @PathVariable("tipo") TipoNotificacion tipo,
             @Valid @RequestBody PreferenciaAvisoRequest request
     ) {
-        Long usuarioId = userExtractor.obtenerUsuarioAutenticadoId();
-        PreferenciaAviso guardada = preferenciasAvisosUseCase.guardarPreferencia(usuarioId, tipo, request.canal());
+        Long targetId = userExtractor.validarAccesoUsuario(usuarioId);
+        PreferenciaAviso guardada = preferenciasAvisosUseCase.guardarPreferencia(targetId, tipo, request.canal());
         return ResponseEntity.ok(toResponse(guardada));
     }
 

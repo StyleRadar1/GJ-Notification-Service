@@ -34,4 +34,32 @@ public class SecurityContextUserExtractor {
         }
         throw new AccesoDenegadoException("No fue posible determinar el usuario autenticado");
     }
+
+    public Long validarAccesoUsuario(String usuarioId) {
+        Long usuarioAutenticadoId = obtenerUsuarioAutenticadoId();
+        if (usuarioId == null || usuarioId.isBlank() || "me".equalsIgnoreCase(usuarioId)) {
+            return usuarioAutenticadoId;
+        }
+        Long idSolicitado;
+        try {
+            idSolicitado = Long.parseLong(usuarioId.trim());
+        } catch (NumberFormatException ex) {
+            throw new AccesoDenegadoException("Identificador de usuario invalido en la ruta: " + usuarioId);
+        }
+        if (!usuarioAutenticadoId.equals(idSolicitado) && !esAdmin()) {
+            throw new AccesoDenegadoException("No tienes autorizacion para acceder o modificar los recursos del usuario " + idSolicitado);
+        }
+        return idSolicitado;
+    }
+
+    public boolean esAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return false;
+        }
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_ADMIN")
+                            || a.getAuthority().equalsIgnoreCase("ROLE_ADMIN_STYLERADAR")
+                            || a.getAuthority().equalsIgnoreCase("ADMIN"));
+    }
 }

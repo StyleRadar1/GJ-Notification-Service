@@ -481,4 +481,33 @@ class AlertaControllerAndInfrastructureTest {
         mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=0&size=5"))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    @DisplayName("Path con usuarioId explicito: responde 200 cuando coincide con el token JWT y 403 cuando no coincide")
+    void accesoConUsuarioIdExplicitoValidaAutenticacion() throws Exception {
+        String token101 = jwtTokenService.generateToken(101L, "user101@styleradar.co", "COMPRADOR");
+
+        // 1. Acceso a sus propias notificaciones con ID explicito 101 -> 200 OK
+        mockMvc.perform(get("/api/v1/usuarios/101/notificaciones")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        // 2. Acceso a sus propias alertas con ID explicito 101 -> 200 OK
+        mockMvc.perform(get("/api/v1/usuarios/101/alertas")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        // 3. Intento de acceder a notificaciones de otro usuario (202) -> 403 Forbidden
+        mockMvc.perform(get("/api/v1/usuarios/202/notificaciones")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.detail").value("No tienes autorizacion para acceder o modificar los recursos del usuario 202"));
+
+        // 4. Intento de acceder a alertas de otro usuario (202) -> 403 Forbidden
+        mockMvc.perform(get("/api/v1/usuarios/202/alertas")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+    }
 }
