@@ -19,7 +19,7 @@ import org.springframework.http.ResponseEntity;
 
 @Tag(
         name = "Preferencias de avisos",
-        description = "Elegir, por tipo de aviso, si se recibe solo en la plataforma o tambien por correo (bajo /api/v1/usuarios/{usuarioId}/preferencias-avisos)"
+        description = "Elegir, por tipo de aviso, si se recibe solo en la plataforma o tambien por correo (bajo /users/{id}/preferencias-avisos)"
 )
 @SecurityRequirement(name = "bearerAuth")
 public interface PreferenciaAvisoApi {
@@ -49,7 +49,7 @@ public interface PreferenciaAvisoApi {
             )
     })
     ResponseEntity<List<PreferenciaAvisoResponse>> listarMisPreferencias(
-            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId
+            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id
     );
 
     @Operation(
@@ -79,7 +79,7 @@ public interface PreferenciaAvisoApi {
             )
     })
     ResponseEntity<PreferenciaAvisoResponse> guardarPreferencia(
-            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId,
+            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
             @Parameter(description = "Tipo de aviso", example = "REPOSICION_STOCK") TipoNotificacion tipo,
             @Valid PreferenciaAvisoRequest request
     );

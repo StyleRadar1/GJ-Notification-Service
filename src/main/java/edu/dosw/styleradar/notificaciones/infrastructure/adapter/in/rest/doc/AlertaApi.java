@@ -25,7 +25,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Tag(
         name = "Alertas y Notificaciones",
-        description = "Endpoints bajo /api/v1/usuarios/{usuarioId} para gestionar alertas de disponibilidad, busquedas guardadas y notificaciones en tiempo real (con validación de autenticación)"
+        description = "Endpoints bajo /users/{id} para gestionar alertas de disponibilidad, busquedas guardadas y notificaciones en tiempo real (con validación de autorización)"
 )
 @SecurityRequirement(name = "bearerAuth")
 public interface AlertaApi {
@@ -55,7 +55,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "ValidacionFallida",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Error de validacion en la solicitud\",\"status\":400,\"detail\":\"El itemId debe ser un numero positivo; El tipo de alerta es obligatorio\",\"instance\":\"/api/v1/usuarios/101/alertas\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Error de validacion en la solicitud\",\"status\":400,\"detail\":\"El itemId debe ser un numero positivo; El tipo de alerta es obligatorio\",\"instance\":\"/users/101/alertas\"}"
                             )
                     )
             ),
@@ -67,7 +67,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "NoAutenticado",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente, invalido o expirado\",\"instance\":\"/api/v1/usuarios/101/alertas\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente, invalido o expirado\",\"instance\":\"/users/101/alertas\"}"
                             )
                     )
             ),
@@ -79,7 +79,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "AccesoDenegado",
-                                    value = "{\"type\":\"https://styleradar.co/errors/403\",\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion para acceder o modificar los recursos del usuario 202\",\"instance\":\"/api/v1/usuarios/202/alertas\"}"
+                                    value = "{\"type\":\"https://styleradar.co/errors/403\",\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion para acceder o modificar los recursos del usuario 202\",\"instance\":\"/users/202/alertas\"}"
                             )
                     )
             ),
@@ -91,7 +91,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "AlertaDuplicada",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Conflicto de estado del recurso\",\"status\":409,\"detail\":\"Ya tienes una alerta activa para este item/talla\",\"instance\":\"/api/v1/usuarios/101/alertas\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Conflicto de estado del recurso\",\"status\":409,\"detail\":\"Ya tienes una alerta activa para este item/talla\",\"instance\":\"/users/101/alertas\"}"
                             )
                     )
             ),
@@ -103,7 +103,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "ItemConStock",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Regla de negocio no satisfecha\",\"status\":422,\"detail\":\"No se puede crear alerta para un item que cuenta con stock disponible\",\"instance\":\"/api/v1/usuarios/101/alertas\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Regla de negocio no satisfecha\",\"status\":422,\"detail\":\"No se puede crear alerta para un item que cuenta con stock disponible\",\"instance\":\"/users/101/alertas\"}"
                             )
                     )
             ),
@@ -115,13 +115,13 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "CatalogoCaido",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Servicio no disponible\",\"status\":503,\"detail\":\"El servicio de catalogo no responde\",\"instance\":\"/api/v1/usuarios/101/alertas\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Servicio no disponible\",\"status\":503,\"detail\":\"El servicio de catalogo no responde\",\"instance\":\"/users/101/alertas\"}"
                             )
                     )
             )
     })
     ResponseEntity<AlertaResponse> crearAlerta(
-            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId,
+            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
             @Valid CrearAlertaRequest request
     );
 
@@ -159,7 +159,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<List<AlertaResponse>> listarMisAlertas(
-            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId
+            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id
     );
 
     @Operation(summary = "Desactivar alerta por ID (DELETE)", description = "Cambia el estado de la alerta a DESACTIVADA")
@@ -205,7 +205,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<AlertaResponse> desactivarAlerta(
-            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId,
+            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
             @Parameter(description = "ID de la alerta a desactivar", example = "501") Long alertaId
     );
 
@@ -226,7 +226,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<AlertaResponse> desactivarAlertaPatch(
-            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId,
+            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
             @Parameter(description = "ID de la alerta a desactivar", example = "501") Long alertaId
     );
 
@@ -266,7 +266,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "ParametrosInvalidos",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Error de validacion en la solicitud\",\"status\":400,\"detail\":\"El tamano maximo de pagina es 100\",\"instance\":\"/api/v1/usuarios/101/notificaciones\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Error de validacion en la solicitud\",\"status\":400,\"detail\":\"El tamano maximo de pagina es 100\",\"instance\":\"/users/101/notificaciones\"}"
                             )
                     )
             ),
@@ -290,7 +290,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<?> listarMisNotificaciones(
-            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId,
+            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
             @Parameter(description = "Filtrar unicamente notificaciones no leidas (equivale a leida=false)", example = "false") Boolean soloNoLeidas,
             @Parameter(description = "Filtrar por leidas (true) o no leidas (false); si se envia, tiene precedencia sobre soloNoLeidas", example = "false") Boolean leida,
             @Parameter(description = "Numero de pagina (cero-indexado, >= 0)", example = "0") @Min(value = 0, message = "page debe ser 0 o mayor") Integer page,
@@ -340,7 +340,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<NotificacionResponse> marcarNotificacionComoLeida(
-            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId,
+            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
             @Parameter(description = "ID de la notificacion", example = "901") Long notificacionId
     );
 
@@ -378,7 +378,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<ContadorNoLeidasResponse> marcarTodasComoLeidas(
-            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId
+            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id
     );
 
     @Operation(summary = "Obtener contador de no leidas", description = "Retorna el numero de notificaciones sin leer para la campana del frontend")
@@ -415,7 +415,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<ContadorNoLeidasResponse> contarNoLeidas(
-            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId
+            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id
     );
 
     @Operation(summary = "Suscribirse a campana en tiempo real (SSE)", description = "Abre un flujo Server-Sent Events para recibir notificaciones sin recargar")
@@ -445,7 +445,7 @@ public interface AlertaApi {
             )
     })
     SseEmitter suscribirCampanaTiempoReal(
-            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId,
+            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
             @Parameter(
                     in = ParameterIn.HEADER,
                     name = "Last-Event-ID",

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/usuarios/{usuarioId}/preferencias-avisos")
+@RequestMapping({"/users/{id}/preferencias-avisos", "/api/v1/users/{id}/preferencias-avisos", "/api/v1/usuarios/{id}/preferencias-avisos"})
 @RequiredArgsConstructor
 public class PreferenciaAvisoController implements PreferenciaAvisoApi {
 
@@ -31,9 +31,9 @@ public class PreferenciaAvisoController implements PreferenciaAvisoApi {
     @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<List<PreferenciaAvisoResponse>> listarMisPreferencias(
-            @PathVariable("usuarioId") String usuarioId
+            @PathVariable("id") String id
     ) {
-        Long targetId = userExtractor.validarAccesoUsuario(usuarioId);
+        Long targetId = userExtractor.validarAccesoUsuario(id);
         return ResponseEntity.ok(preferenciasAvisosUseCase.obtenerPreferencias(targetId).stream()
                 .map(this::toResponse)
                 .toList());
@@ -43,11 +43,11 @@ public class PreferenciaAvisoController implements PreferenciaAvisoApi {
     @PreAuthorize("isAuthenticated()")
     @PutMapping("/{tipo}")
     public ResponseEntity<PreferenciaAvisoResponse> guardarPreferencia(
-            @PathVariable("usuarioId") String usuarioId,
+            @PathVariable("id") String id,
             @PathVariable("tipo") TipoNotificacion tipo,
             @Valid @RequestBody PreferenciaAvisoRequest request
     ) {
-        Long targetId = userExtractor.validarAccesoUsuario(usuarioId);
+        Long targetId = userExtractor.validarAccesoUsuario(id);
         PreferenciaAviso guardada = preferenciasAvisosUseCase.guardarPreferencia(targetId, tipo, request.canal());
         return ResponseEntity.ok(toResponse(guardada));
     }

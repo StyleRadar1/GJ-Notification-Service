@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
-@RequestMapping("/api/v1/usuarios/{usuarioId}")
+@RequestMapping({"/users/{id}", "/api/v1/users/{id}", "/api/v1/usuarios/{id}"})
 @RequiredArgsConstructor
 public class AlertaController implements AlertaApi {
 
@@ -58,10 +58,10 @@ public class AlertaController implements AlertaApi {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/alertas")
     public ResponseEntity<AlertaResponse> crearAlerta(
-            @PathVariable("usuarioId") String usuarioId,
+            @PathVariable("id") String id,
             @Valid @RequestBody CrearAlertaRequest request
     ) {
-        Long targetId = userExtractor.validarAccesoUsuario(usuarioId);
+        Long targetId = userExtractor.validarAccesoUsuario(id);
         Alerta dominio = alertaDtoMapper.toDomain(request, targetId);
         Alerta creada = crearAlertaUseCase.crearAlerta(dominio);
         return ResponseEntity.status(HttpStatus.CREATED).body(alertaDtoMapper.toResponse(creada));
@@ -71,9 +71,9 @@ public class AlertaController implements AlertaApi {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/alertas")
     public ResponseEntity<List<AlertaResponse>> listarMisAlertas(
-            @PathVariable("usuarioId") String usuarioId
+            @PathVariable("id") String id
     ) {
-        Long targetId = userExtractor.validarAccesoUsuario(usuarioId);
+        Long targetId = userExtractor.validarAccesoUsuario(id);
         List<AlertaResponse> respuestas = listarAlertasUseCase.listarAlertasPorUsuario(targetId)
                 .stream()
                 .map(alertaDtoMapper::toResponse)
@@ -85,10 +85,10 @@ public class AlertaController implements AlertaApi {
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/alertas/{alertaId}")
     public ResponseEntity<AlertaResponse> desactivarAlerta(
-            @PathVariable("usuarioId") String usuarioId,
+            @PathVariable("id") String id,
             @PathVariable("alertaId") Long alertaId
     ) {
-        Long targetId = userExtractor.validarAccesoUsuario(usuarioId);
+        Long targetId = userExtractor.validarAccesoUsuario(id);
         Alerta desactivada = desactivarAlertaUseCase.desactivarAlerta(alertaId, targetId);
         return ResponseEntity.ok(alertaDtoMapper.toResponse(desactivada));
     }
@@ -97,23 +97,23 @@ public class AlertaController implements AlertaApi {
     @PatchMapping("/alertas/{alertaId}/desactivar")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AlertaResponse> desactivarAlertaPatch(
-            @PathVariable("usuarioId") String usuarioId,
+            @PathVariable("id") String id,
             @PathVariable("alertaId") Long alertaId
     ) {
-        return desactivarAlerta(usuarioId, alertaId);
+        return desactivarAlerta(id, alertaId);
     }
 
     @Override
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/notificaciones")
     public ResponseEntity<?> listarMisNotificaciones(
-            @PathVariable("usuarioId") String usuarioId,
+            @PathVariable("id") String id,
             @RequestParam(value = "soloNoLeidas", required = false) Boolean soloNoLeidas,
             @RequestParam(value = "leida", required = false) Boolean leida,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size
     ) {
-        Long targetId = userExtractor.validarAccesoUsuario(usuarioId);
+        Long targetId = userExtractor.validarAccesoUsuario(id);
         boolean paginada = page != null || size != null || leida != null;
         if (!paginada) {
             List<NotificacionResponse> respuestas = listarNotificacionesUseCase
@@ -136,10 +136,10 @@ public class AlertaController implements AlertaApi {
     @PreAuthorize("isAuthenticated()")
     @PatchMapping("/notificaciones/{notificacionId}/leer")
     public ResponseEntity<NotificacionResponse> marcarNotificacionComoLeida(
-            @PathVariable("usuarioId") String usuarioId,
+            @PathVariable("id") String id,
             @PathVariable("notificacionId") Long notificacionId
     ) {
-        Long targetId = userExtractor.validarAccesoUsuario(usuarioId);
+        Long targetId = userExtractor.validarAccesoUsuario(id);
         Notificacion actualizada = marcarNotificacionLeidaUseCase.marcarComoLeida(notificacionId, targetId);
         return ResponseEntity.ok(notificacionDtoMapper.toResponse(actualizada));
     }
@@ -148,9 +148,9 @@ public class AlertaController implements AlertaApi {
     @PreAuthorize("isAuthenticated()")
     @PatchMapping("/notificaciones/leer-todas")
     public ResponseEntity<ContadorNoLeidasResponse> marcarTodasComoLeidas(
-            @PathVariable("usuarioId") String usuarioId
+            @PathVariable("id") String id
     ) {
-        Long targetId = userExtractor.validarAccesoUsuario(usuarioId);
+        Long targetId = userExtractor.validarAccesoUsuario(id);
         marcarNotificacionLeidaUseCase.marcarTodasComoLeidas(targetId);
         long restantes = listarNotificacionesUseCase.contarNoLeidas(targetId);
         return ResponseEntity.ok(new ContadorNoLeidasResponse(targetId, restantes));
@@ -160,9 +160,9 @@ public class AlertaController implements AlertaApi {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/notificaciones/no-leidas/contador")
     public ResponseEntity<ContadorNoLeidasResponse> contarNoLeidas(
-            @PathVariable("usuarioId") String usuarioId
+            @PathVariable("id") String id
     ) {
-        Long targetId = userExtractor.validarAccesoUsuario(usuarioId);
+        Long targetId = userExtractor.validarAccesoUsuario(id);
         long cantidad = listarNotificacionesUseCase.contarNoLeidas(targetId);
         return ResponseEntity.ok(new ContadorNoLeidasResponse(targetId, cantidad));
     }
@@ -171,10 +171,10 @@ public class AlertaController implements AlertaApi {
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = "/notificaciones/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter suscribirCampanaTiempoReal(
-            @PathVariable("usuarioId") String usuarioId,
+            @PathVariable("id") String id,
             @RequestHeader(value = "Last-Event-ID", required = false) String ultimoEventoId
     ) {
-        Long targetId = userExtractor.validarAccesoUsuario(usuarioId);
+        Long targetId = userExtractor.validarAccesoUsuario(id);
         SseEmitter emitter = sseRegistry.registrar(targetId);
         reenviarNotificacionesPerdidas(targetId, ultimoEventoId, emitter);
         return emitter;
