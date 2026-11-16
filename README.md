@@ -355,33 +355,38 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 
 ### Tabla de Endpoints Expuestos
 
-> **Nota de Arquitectura REST y API Gateway:**  
-> Siguiendo los lineamientos arquitectónicos de StyleRadar, los endpoints canónicos utilizan el identificador explícito del recurso del usuario: `/api/v1/usuarios/{usuarioId}/...`. El microservicio valida mediante la autenticación JWT que el `{usuarioId}` de la ruta corresponda al usuario autenticado (o rol administrador); si un usuario intenta acceder a los recursos de otro ID, se rechaza la solicitud con **`HTTP 403 Forbidden`**. Por retrocompatibilidad con clientes existentes y pruebas previas, la ruta también admite de forma transparente el alias `/me`.
+> **Nota de Arquitectura REST y Estandarización de Endpoints (/users/{id}):**  
+> Siguiendo la convención oficial del proyecto StyleRadar para el API Gateway y microservicios, los endpoints canónicos utilizan el identificador explícito del recurso del usuario: **`/users/{id}/...`**.
+>
+> **Seguridad y Validación de Autorización:**  
+> La seguridad del backend extrae el usuario autenticado del token JWT (`sub` o `userId`) y valida que coincida exactamente con el `{id}` de la ruta (o que cuente con privilegios de administrador). Si un usuario intenta consultar o manipular los recursos de otro usuario (por ejemplo un token de usuario 101 solicitando `/users/202/...`), el backend rechaza la petición inmediatamente retornando **`HTTP 403 Forbidden`** bajo el estándar RFC 7807 (Problem Details).
+>
+> *Nota de compatibilidad:* Por interoperabilidad y retrocompatibilidad con las distintas capas y clientes anteriores, las rutas también admiten `/api/v1/users/{id}/...`, `/api/v1/usuarios/{id}/...` y el alias transparente `/me`.
 
-|  Método  | Endpoint | Descripción | Rol Requerido | Códigos HTTP |
+|  Método  | Endpoint Canónico | Descripción | Rol Requerido | Códigos HTTP |
 | :--------: | :---------------------------- | :----------------------------------------- | :-------------------- | :-----------------------: |
 |  `GET`  | `/actuator/health` | Health Check y estado del microservicio | Público | `200` |
-|  `POST`  | `/api/v1/usuarios/{usuarioId}/alertas` | Crea una alerta sobre prenda agotada o búsqueda guardada (NOT-05 / NOT-10) | Autenticado (`JWT`) | `201`, `400`, `403`, `409`, `422` |
-|  `GET`  | `/api/v1/usuarios/{usuarioId}/alertas` | Lista todas las alertas configuradas por el usuario autenticado (NOT-05) | Autenticado (`JWT`) | `200`, `401`, `403` |
-| `DELETE` | `/api/v1/usuarios/{usuarioId}/alertas/{alertaId}` | Desactiva una alerta perteneciente al usuario autenticado (NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404` |
-| `PATCH` | `/api/v1/usuarios/{usuarioId}/alertas/{alertaId}/desactivar` | Ruta alternativa PATCH para desactivar alerta (NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404` |
-|  `GET`  | `/api/v1/usuarios/{usuarioId}/notificaciones` | Lista las notificaciones del usuario, de la más reciente a la más antigua. Sin parámetros devuelve la lista completa (`?soloNoLeidas=true/false`). Con `page` (desde 0), `size` (1 a 100, por defecto 20) o `leida` (`true`/`false`) devuelve una página: `content`, `page`, `size`, `totalElements`, `totalPages`, `hasNext` y `hasPrevious` (NOT-05 / NOT-12 / GJ-118) | Autenticado (`JWT`) | `200`, `400`, `401`, `403` |
-| `PATCH` | `/api/v1/usuarios/{usuarioId}/notificaciones/{notificacionId}/leer` | Marca una notificación específica como leída (NOT-13) | Propietario (`JWT`) | `200`, `401`, `403`, `404` |
-| `PATCH` | `/api/v1/usuarios/{usuarioId}/notificaciones/leer-todas` | Marca todas las notificaciones del usuario como leídas (NOT-13) | Autenticado (`JWT`) | `200`, `401`, `403` |
-|  `GET`  | `/api/v1/usuarios/{usuarioId}/notificaciones/no-leidas/contador` | Obtiene el contador de notificaciones sin leer para la campana (NOT-13) | Autenticado (`JWT`) | `200`, `401`, `403` |
-|  `GET`  | `/api/v1/usuarios/{usuarioId}/notificaciones/stream` | Suscripción Server-Sent Events (`text/event-stream`) para campana en tiempo real; con la cabecera `Last-Event-ID` reenvía lo perdido al reconectar (NOT-15, GJ-62) | Autenticado (`JWT`) | `200`, `401`, `403` |
-|  `GET`  | `/api/v1/usuarios/{usuarioId}/preferencias-avisos` | Lista el canal elegido por tipo de aviso; los no configurados salen como `SOLO_PLATAFORMA` (GJ-64) | Autenticado (`JWT`) | `200`, `401`, `403` |
-|  `PUT`  | `/api/v1/usuarios/{usuarioId}/preferencias-avisos/{tipo}` | Elige `SOLO_PLATAFORMA` o `CORREO_Y_PLATAFORMA` para un tipo de aviso (GJ-64) | Autenticado (`JWT`) | `200`, `400`, `401`, `403` |
+|  `POST`  | `/users/{id}/alertas` | Crea una alerta sobre prenda agotada o búsqueda guardada (NOT-05 / NOT-10) | Autenticado (`JWT`) | `201`, `400`, `403`, `409`, `422` |
+|  `GET`  | `/users/{id}/alertas` | Lista todas las alertas configuradas por el usuario autenticado (NOT-05) | Autenticado (`JWT`) | `200`, `401`, `403` |
+| `DELETE` | `/users/{id}/alertas/{alertaId}` | Desactiva una alerta perteneciente al usuario autenticado (NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404` |
+| `PATCH` | `/users/{id}/alertas/{alertaId}/desactivar` | Ruta alternativa PATCH para desactivar alerta (NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404` |
+|  `GET`  | `/users/{id}/notificaciones` | Lista las notificaciones del usuario, de la más reciente a la más antigua. Sin parámetros devuelve la lista completa (`?soloNoLeidas=true/false`). Con `page` (desde 0), `size` (1 a 100, por defecto 20) o `leida` (`true`/`false`) devuelve una página: `content`, `page`, `size`, `totalElements`, `totalPages`, `hasNext` y `hasPrevious` (NOT-05 / NOT-12 / GJ-118) | Autenticado (`JWT`) | `200`, `400`, `401`, `403` |
+| `PATCH` | `/users/{id}/notificaciones/{notificacionId}/leer` | Marca una notificación específica como leída (NOT-13) | Propietario (`JWT`) | `200`, `401`, `403`, `404` |
+| `PATCH` | `/users/{id}/notificaciones/leer-todas` | Marca todas las notificaciones del usuario como leídas (NOT-13) | Autenticado (`JWT`) | `200`, `401`, `403` |
+|  `GET`  | `/users/{id}/notificaciones/no-leidas/conteo` | Obtiene el contador de notificaciones sin leer para la campana (NOT-13) | Autenticado (`JWT`) | `200`, `401`, `403` |
+|  `GET`  | `/users/{id}/notificaciones/stream` | Suscripción Server-Sent Events (`text/event-stream`) para campana en tiempo real; con la cabecera `Last-Event-ID` reenvía lo perdido al reconectar (NOT-15, GJ-62) | Autenticado (`JWT`) | `200`, `401`, `403` |
+|  `GET`  | `/users/{id}/preferencias-avisos` | Lista el canal elegido por tipo de aviso; los no configurados salen como `SOLO_PLATAFORMA` (GJ-64) | Autenticado (`JWT`) | `200`, `401`, `403` |
+|  `PUT`  | `/users/{id}/preferencias-avisos/{tipo}` | Elige `SOLO_PLATAFORMA` o `CORREO_Y_PLATAFORMA` para un tipo de aviso (GJ-64) | Autenticado (`JWT`) | `200`, `400`, `401`, `403` |
 
 <details>
 <summary><b>Click para ver Ejemplos Interactivos de Request y Response JSON (Payloads)</b></summary>
 
 <br>
 
-#### Ejemplo Request (`POST /api/v1/usuarios/{usuarioId}/alertas`)
+#### Ejemplo Request (`POST /users/{id}/alertas`)
 
 ```bash
-curl -X POST "http://localhost:8300/api/v1/usuarios/101/alertas" \
+curl -X POST "http://localhost:8300/users/101/alertas" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -d '{
