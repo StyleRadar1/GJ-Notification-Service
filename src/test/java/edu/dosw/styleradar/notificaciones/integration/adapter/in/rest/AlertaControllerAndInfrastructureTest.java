@@ -355,4 +355,130 @@ class AlertaControllerAndInfrastructureTest {
         assertThat(rabbitMqConfig.moderationChangedQueue()).isNotNull();
         assertThat(rabbitMqConfig.jackson2JsonMessageConverter()).isNotNull();
     }
+
+    private static final long USUARIO_PAGINAS = 7_801L;
+
+    private void sembrarDoceNotificaciones() {
+        LocalDateTime base = LocalDateTime.of(2026, 11, 14, 8, 0);
+        for (int i = 0; i < 12; i++) {
+            // las de indice 0, 3, 6 y 9 estan leidas; la mas reciente es la 11
+            notificacionRepositoryPort.guardar(new Notificacion(
+                    null, USUARIO_PAGINAS, null, null, null, TipoNotificacion.MENSAJE_NUEVO, CanalNotificacion.IN_APP,
+                    "Aviso " + i, "Mensaje " + i, "/chat/conversaciones/" + i, i % 3 == 0,
+                    base.plusMinutes(i), null));
+        }
+        notificacionRepositoryPort.guardar(new Notificacion(
+                null, 7_802L, null, null, null, TipoNotificacion.MENSAJE_NUEVO, CanalNotificacion.IN_APP,
+                "De otro usuario", "No debe aparecer", null, false, base, null));
+    }
+
+    @Test
+    @DisplayName("GJ-118 - La bandeja pagina con page y size y devuelve los metadatos de la pagina")
+    void bandejaPaginaConMetadatos() throws Exception {
+        sembrarDoceNotificaciones();
+        String token = jwtTokenService.generateToken(USUARIO_PAGINAS, "pag@styleradar.co", "COMPRADOR");
+
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=0&size=5")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(5))
+                .andExpect(jsonPath("$.content[0].titulo").value("Aviso 11"))
+                .andExpect(jsonPath("$.content[4].titulo").value("Aviso 7"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(12))
+                .andExpect(jsonPath("$.totalPages").value(3))
+                .andExpect(jsonPath("$.hasNext").value(true))
+                .andExpect(jsonPath("$.hasPrevious").value(false));
+
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=2&size=5")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[1].titulo").value("Aviso 0"))
+                .andExpect(jsonPath("$.hasNext").value(false))
+                .andExpect(jsonPath("$.hasPrevious").value(true));
+
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=9&size=5")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(12))
+                .andExpect(jsonPath("$.hasNext").value(false));
+
+        // Con solo page, el tamano por defecto es 20
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=0")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.content.length()").value(12))
+                .andExpect(jsonPath("$.totalPages").value(1));
+    }
+
+    @Test
+    @DisplayName("GJ-118 - El filtro de leidas sigue funcionando junto con la paginacion y sin ella")
+    void bandejaFiltraPorLeidaYMantieneLaListaCompleta() throws Exception {
+        sembrarDoceNotificaciones();
+        String token = jwtTokenService.generateToken(USUARIO_PAGINAS, "pag@styleradar.co", "COMPRADOR");
+
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?leida=false&size=5")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(8))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.content[0].leida").value(false));
+
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?leida=true")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(4))
+                .andExpect(jsonPath("$.content[0].leida").value(true));
+
+        // soloNoLeidas=true con paginacion equivale a leida=false
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?soloNoLeidas=true&page=0&size=20")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(8));
+
+        // Sin page, size ni leida: la lista completa de siempre (un arreglo), solo del usuario
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(12));
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?soloNoLeidas=true")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(8));
+    }
+
+    @Test
+    @DisplayName("GJ-118 - Un size mayor que 100, un size menor que 1 o un page negativo responden 400, y sin JWT 401")
+    void bandejaRechazaParametrosDePaginaInvalidos() throws Exception {
+        String token = jwtTokenService.generateToken(USUARIO_PAGINAS, "pag@styleradar.co", "COMPRADOR");
+
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?size=101")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.detail").value("size no puede superar 100"));
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?size=0")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("size debe ser al menos 1"));
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=-1")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("page debe ser 0 o mayor"));
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=abc")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+        // El limite exacto es valido
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?size=100")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(100));
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=0&size=5"))
+                .andExpect(status().isUnauthorized());
+    }
 }

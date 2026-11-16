@@ -4,6 +4,8 @@ import edu.dosw.styleradar.notificaciones.application.dto.request.CrearAlertaReq
 import edu.dosw.styleradar.notificaciones.application.dto.response.AlertaResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.ContadorNoLeidasResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.NotificacionResponse;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -196,7 +198,7 @@ public interface AlertaApi {
             @Parameter(description = "ID de la alerta a desactivar", example = "501") Long alertaId
     );
 
-    @Operation(summary = "Listar mis notificaciones", description = "Retorna las notificaciones del usuario autenticado con filtro opcional de no leidas")
+    @Operation(summary = "Listar mis notificaciones", description = "Retorna las notificaciones del usuario autenticado, de la mas reciente a la mas antigua. Sin page, size ni leida devuelve la lista completa (compatibilidad). Con cualquiera de ellos devuelve una pagina con sus metadatos: page empieza en 0 (por defecto 0), size va de 1 a 100 (por defecto 20) y leida filtra leidas (true) o no leidas (false).")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -204,10 +206,27 @@ public interface AlertaApi {
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = NotificacionResponse.class)),
-                            examples = @ExampleObject(
-                                    name = "ListaNotificaciones",
-                                    value = "[{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":1045,\"cicloReposicion\":1,\"tipo\":\"REPOSICION_STOCK\",\"canal\":\"IN_APP\",\"titulo\":\"Stock Disponible\",\"mensaje\":\"Chaqueta Denim Vintage vuelve a tener stock.\",\"enlace\":\"/catalogo/prendas/1045\",\"leida\":false,\"fechaCreacion\":\"2026-11-02T12:00:00\",\"fechaLectura\":null}]"
-                            )
+                            examples = {
+                                    @ExampleObject(
+                                            name = "ListaNotificaciones",
+                                            summary = "Sin page, size ni leida",
+                                            value = "[{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":1045,\"cicloReposicion\":1,\"tipo\":\"REPOSICION_STOCK\",\"canal\":\"IN_APP\",\"titulo\":\"Stock Disponible\",\"mensaje\":\"Chaqueta Denim Vintage vuelve a tener stock.\",\"enlace\":\"/catalogo/prendas/1045\",\"leida\":false,\"fechaCreacion\":\"2026-11-02T12:00:00\",\"fechaLectura\":null}]"
+                                    ),
+                                    @ExampleObject(
+                                            name = "PaginaNotificaciones",
+                                            summary = "Con page, size o leida",
+                                            value = "{\"content\":[{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":1045,\"cicloReposicion\":1,\"tipo\":\"REPOSICION_STOCK\",\"canal\":\"IN_APP\",\"titulo\":\"Stock Disponible\",\"mensaje\":\"Chaqueta Denim Vintage vuelve a tener stock.\",\"enlace\":\"/catalogo/prendas/1045\",\"leida\":false,\"fechaCreacion\":\"2026-11-02T12:00:00\",\"fechaLectura\":null}],\"page\":0,\"size\":20,\"totalElements\":1,\"totalPages\":1,\"hasNext\":false,\"hasPrevious\":false}"
+                                    )
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "page negativo o size fuera del rango 1 a 100",
+                    content = @Content(
+                            mediaType = "application/problem+json",
+                            schema = @Schema(implementation = ProblemDetail.class),
+                            examples = @ExampleObject(value = "{\"title\":\"Error de validacion en la solicitud\",\"status\":400,\"detail\":\"size no puede superar 100\"}")
                     )
             ),
             @ApiResponse(
@@ -220,8 +239,14 @@ public interface AlertaApi {
                     )
             )
     })
-    ResponseEntity<List<NotificacionResponse>> listarMisNotificaciones(
-            @Parameter(description = "Filtrar unicamente notificaciones no leidas", example = "false") Boolean soloNoLeidas
+    ResponseEntity<?> listarMisNotificaciones(
+            @Parameter(description = "Filtrar unicamente notificaciones no leidas (equivale a leida=false)", example = "false") Boolean soloNoLeidas,
+            @Parameter(description = "Filtrar por leidas (true) o no leidas (false); si se envia, la respuesta es paginada", example = "false") Boolean leida,
+            @Parameter(description = "Numero de pagina, desde 0 (por defecto 0)", example = "0")
+            @Min(value = 0, message = "page debe ser 0 o mayor") Integer page,
+            @Parameter(description = "Tamano de pagina, de 1 a 100 (por defecto 20)", example = "20")
+            @Min(value = 1, message = "size debe ser al menos 1")
+            @Max(value = 100, message = "size no puede superar 100") Integer size
     );
 
     @Operation(summary = "Marcar notificacion como leida", description = "Marca una notificacion especifica del usuario como leida")

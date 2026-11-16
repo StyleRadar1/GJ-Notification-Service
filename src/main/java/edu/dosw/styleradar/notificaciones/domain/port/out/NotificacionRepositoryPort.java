@@ -1,6 +1,7 @@
 package edu.dosw.styleradar.notificaciones.domain.port.out;
 
 import edu.dosw.styleradar.notificaciones.domain.model.Notificacion;
+import edu.dosw.styleradar.notificaciones.domain.model.Pagina;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,6 +12,13 @@ public interface NotificacionRepositoryPort {
     Optional<Notificacion> buscarPorId(Long id);
 
     List<Notificacion> listarPorUsuario(Long usuarioId, Boolean soloNoLeidas);
+
+    /**
+     * Notificaciones del usuario por paginas, de la mas reciente a la mas antigua.
+     *
+     * @param leida {@code true} solo las leidas, {@code false} solo las no leidas, {@code null} todas
+     */
+    Pagina<Notificacion> listarPaginadas(Long usuarioId, Boolean leida, int page, int size);
 
     /** Notificaciones del usuario con id mayor al indicado, de la mas antigua a la mas reciente. */
     List<Notificacion> listarPosterioresA(Long usuarioId, Long ultimoId);

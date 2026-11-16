@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -62,7 +63,7 @@ class PreferenciasYCorreoUseCasesTest {
 
         enviarCorreo.enviarSiCorresponde(aviso(TipoNotificacion.REPOSICION_STOCK));
 
-        verify(correo).enviar("ana@styleradar.co", "StyleRadar: Prenda disponible", "Volvio a haber stock");
+        verify(correo).enviar(eq(USUARIO), eq("ana@styleradar.co"), eq("StyleRadar: Prenda disponible"), eq("Volvio a haber stock"));
     }
 
     @Test
@@ -73,7 +74,7 @@ class PreferenciasYCorreoUseCasesTest {
 
         enviarCorreo.enviarSiCorresponde(aviso(TipoNotificacion.REPOSICION_STOCK));
 
-        verify(correo, never()).enviar(anyString(), anyString(), anyString());
+        verify(correo, never()).enviar(any(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -83,7 +84,7 @@ class PreferenciasYCorreoUseCasesTest {
 
         enviarCorreo.enviarSiCorresponde(aviso(TipoNotificacion.MENSAJE_NUEVO));
 
-        verify(correo, never()).enviar(anyString(), anyString(), anyString());
+        verify(correo, never()).enviar(any(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -96,7 +97,7 @@ class PreferenciasYCorreoUseCasesTest {
 
         assertThatCode(() -> enviarCorreo.enviarSiCorresponde(aviso(TipoNotificacion.MENSAJE_NUEVO))).doesNotThrowAnyException();
 
-        verify(correo, never()).enviar(anyString(), anyString(), anyString());
+        verify(correo, never()).enviar(any(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -104,7 +105,7 @@ class PreferenciasYCorreoUseCasesTest {
     void unFalloNuncaSePropaga() {
         when(preferencias.buscar(USUARIO, TipoNotificacion.MENSAJE_NUEVO)).thenReturn(
                 Optional.of(new PreferenciaAviso(USUARIO, TipoNotificacion.MENSAJE_NUEVO, CanalAviso.CORREO_Y_PLATAFORMA, null)));
-        doThrow(new IllegalStateException("smtp caido")).when(correo).enviar(anyString(), anyString(), anyString());
+        doThrow(new IllegalStateException("smtp caido")).when(correo).enviar(any(), anyString(), anyString(), anyString());
 
         assertThatCode(() -> enviarCorreo.enviarSiCorresponde(aviso(TipoNotificacion.MENSAJE_NUEVO))).doesNotThrowAnyException();
         assertThatCode(() -> enviarCorreo.enviarSiCorresponde(null)).doesNotThrowAnyException();

@@ -362,7 +362,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 |  `GET`  | `/api/v1/usuarios/me/alertas` | Lista todas las alertas configuradas por el usuario autenticado (NOT-05) | Autenticado (`JWT`) | `200`, `401` |
 | `DELETE` | `/api/v1/usuarios/me/alertas/{alertaId}` | Desactiva una alerta perteneciente al usuario autenticado (NOT-05) | Propietario (`JWT`) | `200`, `403`, `404` |
 | `PATCH` | `/api/v1/usuarios/me/alertas/{alertaId}/desactivar` | Ruta alternativa PATCH para desactivar alerta (NOT-05) | Propietario (`JWT`) | `200`, `403`, `404` |
-|  `GET`  | `/api/v1/usuarios/me/notificaciones` | Lista las notificaciones del usuario (`?soloNoLeidas=true/false`) (NOT-05 / NOT-12) | Autenticado (`JWT`) | `200`, `401` |
+|  `GET`  | `/api/v1/usuarios/me/notificaciones` | Lista las notificaciones del usuario, de la más reciente a la más antigua. Sin parámetros devuelve la lista completa (`?soloNoLeidas=true/false`). Con `page` (desde 0), `size` (1 a 100, por defecto 20) o `leida` (`true`/`false`) devuelve una página: `content`, `page`, `size`, `totalElements`, `totalPages`, `hasNext` y `hasPrevious` (NOT-05 / NOT-12 / GJ-118) | Autenticado (`JWT`) | `200`, `400`, `401` |
 | `PATCH` | `/api/v1/usuarios/me/notificaciones/{notificacionId}/leer` | Marca una notificación específica como leída (NOT-13) | Propietario (`JWT`) | `200`, `403`, `404` |
 | `PATCH` | `/api/v1/usuarios/me/notificaciones/leer-todas` | Marca todas las notificaciones del usuario como leídas (NOT-13) | Autenticado (`JWT`) | `200`, `401` |
 |  `GET`  | `/api/v1/usuarios/me/notificaciones/no-leidas/contador` | Obtiene el contador de notificaciones sin leer para la campana (NOT-13) | Autenticado (`JWT`) | `200`, `401` |
@@ -473,7 +473,7 @@ El stack del microservicio cumple con el estándar unificado de arquitectura de 
 | **Framework Empresarial** | Spring Boot | `3.2.5` | Gestión declarativa de configuración, ecosistema nativo Spring Web, Security, Data JPA y AMQP. |
 | **Cliente HTTP Declarativo** | Spring Cloud OpenFeign | `2023.0.1` | Validación síncrona de prenda agotada contra `ms-item-catalogo` (NOT-10). |
 | **Base de Datos** | PostgreSQL | `16` | Integridad transaccional ACID y restricción única `(alerta_id, item_id, ciclo_reposicion)`. |
-| **Migraciones de BD** | Flyway | `9.22.x` | Control de versiones reproducible de scripts SQL (`V1` esquema, `V2` índices, `V3` `evento_id` de idempotencia, `V4` `preferencias_avisos`). |
+| **Migraciones de BD** | Flyway | `9.22.x` | Control de versiones reproducible de scripts SQL (`V1` esquema, `V2` índices, `V3` `evento_id` de idempotencia, `V4` `preferencias_avisos`, `V5` `correos_pendientes`). |
 | **Broker de Mensajería** | RabbitMQ | `3.13` | Desacoplamiento temporal de microservicios mediante Topic Exchanges y Dead Letter Queues. |
 | **Caché en Memoria** | Redis | `7.x` | Declarado en `docker-compose`; el servicio todavía no lo usa. |
 | **Correo** | Spring Boot Starter Mail (`JavaMailSender`) | `3.2.5` | Avisos por correo cuando el usuario lo elige. Se activa con `SPRING_MAIL_HOST`; sin él no se envía correo. |
@@ -595,6 +595,8 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 | `SPRING_MAIL_PORT` | Puerto del servidor SMTP | `587` | No |
 | `SPRING_MAIL_USERNAME` / `SPRING_MAIL_PASSWORD` | Credenciales del SMTP. Se inyectan como variables de entorno o secretos; no se guardan en el repositorio | — | No |
 | `MAIL_FROM` | Dirección remitente de los correos | `no-reply@styleradar.co` | No |
+| `MAIL_PENDING_MAX_ATTEMPTS` | Cuántas veces se reintenta un correo guardado como pendiente antes de marcarlo `FALLIDO` (GJ-119) | `3` | No |
+| `MAIL_RETRY_DELAY_MS` | Cada cuántos milisegundos se reintentan los correos pendientes (además de al arrancar el servicio) | `60000` | No |
 
 <details>
 <summary><b>Click para copiar la Plantilla de Archivo .env.example</b></summary>
@@ -691,7 +693,7 @@ mvn jacoco:report
 | **Pruebas de Integración y Contrato** | Controladores REST, Seguridad JWT, Flyway, Repositorios JPA, Consumidores AMQP, SSE y correo | Spring Boot Test, MockMvc, H2 PostgreSQL Mode, GreenMail | `src/test/java/.../integration/` | ≥ 85% |
 | **Pruebas con RabbitMQ real** | Publicación de `AlertaCreada` y consumo de eventos contra un broker real | Testcontainers (requieren Docker; en un equipo sin Docker se omiten y las corre el CI) | `src/test/java/.../integration/messaging/` | — |
 
-Estado actual: **124 pruebas, 0 fallos, cobertura de líneas 93,0 %** (11 pruebas con Docker omitidas en un equipo sin Docker).
+Estado actual: **169 pruebas, 0 fallos, cobertura de líneas 94,0 %** (11 pruebas con Docker omitidas en un equipo sin Docker).
 
 > [!IMPORTANT]
 > **Criterio de Fallo en CI:** El archivo `pom.xml` contiene la regla `<limit><minimum>0.85</minimum></limit>`. Si la cobertura total consolidada es inferior al 85%, el comando `mvn verify` fallará con error y el pipeline bloqueará el Pull Request.

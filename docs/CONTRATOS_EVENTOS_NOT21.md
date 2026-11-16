@@ -261,6 +261,37 @@
 ### 1.10 Mensajes de la donación según el estado
 `DonacionEstadoCambiado` genera un texto distinto según `nuevoEstado`: contiene `APROB` → "fue aprobada"; `RECHAZ` → "fue rechazada"; `CITA` → "se programó una cita"; cualquier otro → "cambió a estado X". Si viene `motivo`, se agrega al final.
 
+### 1.11 `FundacionDesactivada` (Emisor: `ms-tiendas`) — GJ-117
+
+Avisa a los donantes afectados de que una fundación a la que donaron o querían donar se desactivó, para que no le entreguen una donación.
+
+- **Exchange:** `styleradar.exchange` · **Routing key:** `styleradar.tiendas.fundacion.desactivada`
+- **Cola:** `styleradar.notificaciones.fundacion-desactivada.q` (durable, con `styleradar.dlx` como destino de errores)
+
+| Campo | Tipo | Obligatorio | Descripción |
+| :--- | :--- | :---: | :--- |
+| `eventoId` | texto | Sí | Identificador del evento. Debe mantenerse igual si reintentan el envío |
+| `fundacionId` | número | Sí | Id de la fundación desactivada |
+| `nombreFundacion` | texto | No | Nombre visible. Sin él el aviso dice «una fundacion aliada» |
+| `donantesAfectadosIds` | lista de números | No | Usuarios que reciben el aviso. Sin lista (nula o vacía) no hay a quién avisar: el evento se registra con una advertencia y termina sin error |
+| `motivo` | texto | No | Se agrega al final del mensaje |
+| `fechaEvento` | fecha y hora | No | Cuándo se desactivó |
+
+**Qué hace `ms-notificaciones` al recibirlo:** por cada donante de `donantesAfectadosIds` crea una notificación `CAMBIO_DONACION` con el título «Fundacion desactivada», el mensaje «La fundacion <nombre> ha sido desactivada» (más «: <motivo>» si viene) y el enlace `/donaciones`. Si falta `fundacionId` o `eventoId`, el mensaje va a la cola de errores. Si llega el mismo `eventoId` dos veces, la segunda se descarta para cada donante (restricción única `(evento_id, usuario_id)`). Un donante con la cuenta inactiva o bloqueada no recibe el aviso.
+
+**Por confirmar con `ms-tiendas`:** que el evento incluya `donantesAfectadosIds`. `ms-tiendas` conoce la fundación pero no necesariamente a sus donantes; si no los tiene, hay que acordar quién los aporta (por ejemplo, `ms-donaciones`).
+
+```json
+{
+  "eventoId": "evt-fun-5001",
+  "fundacionId": 9,
+  "nombreFundacion": "Fundacion Sol",
+  "donantesAfectadosIds": [501, 502],
+  "motivo": "cerro sus operaciones",
+  "fechaEvento": "2026-11-15T09:00:00"
+}
+```
+
 ---
 
 ## 2. Eventos Publicados por `ms-notificaciones`
@@ -290,7 +321,7 @@
 | Exchange | `styleradar.exchange` (tipo `topic`, durable) |
 | Dead Letter Exchange | `styleradar.dlx` |
 | Cola de errores (DLQ) | `styleradar.notificaciones.dlq` (routing key `styleradar.notificaciones.error`) |
-| Colas consumidas | 11, todas durables y con la DLX configurada |
+| Colas consumidas | 12, todas durables y con la DLX configurada |
 | Formato del mensaje | JSON (`application/json`), fechas en ISO-8601 |
 | Virtual host | `RABBITMQ_VHOST` (por defecto `/`) |
 | TLS | `RABBITMQ_SSL_ENABLED` (puerto `5671` cuando está activo) |

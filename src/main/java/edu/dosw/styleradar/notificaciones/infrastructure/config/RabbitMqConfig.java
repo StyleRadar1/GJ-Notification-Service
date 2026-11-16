@@ -54,6 +54,9 @@ public class RabbitMqConfig {
     @Value("${application.messaging.queues.payment-confirmed:styleradar.notificaciones.pago-confirmado.q}")
     private String paymentConfirmedQueueName;
 
+    @Value("${application.messaging.queues.foundation-deactivated:styleradar.notificaciones.fundacion-desactivada.q}")
+    private String foundationDeactivatedQueueName;
+
     @Value("${application.messaging.queues.dlq:styleradar.notificaciones.dlq}")
     private String dlqName;
 
@@ -89,6 +92,9 @@ public class RabbitMqConfig {
 
     @Value("${application.messaging.routing-keys.payment-confirmed:styleradar.pagos.pago.confirmado}")
     private String paymentConfirmedKey;
+
+    @Value("${application.messaging.routing-keys.foundation-deactivated:styleradar.tiendas.fundacion.desactivada}")
+    private String foundationDeactivatedKey;
 
     @Value("${application.messaging.routing-keys.dlq:styleradar.notificaciones.error}")
     private String dlqRoutingKey;
@@ -206,6 +212,16 @@ public class RabbitMqConfig {
     @Bean
     public Queue paymentConfirmedQueue() {
         return buildDurableQueueWithDlq(paymentConfirmedQueueName);
+    }
+
+    @Bean
+    public Queue foundationDeactivatedQueue() {
+        return buildDurableQueueWithDlq(foundationDeactivatedQueueName);
+    }
+
+    @Bean
+    public Binding foundationDeactivatedBinding(Queue foundationDeactivatedQueue, TopicExchange styleradarExchange) {
+        return BindingBuilder.bind(foundationDeactivatedQueue).to(styleradarExchange).with(foundationDeactivatedKey);
     }
 
     @Bean

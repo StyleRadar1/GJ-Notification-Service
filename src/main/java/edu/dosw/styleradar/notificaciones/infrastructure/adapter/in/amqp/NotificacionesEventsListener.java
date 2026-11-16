@@ -2,6 +2,7 @@ package edu.dosw.styleradar.notificaciones.infrastructure.adapter.in.amqp;
 
 import edu.dosw.styleradar.notificaciones.application.dto.event.BusquedaGuardadaSincronizadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.DonacionEstadoCambiadoEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.FundacionDesactivadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.InventarioActualizadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.MensajeEnviadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.ModeracionPrendaCambiadaEventPayload;
@@ -256,6 +257,38 @@ public class NotificacionesEventsListener {
         } catch (RecursoNoEncontradoException ex) {
             log.error("PagoConfirmado de un usuario desconocido ({}), se envia a la cola de errores", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex.getMessage(), ex);
+        }
+    }
+
+    @RabbitListener(queues = "${application.messaging.queues.foundation-deactivated:styleradar.notificaciones.fundacion-desactivada.q}")
+    public void onFundacionDesactivada(FundacionDesactivadaEventPayload payload) {
+        if (payload == null || payload.fundacionId() == null
+                || payload.eventoId() == null || payload.eventoId().isBlank()) {
+            throw payloadInvalido("FundacionDesactivada", "sin fundacionId o eventoId");
+        }
+        List<Long> donantes = payload.donantesAfectadosIds();
+        if (donantes == null || donantes.isEmpty()) {
+            log.warn("FundacionDesactivada {} sin donantes afectados, no hay a quien avisar", payload.fundacionId());
+            return;
+        }
+        String fundacion = payload.nombreFundacion() != null && !payload.nombreFundacion().isBlank()
+                ? payload.nombreFundacion() : "una fundacion aliada";
+        String mensaje = "La fundacion " + fundacion + " ha sido desactivada"
+                + (payload.motivo() != null && !payload.motivo().isBlank() ? ": " + payload.motivo() : "");
+        for (Long donanteId : donantes) {
+            if (donanteId == null) {
+                continue;
+            }
+            // La clave de idempotencia es (eventoId, donanteId): un evento repetido no duplica el aviso.
+            procesarEventosExternosUseCase.generarNotificacionDirecta(
+                    donanteId,
+                    TipoNotificacion.CAMBIO_DONACION,
+                    "Fundacion desactivada",
+                    mensaje,
+                    "/donaciones",
+                    null,
+                    payload.eventoId()
+            );
         }
     }
 

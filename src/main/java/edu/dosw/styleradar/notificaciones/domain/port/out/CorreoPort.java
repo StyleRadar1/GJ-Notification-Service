@@ -4,7 +4,8 @@ public interface CorreoPort {
 
     /**
      * Pide enviar un correo. El envio no bloquea a quien llama y no lanza excepciones: si el servidor de
-     * correo falla, el adaptador reintenta y, agotados los intentos, lo registra en el log.
+     * correo falla, el adaptador reintenta y, agotados los intentos, guarda el correo como pendiente para
+     * volver a intentarlo, incluso despues de un reinicio del servicio.
      */
-    void enviar(String destinatario, String asunto, String cuerpo);
+    void enviar(Long usuarioId, String destinatario, String asunto, String cuerpo);
 }
