@@ -285,14 +285,37 @@ jobs:
             print(f'{header}.{payload}.{sig}')
             ")
             mkdir -p target/newman
+
+            # QA corre en un plan compartido y sin Always On: tras un rato sin trafico, o con el plan cargado,
+            # una peticion puede tardar minutos o terminar en 504 sin que el codigo falle. Se calienta el
+            # servicio y cada carpeta se intenta dos veces antes de dar la prueba por fallida.
+            echo "Calentando el servicio en QA..."
+            curl -sS --max-time 120 -o /dev/null "${BASE_URL}/v3/api-docs" || true
+
+            ejecutar_newman() {
+              carpeta="$1"
+              nombre="$2"
+              for intento in 1 2; do
+                if npx --yes newman@6.2.1 run postman/styleradar-notificaciones.postman_collection.json \
+                  --folder "$carpeta" \
+                  --env-var "baseUrl=${BASE_URL}" \
+                  --env-var "jwtToken=$JWT_TOKEN_QA" \
+                  --timeout-request 120000 \
+                  --reporters cli,json,junit \
+                  --reporter-json-export "target/newman/newman-report-qa-${nombre}.json" \
+                  --reporter-junit-export "target/newman/newman-report-qa-${nombre}.xml"; then
+                  return 0
+                fi
+                echo "Intento ${intento} de 2 fallido en la carpeta '${carpeta}'."
+                if [ "$intento" -lt 2 ]; then
+                  sleep 30
+                fi
+              done
+              return 1
+            }
+
             echo "Ejecutando carpeta de pruebas independientes..."
-            npx --yes newman@6.2.1 run postman/styleradar-notificaciones.postman_collection.json \
-              --folder "Pruebas Independientes ms-notificaciones" \
-              --env-var "baseUrl=${BASE_URL}" \
-              --env-var "jwtToken=$JWT_TOKEN_QA" \
-              --reporters cli,json,junit \
-              --reporter-json-export target/newman/newman-report-qa-independientes.json \
-              --reporter-junit-export target/newman/newman-report-qa-independientes.xml
+            ejecutar_newman "Pruebas Independientes ms-notificaciones" independientes
 
             CATALOG_HEALTH_OK=0
             if curl -fsS --max-time 5 "${CATALOG_SERVICE_URL_QA}/actuator/health" > /dev/null 2>&1; then
@@ -301,13 +324,7 @@ jobs:
 
             if [ "$CATALOG_HEALTH_OK" -eq 1 ]; then
               echo "ms-item-catalogo respondio en QA (${CATALOG_SERVICE_URL_QA}). Ejecutando pruebas dependientes de catalogo..."
-              npx --yes newman@6.2.1 run postman/styleradar-notificaciones.postman_collection.json \
-                --folder "Pruebas Dependientes ms-item-catalogo" \
-                --env-var "baseUrl=${BASE_URL}" \
-                --env-var "jwtToken=$JWT_TOKEN_QA" \
-                --reporters cli,json,junit \
-                --reporter-json-export target/newman/newman-report-qa-dependientes.json \
-                --reporter-junit-export target/newman/newman-report-qa-dependientes.xml
+              ejecutar_newman "Pruebas Dependientes ms-item-catalogo" dependientes
             else
               echo "ms-item-catalogo NO esta disponible en QA (${CATALOG_SERVICE_URL_QA}). Pruebas de catalogo omitidas por dependencia externa."
             fi
