@@ -2,6 +2,7 @@ package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistenc
 
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.mapper.NotificacionEntityMapper;
 import edu.dosw.styleradar.notificaciones.domain.model.Notificacion;
+import edu.dosw.styleradar.notificaciones.domain.model.Pagina;
 import edu.dosw.styleradar.notificaciones.domain.port.out.NotificacionRepositoryPort;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.entity.NotificacionJpaEntity;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.repository.SpringDataNotificacionRepository;
@@ -10,6 +11,10 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +62,22 @@ public class NotificacionRepositoryAdapter implements NotificacionRepositoryPort
                 ? repository.findByUsuarioIdAndLeidaOrderByFechaCreacionDesc(usuarioId, false)
                 : repository.findByUsuarioIdOrderByFechaCreacionDesc(usuarioId);
         return entities.stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Pagina<Notificacion> listarPaginadas(Long usuarioId, Boolean leida, int page, int size) {
+        // Mas recientes primero; el id desempata las que se crearon en el mismo instante
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by(Sort.Order.desc("fechaCreacion"), Sort.Order.desc("id")));
+        Page<NotificacionJpaEntity> resultado = leida == null
+                ? repository.findByUsuarioId(usuarioId, pageable)
+                : repository.findByUsuarioIdAndLeida(usuarioId, leida, pageable);
+        return new Pagina<>(
+                resultado.getContent().stream().map(mapper::toDomain).toList(),
+                page,
+                size,
+                resultado.getTotalElements());
     }
 
     @Override

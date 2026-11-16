@@ -3,7 +3,9 @@ package edu.dosw.styleradar.notificaciones.application.service.impl;
 import edu.dosw.styleradar.notificaciones.application.service.NotificacionApplicationService;
 import edu.dosw.styleradar.notificaciones.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.notificaciones.domain.exception.RecursoNoEncontradoException;
+import edu.dosw.styleradar.notificaciones.domain.exception.ReglaDeNegocioException;
 import edu.dosw.styleradar.notificaciones.domain.model.Notificacion;
+import edu.dosw.styleradar.notificaciones.domain.model.Pagina;
 import edu.dosw.styleradar.notificaciones.domain.port.out.NotificacionRepositoryPort;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +16,25 @@ public class NotificacionApplicationServiceImpl implements NotificacionApplicati
     /** Tope de notificaciones que se reenvian al reconectar la campana: las mas recientes. */
     private static final int MAX_NOTIFICACIONES_A_REENVIAR = 200;
 
+    /** Tamano maximo de una pagina de la bandeja. */
+    public static final int TAMANO_MAXIMO_PAGINA = 100;
+
     private final NotificacionRepositoryPort notificacionRepositoryPort;
 
     @Override
     public List<Notificacion> listarNotificacionesPorUsuario(Long usuarioId, Boolean soloNoLeidas) {
         return notificacionRepositoryPort.listarPorUsuario(usuarioId, soloNoLeidas);
+    }
+
+    @Override
+    public Pagina<Notificacion> listarNotificacionesPaginadas(Long usuarioId, Boolean leida, int page, int size) {
+        if (page < 0) {
+            throw new ReglaDeNegocioException("La pagina debe ser 0 o mayor");
+        }
+        if (size < 1 || size > TAMANO_MAXIMO_PAGINA) {
+            throw new ReglaDeNegocioException("El tamano de pagina debe estar entre 1 y " + TAMANO_MAXIMO_PAGINA);
+        }
+        return notificacionRepositoryPort.listarPaginadas(usuarioId, leida, page, size);
     }
 
     @Override

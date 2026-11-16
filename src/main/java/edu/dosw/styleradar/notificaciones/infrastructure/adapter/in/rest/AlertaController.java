@@ -4,6 +4,7 @@ import edu.dosw.styleradar.notificaciones.application.dto.request.CrearAlertaReq
 import edu.dosw.styleradar.notificaciones.application.dto.response.AlertaResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.ContadorNoLeidasResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.NotificacionResponse;
+import edu.dosw.styleradar.notificaciones.application.dto.response.PaginaResponse;
 import edu.dosw.styleradar.notificaciones.application.mapper.in.AlertaDtoMapper;
 import edu.dosw.styleradar.notificaciones.application.mapper.in.NotificacionDtoMapper;
 import edu.dosw.styleradar.notificaciones.domain.model.Alerta;
@@ -50,6 +51,9 @@ public class AlertaController implements AlertaApi {
     private final SecurityContextUserExtractor userExtractor;
     private final SseEmitterRegistry sseRegistry;
 
+    private static final int PAGINA_POR_DEFECTO = 0;
+    private static final int TAMANO_POR_DEFECTO = 20;
+
     @Override
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/alertas")
@@ -91,16 +95,31 @@ public class AlertaController implements AlertaApi {
     @Override
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/notificaciones")
-    public ResponseEntity<List<NotificacionResponse>> listarMisNotificaciones(
-            @RequestParam(value = "soloNoLeidas", required = false) Boolean soloNoLeidas
+    public ResponseEntity<?> listarMisNotificaciones(
+            @RequestParam(value = "soloNoLeidas", required = false) Boolean soloNoLeidas,
+            @RequestParam(value = "leida", required = false) Boolean leida,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size
     ) {
         Long usuarioId = userExtractor.obtenerUsuarioAutenticadoId();
-        List<NotificacionResponse> respuestas = listarNotificacionesUseCase
-                .listarNotificacionesPorUsuario(usuarioId, soloNoLeidas)
-                .stream()
-                .map(notificacionDtoMapper::toResponse)
-                .toList();
-        return ResponseEntity.ok(respuestas);
+        boolean paginada = page != null || size != null || leida != null;
+        if (!paginada) {
+            // Compatibilidad: sin page, size ni leida se mantiene la lista completa de siempre
+            List<NotificacionResponse> respuestas = listarNotificacionesUseCase
+                    .listarNotificacionesPorUsuario(usuarioId, soloNoLeidas)
+                    .stream()
+                    .map(notificacionDtoMapper::toResponse)
+                    .toList();
+            return ResponseEntity.ok(respuestas);
+        }
+        // leida manda; soloNoLeidas=true equivale a leida=false
+        Boolean filtroLeida = leida != null ? leida : (Boolean.TRUE.equals(soloNoLeidas) ? Boolean.FALSE : null);
+        var pagina = listarNotificacionesUseCase.listarNotificacionesPaginadas(
+                usuarioId,
+                filtroLeida,
+                page != null ? page : PAGINA_POR_DEFECTO,
+                size != null ? size : TAMANO_POR_DEFECTO);
+        return ResponseEntity.ok(PaginaResponse.de(pagina, notificacionDtoMapper::toResponse));
     }
 
     @Override
