@@ -19,14 +19,14 @@ import org.springframework.http.ResponseEntity;
 
 @Tag(
         name = "Preferencias de avisos",
-        description = "Elegir, por tipo de aviso, si se recibe solo en la plataforma o tambien por correo"
+        description = "Elegir, por tipo de aviso, si se recibe solo en la plataforma o tambien por correo (bajo /api/v1/usuarios/{usuarioId}/preferencias-avisos)"
 )
 @SecurityRequirement(name = "bearerAuth")
 public interface PreferenciaAvisoApi {
 
     @Operation(
-            summary = "Listar mis preferencias",
-            description = "Devuelve un canal por cada tipo de aviso. Los tipos que el usuario nunca configuro salen como SOLO_PLATAFORMA"
+            summary = "Listar preferencias del usuario",
+            description = "Devuelve un canal por cada tipo de aviso para el usuario indicado. Los tipos que el usuario nunca configuro salen como SOLO_PLATAFORMA"
     )
     @ApiResponses({
             @ApiResponse(
@@ -41,13 +41,20 @@ public interface PreferenciaAvisoApi {
                     responseCode = "401",
                     description = "No autenticado o token JWT expirado",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Acceso denegado: el ID del path no coincide con el token JWT del usuario",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
-    ResponseEntity<List<PreferenciaAvisoResponse>> listarMisPreferencias();
+    ResponseEntity<List<PreferenciaAvisoResponse>> listarMisPreferencias(
+            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId
+    );
 
     @Operation(
             summary = "Elegir el canal de un tipo de aviso",
-            description = "Guarda (o cambia) el canal del tipo indicado: SOLO_PLATAFORMA o CORREO_Y_PLATAFORMA"
+            description = "Guarda (o cambia) el canal del tipo indicado para el usuario: SOLO_PLATAFORMA o CORREO_Y_PLATAFORMA"
     )
     @ApiResponses({
             @ApiResponse(
@@ -64,9 +71,15 @@ public interface PreferenciaAvisoApi {
                     responseCode = "401",
                     description = "No autenticado o token JWT expirado",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Acceso denegado: el ID del path no coincide con el token JWT del usuario",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     ResponseEntity<PreferenciaAvisoResponse> guardarPreferencia(
+            @Parameter(description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String usuarioId,
             @Parameter(description = "Tipo de aviso", example = "REPOSICION_STOCK") TipoNotificacion tipo,
             @Valid PreferenciaAvisoRequest request
     );
