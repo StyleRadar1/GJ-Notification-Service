@@ -9,12 +9,14 @@ import edu.dosw.styleradar.notificaciones.application.usecase.DesactivarAlertaUs
 import edu.dosw.styleradar.notificaciones.application.usecase.ListarAlertasUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.ListarNotificacionesUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.EnviarAvisoPorCorreoUseCaseImpl;
+import edu.dosw.styleradar.notificaciones.application.usecase.ReenviarCorreosPendientesUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.MarcarNotificacionLeidaUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.PreferenciasAvisosUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.ProcesarEventosExternosUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.domain.port.in.CrearAlertaUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.DesactivarAlertaUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.EnviarAvisoPorCorreoUseCase;
+import edu.dosw.styleradar.notificaciones.domain.port.in.ReenviarCorreosPendientesUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ListarAlertasUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ListarNotificacionesUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.MarcarNotificacionLeidaUseCase;
@@ -23,7 +25,9 @@ import edu.dosw.styleradar.notificaciones.domain.port.in.ProcesarEventosExternos
 import edu.dosw.styleradar.notificaciones.domain.port.out.AlertaRepositoryPort;
 import edu.dosw.styleradar.notificaciones.domain.port.out.BusquedaGuardadaCopiaRepositoryPort;
 import edu.dosw.styleradar.notificaciones.domain.port.out.CatalogoClientPort;
+import edu.dosw.styleradar.notificaciones.domain.port.out.CorreoPendienteRepositoryPort;
 import edu.dosw.styleradar.notificaciones.domain.port.out.CorreoPort;
+import edu.dosw.styleradar.notificaciones.domain.port.out.EnvioCorreoPort;
 import edu.dosw.styleradar.notificaciones.domain.port.out.EstadoCuentaCopiaRepositoryPort;
 import edu.dosw.styleradar.notificaciones.domain.port.out.EventPublisherPort;
 import edu.dosw.styleradar.notificaciones.domain.port.out.NotificacionRepositoryPort;
@@ -135,5 +139,13 @@ public class BeanConfig {
             CorreoPort correoPort
     ) {
         return new EnviarAvisoPorCorreoUseCaseImpl(preferenciaAvisoRepositoryPort, estadoCuentaCopiaRepositoryPort, correoPort);
+    }
+
+    @Bean
+    public ReenviarCorreosPendientesUseCase reenviarCorreosPendientesUseCase(
+            CorreoPendienteRepositoryPort correoPendienteRepositoryPort,
+            EnvioCorreoPort envioCorreoPort
+    ) {
+        return new ReenviarCorreosPendientesUseCaseImpl(correoPendienteRepositoryPort, envioCorreoPort);
     }
 }

@@ -31,6 +31,10 @@ application:
     retry:
       max-attempts: 3
       initial-interval-ms: 1000
+    # GJ-119: correos que no se pudieron enviar y se reintentan aunque el servicio se reinicie
+    pending:
+      max-attempts: ${MAIL_PENDING_MAX_ATTEMPTS:3}
+    retry-delay-ms: ${MAIL_RETRY_DELAY_MS:60000}
   security:
     jwt:
       secret-key: ${JWT_SECRET}

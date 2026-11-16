@@ -17,6 +17,8 @@ spring:
       - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
 
 application:
+  mail:
+    retry-delay-ms: 3600000
   security:
     jwt:
       secret-key: clave_exclusiva_de_pruebas_automatizadas_0123456789

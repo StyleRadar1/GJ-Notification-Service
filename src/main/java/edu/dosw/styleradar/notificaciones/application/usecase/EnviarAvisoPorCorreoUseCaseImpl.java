@@ -37,7 +37,7 @@ public class EnviarAvisoPorCorreoUseCaseImpl implements EnviarAvisoPorCorreoUseC
                 log.warn("El usuario {} pidio correo pero no hay un email guardado para el", notificacion.getUsuarioId());
                 return;
             }
-            correoPort.enviar(email, "StyleRadar: " + notificacion.getTitulo(), notificacion.getMensaje());
+            correoPort.enviar(notificacion.getUsuarioId(), email, "StyleRadar: " + notificacion.getTitulo(), notificacion.getMensaje());
         } catch (RuntimeException ex) {
             // el aviso en plataforma ya se creo; un fallo aqui nunca debe deshacerlo
             log.error("No se pudo preparar el correo de la notificacion {}", notificacion.getId(), ex);
