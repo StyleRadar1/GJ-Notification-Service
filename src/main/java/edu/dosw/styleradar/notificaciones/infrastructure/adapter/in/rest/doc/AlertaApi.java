@@ -24,20 +24,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Tag(
-        name = "Alertas y Notificaciones",
-        description = "Endpoints bajo /users/{id} para gestionar alertas de disponibilidad, busquedas guardadas y notificaciones en tiempo real (con validación de autorización)"
+        name = "Alerts & Notifications",
+        description = "Endpoints under /users/{id} to manage stock alerts, saved searches and real-time notifications (with authorization validation)"
 )
 @SecurityRequirement(name = "bearerAuth")
 public interface AlertaApi {
 
     @Operation(
-            summary = "Crear nueva alerta",
-            description = "Configura una alerta para un item agotado o una busqueda guardada del usuario indicado (validado contra el token JWT)"
+            summary = "Create a new alert",
+            description = "Configures an alert for an out-of-stock item or saved search for the specified user (validated against JWT token)"
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
-                    description = "Alerta creada exitosamente",
+                    description = "Alert created successfully",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = AlertaResponse.class),
@@ -49,87 +49,87 @@ public interface AlertaApi {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Datos de entrada invalidos",
+                    description = "Invalid input payload",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "ValidacionFallida",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Error de validacion en la solicitud\",\"status\":400,\"detail\":\"El itemId debe ser un numero positivo; El tipo de alerta es obligatorio\",\"instance\":\"/users/101/alertas\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Validation Error\",\"status\":400,\"detail\":\"itemId must be positive; alert type is required\",\"instance\":\"/users/101/alerts\"}"
                             )
                     )
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado o token JWT expirado",
+                    description = "Unauthorized: missing or expired JWT token",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "NoAutenticado",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente, invalido o expirado\",\"instance\":\"/users/101/alertas\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Unauthorized\",\"status\":401,\"detail\":\"JWT token missing, invalid or expired\",\"instance\":\"/users/101/alerts\"}"
                             )
                     )
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado: el ID del path no coincide con el token JWT del usuario",
+                    description = "Forbidden: path ID does not match JWT principal",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "AccesoDenegado",
-                                    value = "{\"type\":\"https://styleradar.co/errors/403\",\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion para acceder o modificar los recursos del usuario 202\",\"instance\":\"/users/202/alertas\"}"
+                                    value = "{\"type\":\"https://styleradar.co/errors/403\",\"title\":\"Access Denied\",\"status\":403,\"detail\":\"No tienes autorizacion para acceder o modificar los recursos del usuario 202\",\"instance\":\"/users/202/alerts\"}"
                             )
                     )
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "Ya existe una alerta activa para este recurso",
+                    description = "Active alert already exists for this item/size",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "AlertaDuplicada",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Conflicto de estado del recurso\",\"status\":409,\"detail\":\"Ya tienes una alerta activa para este item/talla\",\"instance\":\"/users/101/alertas\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Conflict\",\"status\":409,\"detail\":\"An active alert already exists for this item/size\",\"instance\":\"/users/101/alerts\"}"
                             )
                     )
             ),
             @ApiResponse(
                     responseCode = "422",
-                    description = "Regla de negocio no satisfecha (ej. item con stock disponible)",
+                    description = "Business rule violation (e.g. item has stock)",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "ItemConStock",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Regla de negocio no satisfecha\",\"status\":422,\"detail\":\"No se puede crear alerta para un item que cuenta con stock disponible\",\"instance\":\"/users/101/alertas\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Unprocessable Entity\",\"status\":422,\"detail\":\"Cannot create alert for an item that currently has stock\",\"instance\":\"/users/101/alerts\"}"
                             )
                     )
             ),
             @ApiResponse(
                     responseCode = "503",
-                    description = "Microservicio de Catalogo no disponible",
+                    description = "Catalog microservice unavailable",
                     content = @Content(
                             mediaType = "application/problem+json",
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "CatalogoCaido",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Servicio no disponible\",\"status\":503,\"detail\":\"El servicio de catalogo no responde\",\"instance\":\"/users/101/alertas\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Service Unavailable\",\"status\":503,\"detail\":\"Catalog service did not respond\",\"instance\":\"/users/101/alerts\"}"
                             )
                     )
             )
     })
     ResponseEntity<AlertaResponse> crearAlerta(
-            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
             @Valid CrearAlertaRequest request
     );
 
-    @Operation(summary = "Listar mis alertas activas", description = "Retorna las alertas de stock y busquedas guardadas asociadas al usuario")
+    @Operation(summary = "List user alerts", description = "Retrieves stock alerts and saved searches belonging to the authenticated user")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Listado de alertas obtenido",
+                    description = "Alerts retrieved successfully",
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = AlertaResponse.class)),
@@ -141,118 +141,84 @@ public interface AlertaApi {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente o invalido\"}")
-                    )
+                    description = "Unauthorized",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado: el ID del path no coincide con el token JWT del usuario",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion para acceder o modificar los recursos de otro usuario\"}")
-                    )
+                    description = "Forbidden: path ID does not match JWT principal",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     ResponseEntity<List<AlertaResponse>> listarMisAlertas(
-            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
     );
 
-    @Operation(summary = "Desactivar alerta por ID (DELETE)", description = "Cambia el estado de la alerta a DESACTIVADA")
+    @Operation(summary = "Deactivate alert by ID (DELETE)", description = "Sets alert status to DESACTIVADA")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Alerta desactivada",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AlertaResponse.class),
-                            examples = @ExampleObject(
-                                    name = "AlertaDesactivada",
-                                    value = "{\"id\":501,\"usuarioId\":101,\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":1045,\"tallaObjetivo\":\"M\",\"busquedaGuardadaId\":null,\"canal\":\"IN_APP\",\"estado\":\"DESACTIVADA\",\"fechaCreacion\":\"2026-11-02T10:15:30\",\"fechaActualizacion\":\"2026-11-02T12:00:00\"}"
-                            )
-                    )
+                    description = "Alert deactivated successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AlertaResponse.class))
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente o invalido\"}")
-                    )
+                    description = "Unauthorized",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion para modificar recursos de otro usuario\"}")
-                    )
+                    description = "Forbidden",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Alerta no encontrada",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"Recurso no encontrado\",\"status\":404,\"detail\":\"No se encontro la alerta con ID: 999\"}")
-                    )
+                    description = "Alert not found",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     ResponseEntity<AlertaResponse> desactivarAlerta(
-            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
-            @Parameter(description = "ID de la alerta a desactivar", example = "501") Long alertaId
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "alertId", description = "ID of the alert to deactivate", example = "501") Long alertId
     );
 
-    @Operation(summary = "Desactivar alerta por ID (PATCH)", description = "Alias PATCH para desactivar alerta")
+    @Operation(summary = "Deactivate alert by ID (PATCH)", description = "PATCH alias to deactivate alert")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Alerta desactivada",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AlertaResponse.class)
-                    )
+                    description = "Alert deactivated successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AlertaResponse.class))
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Alerta no encontrada",
+                    description = "Alert not found",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     ResponseEntity<AlertaResponse> desactivarAlertaPatch(
-            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
-            @Parameter(description = "ID de la alerta a desactivar", example = "501") Long alertaId
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "alertId", description = "ID of the alert to deactivate", example = "501") Long alertId
     );
 
     @Operation(
-            summary = "Listar notificaciones del usuario",
-            description = "Consulta la bandeja de notificaciones. Si no se especifican parametros de paginacion ('page', 'size') "
-                    + "ni de estado ('leida'), devuelve un array JSON directo con todas las notificaciones. "
-                    + "Si se pasa 'page', 'size' o 'leida', la respuesta cambia a una estructura paginada "
-                    + "({ content: [...], page: 0, size: 20, totalElements: N, totalPages: M, first: true, last: false }). "
-                    + "Se puede filtrar por solo no leidas con 'soloNoLeidas=true' o 'leida=false'; 'leida' tiene precedencia."
+            summary = "List user notifications",
+            description = "Retrieves user notifications. Without pagination parameters returns direct array. With 'page', 'size', 'read' or 'unreadOnly' returns paginated result."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Listado de notificaciones (array directo o estructura paginada segun parametros)",
+                    description = "List of notifications (direct array or paginated structure)",
                     content = @Content(
                             mediaType = "application/json",
                             examples = {
                                     @ExampleObject(
                                             name = "ArrayDirectoCompatibilidad",
-                                            summary = "Sin parametros de paginacion (formato clasico)",
+                                            summary = "Without pagination parameters (direct array)",
                                             value = "[{\"id\":901,\"usuarioId\":101,\"tipo\":\"REPOSICION_STOCK\",\"titulo\":\"Talla disponible\",\"mensaje\":\"El item 1045 volvio a tener stock en talla M\",\"leida\":false,\"fechaCreacion\":\"2026-11-06T08:00:00\",\"referenciaId\":\"1045\"}]"
                                     ),
                                     @ExampleObject(
                                             name = "EstructuraPaginada",
-                                            summary = "Con page, size o leida (formato paginado GJ-118)",
+                                            summary = "With page, size, read, unreadOnly (paginated)",
                                             value = "{\"content\":[{\"id\":901,\"usuarioId\":101,\"tipo\":\"REPOSICION_STOCK\",\"titulo\":\"Talla disponible\",\"mensaje\":\"El item 1045 volvio a tener stock en talla M\",\"leida\":false,\"fechaCreacion\":\"2026-11-06T08:00:00\",\"referenciaId\":\"1045\"}],\"page\":0,\"size\":20,\"totalElements\":1,\"totalPages\":1,\"first\":true,\"last\":true}"
                                     )
                             }
@@ -260,197 +226,126 @@ public interface AlertaApi {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Parametros de paginacion invalidos (page < 0, size < 1 o size > 100)",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(
-                                    name = "ParametrosInvalidos",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Error de validacion en la solicitud\",\"status\":400,\"detail\":\"El tamano maximo de pagina es 100\",\"instance\":\"/users/101/notificaciones\"}"
-                            )
-                    )
+                    description = "Invalid pagination parameters (page < 0, size < 1 or size > 100)",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente o invalido\"}")
-                    )
+                    description = "Unauthorized",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion para consultar notificaciones de otro usuario\"}")
-                    )
+                    description = "Forbidden",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     ResponseEntity<?> listarMisNotificaciones(
-            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
-            @Parameter(description = "Filtrar unicamente notificaciones no leidas (equivale a leida=false)", example = "false") Boolean soloNoLeidas,
-            @Parameter(description = "Filtrar por leidas (true) o no leidas (false); si se envia, tiene precedencia sobre soloNoLeidas", example = "false") Boolean leida,
-            @Parameter(description = "Numero de pagina (cero-indexado, >= 0)", example = "0") @Min(value = 0, message = "page debe ser 0 o mayor") Integer page,
-            @Parameter(description = "Tamano de pagina (1 a 100)", example = "20") @Min(value = 1, message = "size debe ser al menos 1") @Max(value = 100, message = "size no puede superar 100") Integer size
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(description = "Filter only unread notifications (English alias)", example = "false") Boolean unreadOnly,
+            @Parameter(description = "Filter only unread notifications (legacy)", example = "false") Boolean soloNoLeidas,
+            @Parameter(description = "Filter by read status (true=read, false=unread)", example = "false") Boolean read,
+            @Parameter(description = "Filter by read status (legacy)", example = "false") Boolean leida,
+            @Parameter(description = "Page number (zero-indexed, >= 0)", example = "0") @Min(value = 0, message = "page debe ser 0 o mayor") Integer page,
+            @Parameter(description = "Page size (1 to 100)", example = "20") @Min(value = 1, message = "size debe ser al menos 1") @Max(value = 100, message = "size no puede superar 100") Integer size
     );
 
-    @Operation(summary = "Marcar notificacion como leida", description = "Actualiza el estado de una notificacion especifica a leida=true")
+    @Operation(summary = "Mark notification as read", description = "Updates specific notification status to read=true")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Notificacion marcada como leida",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = NotificacionResponse.class),
-                            examples = @ExampleObject(
-                                    name = "NotificacionLeida",
-                                    value = "{\"id\":901,\"usuarioId\":101,\"tipo\":\"REPOSICION_STOCK\",\"titulo\":\"Talla disponible\",\"mensaje\":\"El item 1045 volvio a tener stock en talla M\",\"leida\":true,\"fechaCreacion\":\"2026-11-06T08:00:00\",\"referenciaId\":\"1045\"}"
-                            )
-                    )
+                    description = "Notification marked as read",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = NotificacionResponse.class))
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente o invalido\"}")
-                    )
+                    description = "Unauthorized",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion para modificar notificaciones de otro usuario\"}")
-                    )
+                    description = "Forbidden",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Notificacion no encontrada",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"Recurso no encontrado\",\"status\":404,\"detail\":\"No se encontro la notificacion con ID: 999\"}")
-                    )
+                    description = "Notification not found",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     ResponseEntity<NotificacionResponse> marcarNotificacionComoLeida(
-            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
-            @Parameter(description = "ID de la notificacion", example = "901") Long notificacionId
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "notificationId", description = "Notification ID", example = "901") Long notificationId
     );
 
-    @Operation(summary = "Marcar todas las notificaciones como leidas", description = "Marca todas las notificaciones pendientes del usuario como leidas")
+    @Operation(summary = "Mark all notifications as read", description = "Marks all unread notifications of the user as read")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Cantidad de notificaciones actualizadas a estado leido",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ContadorNoLeidasResponse.class),
-                            examples = @ExampleObject(
-                                    name = "TodasLeidas",
-                                    value = "{\"usuarioId\":101,\"cantidadNoLeidas\":0}"
-                            )
-                    )
+                    description = "Count of remaining unread notifications",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ContadorNoLeidasResponse.class))
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente o invalido\"}")
-                    )
+                    description = "Unauthorized",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion\"}")
-                    )
+                    description = "Forbidden",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     ResponseEntity<ContadorNoLeidasResponse> marcarTodasComoLeidas(
-            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
     );
 
-    @Operation(summary = "Obtener contador de no leidas", description = "Retorna el numero de notificaciones sin leer para la campana del frontend")
+    @Operation(summary = "Get unread notifications count", description = "Returns total count of unread notifications for frontend bell badge")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Contador obtenido",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ContadorNoLeidasResponse.class),
-                            examples = @ExampleObject(
-                                    name = "ContadorCampana",
-                                    value = "{\"usuarioId\":101,\"cantidadNoLeidas\":3}"
-                            )
-                    )
+                    description = "Unread count retrieved",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ContadorNoLeidasResponse.class))
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente o invalido\"}")
-                    )
+                    description = "Unauthorized",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion\"}")
-                    )
+                    description = "Forbidden",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     ResponseEntity<ContadorNoLeidasResponse> contarNoLeidas(
-            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
     );
 
-    @Operation(summary = "Suscribirse a campana en tiempo real (SSE)", description = "Abre un flujo Server-Sent Events para recibir notificaciones sin recargar")
+    @Operation(summary = "Subscribe to real-time notification stream (SSE)", description = "Opens a Server-Sent Events stream to receive real-time notifications without page refresh")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Flujo SSE establecido exitosamente",
+                    description = "SSE stream established successfully",
                     content = @Content(mediaType = "text/event-stream")
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "No autenticado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente o invalido\"}")
-                    )
+                    description = "Unauthorized",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acceso denegado",
-                    content = @Content(
-                            mediaType = "application/problem+json",
-                            schema = @Schema(implementation = ProblemDetail.class),
-                            examples = @ExampleObject(value = "{\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion\"}")
-                    )
+                    description = "Forbidden",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     SseEmitter suscribirCampanaTiempoReal(
-            @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
             @Parameter(
                     in = ParameterIn.HEADER,
                     name = "Last-Event-ID",
-                    description = "Id del ultimo evento recibido. El navegador lo envia solo al reconectarse y el servicio "
-                            + "reenvia las notificaciones posteriores (hasta 200, las mas recientes).",
+                    description = "Last received event ID. Sent by browser upon reconnect to replay missed notifications.",
                     required = false,
                     example = "42"
             ) String ultimoEventoId

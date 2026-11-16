@@ -483,31 +483,62 @@ class AlertaControllerAndInfrastructureTest {
     }
 
     @Test
-    @DisplayName("Path con /users/{id} explicito: responde 200 cuando coincide con el token JWT y 403 cuando no coincide")
+    @DisplayName("Path con /users/{id} explicito: responde 200 cuando coincide con el token JWT y 403 cuando no coincide (en ingles y espanol)")
     void accesoConUsuarioIdExplicitoValidaAutenticacion() throws Exception {
         String token101 = jwtTokenService.generateToken(101L, "user101@styleradar.co", "COMPRADOR");
 
-        // 1. Acceso a /users/{id}/notificaciones con ID propio 101 -> 200 OK
+        // 1. Endpoints canonicos en INGLES con ID propio 101 -> 200 OK
+        mockMvc.perform(get("/users/101/notifications")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/101/alerts")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/101/notification-preferences")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/101/notifications/unread/count")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        // 2. Compatibilidad con endpoints en espanol con ID propio 101 -> 200 OK
         mockMvc.perform(get("/users/101/notificaciones")
                         .header("Authorization", "Bearer " + token101))
                 .andExpect(status().isOk());
 
-        // 2. Acceso a /api/v1/users/{id}/alertas con ID propio 101 -> 200 OK
         mockMvc.perform(get("/api/v1/users/101/alertas")
                         .header("Authorization", "Bearer " + token101))
                 .andExpect(status().isOk());
 
-        // 3. Acceso a /users/{id}/preferencias-avisos con ID propio 101 -> 200 OK
         mockMvc.perform(get("/users/101/preferencias-avisos")
                         .header("Authorization", "Bearer " + token101))
                 .andExpect(status().isOk());
+
+        // 3. Intento de acceder a endpoints en ingles de otro usuario (202) -> 403 Forbidden
+        mockMvc.perform(get("/users/202/notifications")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.detail").value("No tienes autorizacion para acceder o modificar los recursos del usuario 202"));
+
+        mockMvc.perform(get("/users/202/alerts")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+
+        mockMvc.perform(get("/users/202/notification-preferences")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
 
         // 4. Intento de acceder a /users/{id}/notificaciones de otro usuario (202) -> 403 Forbidden
         mockMvc.perform(get("/users/202/notificaciones")
                         .header("Authorization", "Bearer " + token101))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.status").value(403))
-                .andExpect(jsonPath("$.detail").value("No tienes autorizacion para acceder o modificar los recursos del usuario 202"));
+                .andExpect(jsonPath("$.status").value(403));
 
         // 5. Intento de acceder a /api/v1/users/{id}/alertas de otro usuario (202) -> 403 Forbidden
         mockMvc.perform(get("/api/v1/users/202/alertas")
