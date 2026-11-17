@@ -46,7 +46,7 @@ public class AlertaValidator {
     public void validarItemAgotadoEnCatalogo(boolean estaAgotado, String itemId) {
         if (!estaAgotado) {
             throw new ReglaDeNegocioException(
-                    "No se puede crear una alerta de reposicion porque el item " + itemId + " actualmente tiene stock disponible");
+                    "No se puede crear una alerta de reposicion porque la prenda actualmente tiene stock disponible");
         }
     }
 

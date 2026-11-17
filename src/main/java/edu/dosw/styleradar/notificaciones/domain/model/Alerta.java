@@ -51,6 +51,11 @@ public class Alerta {
         this.fechaActualizacion = LocalDateTime.now();
     }
 
+    public void activar() {
+        this.estado = EstadoAlerta.ACTIVA;
+        this.fechaActualizacion = LocalDateTime.now();
+    }
+
     public void marcarDisparada() {
         this.estado = EstadoAlerta.DISPARADA;
         this.fechaActualizacion = LocalDateTime.now();

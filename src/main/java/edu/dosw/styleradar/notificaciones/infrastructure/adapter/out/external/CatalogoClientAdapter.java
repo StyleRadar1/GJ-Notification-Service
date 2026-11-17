@@ -39,7 +39,8 @@ public class CatalogoClientAdapter implements CatalogoClientPort {
         try {
             disp = catalogoFeignClient.consultarDisponibilidad(itemId);
         } catch (FeignException.NotFound ex) {
-            throw new ReglaDeNegocioException("El item " + itemId + " no existe en el catalogo");
+            log.debug("El item {} no existe en el catalogo", itemId);
+            throw new ReglaDeNegocioException("La prenda indicada no existe en el catalogo");
         } catch (Exception ex) {
             log.warn("No fue posible consultar ms-item-catalogo para el item {}: {}", itemId, ex.getMessage());
             throw new ServicioExternoNoDisponibleException(MENSAJE_NO_DISPONIBLE, ex);

@@ -77,7 +77,7 @@ class CatalogoClientAdapterWireMockTest {
 
         assertThatThrownBy(() -> catalogoClientPort.verificarItemAgotado("1045", null))
                 .isInstanceOf(ReglaDeNegocioException.class)
-                .hasMessageContaining("1045");
+                .hasMessage("La prenda indicada no existe en el catalogo");
     }
 
     @Test
