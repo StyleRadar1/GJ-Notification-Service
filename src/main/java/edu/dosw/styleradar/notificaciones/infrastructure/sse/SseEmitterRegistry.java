@@ -72,6 +72,11 @@ public class SseEmitterRegistry {
         return list != null ? list.size() : 0;
     }
 
+    /** Total de conexiones abiertas en esta instancia; alimenta la metrica de campanas conectadas. */
+    public int contarSuscripcionesTotales() {
+        return emittersByUser.values().stream().mapToInt(List::size).sum();
+    }
+
     private void remover(Long usuarioId, SseEmitter emitter) {
         List<SseEmitter> list = emittersByUser.get(usuarioId);
         if (list != null) {
