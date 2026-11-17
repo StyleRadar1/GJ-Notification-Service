@@ -2,6 +2,7 @@ package edu.dosw.styleradar.notificaciones.infrastructure.config;
 
 import edu.dosw.styleradar.notificaciones.infrastructure.security.JwtAuthenticationFilter;
 import edu.dosw.styleradar.notificaciones.infrastructure.security.ProblemDetailSecurityHandlers;
+import edu.dosw.styleradar.notificaciones.infrastructure.security.RateLimitFilter;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +28,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final ProblemDetailSecurityHandlers securityHandlers;
+    private final RateLimitFilter rateLimitFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -46,9 +48,13 @@ public class SecurityConfig {
                                 "/actuator/health",
                                 "/actuator/health/**"
                         ).permitAll()
+                        // metricas: solo administradores (A02/A09); health sigue publico para el health check de Azure
+                        .requestMatchers("/actuator/metrics/**", "/actuator/prometheus")
+                        .hasAnyRole("ADMIN", "ADMIN_STYLERADAR")
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(rateLimitFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

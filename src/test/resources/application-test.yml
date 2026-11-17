@@ -17,6 +17,8 @@ spring:
       - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
 
 application:
+  rate-limit:
+    enabled: false
   mail:
     retry-delay-ms: 3600000
   security:

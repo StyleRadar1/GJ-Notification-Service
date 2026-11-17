@@ -36,6 +36,16 @@ public class ProblemDetailSecurityHandlers {
                 request, response, HttpStatus.FORBIDDEN, "Acceso denegado", "No tiene permisos para realizar esta accion");
     }
 
+    public void responder(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            HttpStatus estado,
+            String titulo,
+            String detalle
+    ) throws IOException {
+        escribir(request, response, estado, titulo, detalle);
+    }
+
     private void escribir(
             HttpServletRequest request,
             HttpServletResponse response,
