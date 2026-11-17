@@ -19,5 +19,13 @@ spring:
     password: ${RABBITMQ_PASSWORD}
     virtual-host: ${RABBITMQ_VHOST:/}
     ssl:
-      enabled: ${RABBITMQ_SSL_ENABLED:false}
+      # A04: en PROD el trafico hacia el broker va cifrado salvo que se apague a proposito
+      enabled: ${RABBITMQ_SSL_ENABLED:true}
       verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
+
+# A02: Swagger y /v3/api-docs apagados en PROD; se encienden con SWAGGER_ENABLED=true
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}

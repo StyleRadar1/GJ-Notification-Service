@@ -223,6 +223,7 @@ jobs:
                 WEBSITES_PORT=8300 \
                 PORT=8300 \
                 SPRING_PROFILES_ACTIVE=prod \
+                SWAGGER_ENABLED=true \
                 DB_HOST="${DB_HOST_QA}" \
                 DB_PORT="${DB_PORT_QA}" \
                 DB_NAME="${DB_NAME_QA}" \

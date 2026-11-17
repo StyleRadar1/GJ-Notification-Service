@@ -1,0 +1,66 @@
+# A09 (registro y alertas): reglas de alerta para Prometheus sobre las metricas de ms-notificaciones.
+#
+# Las metricas se leen en /actuator/prometheus, que exige un JWT con rol ADMIN o ADMIN_STYLERADAR
+# (ver docs/observabilidad/README.md). Cargar este archivo en `rule_files` de Prometheus o importarlo
+# en Grafana Alerting / Azure Managed Prometheus.
+groups:
+  - name: ms-notificaciones
+    rules:
+      - alert: NotificacionesServicioCaido
+        expr: up{job="ms-notificaciones"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ms-notificaciones no responde"
+          description: "Prometheus no puede leer las metricas de {{ $labels.instance }} desde hace 2 minutos."
+
+      - alert: NotificacionesEventosConError
+        # El listener de RabbitMQ registra cada mensaje procesado; si muchos terminan en error van a la cola de errores
+        expr: |
+          sum(rate(spring_rabbitmq_listener_seconds_count{error!="none"}[5m]))
+            / clamp_min(sum(rate(spring_rabbitmq_listener_seconds_count[5m])), 0.001) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mas del 20 % de los eventos recibidos fallan"
+          description: "Revisar la cola styleradar.notificaciones.dlq y los registros del servicio."
+
+      - alert: NotificacionesCorreosPendientes
+        expr: notificaciones_correos_pendientes > 10
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Hay mas de 10 correos esperando reintento"
+          description: "El servidor SMTP puede estar caido o mal configurado (tabla correos_pendientes)."
+
+      - alert: NotificacionesLimiteDeSolicitudes
+        expr: increase(notificaciones_ratelimit_rechazadas_total[5m]) > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Muchas solicitudes rechazadas con 429"
+          description: "Un usuario o una IP esta superando el limite por minuto; puede ser un bucle del front o un abuso."
+
+      - alert: NotificacionesErrores5xx
+        expr: |
+          sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+            / clamp_min(sum(rate(http_server_requests_seconds_count[5m])), 0.001) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mas del 5 % de las respuestas son errores 5xx"
+          description: "Revisar el catalogo (503), la base de datos y el broker."
+
+      - alert: NotificacionesMemoriaAlta
+        expr: sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"}) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "El heap de la JVM supera el 90 %"
+          description: "Revisar fugas o aumentar el plan del App Service."

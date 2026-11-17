@@ -35,7 +35,14 @@ application:
     pending:
       max-attempts: ${MAIL_PENDING_MAX_ATTEMPTS:3}
     retry-delay-ms: ${MAIL_RETRY_DELAY_MS:60000}
+  # A06: limite de solicitudes por usuario y por minuto (429 al pasarse)
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    requests-per-minute: ${RATE_LIMIT_PER_MINUTE:120}
   security:
+    # el stream SSE se abre con un ticket de vida corta en ?ticket= (el EventSource no envia cabeceras)
+    sse-ticket:
+      ttl-seconds: ${SSE_TICKET_TTL_SECONDS:60}
     jwt:
       secret-key: ${JWT_SECRET}
       expiration-ms: ${JWT_EXPIRATION_MS:86400000}
@@ -90,4 +97,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus

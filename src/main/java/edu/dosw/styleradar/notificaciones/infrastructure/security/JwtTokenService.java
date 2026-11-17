@@ -16,8 +16,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtTokenService {
 
+    /** Claim que marca un token como ticket de un solo uso de proposito: abrir el stream SSE. */
+    static final String CLAIM_PROPOSITO = "purpose";
+    static final String PROPOSITO_STREAM = "sse-stream";
+
     private final Key signingKey;
     private final long expirationMs;
+
+    /** Vida del ticket del stream SSE: es lo unico que viaja en la URL, por eso dura segundos. */
+    @Value("${application.security.sse-ticket.ttl-seconds:60}")
+    private long ticketTtlSegundos = 60;
 
     public JwtTokenService(
             @Value("${application.security.jwt.secret-key}") String secretKey,
@@ -78,6 +86,42 @@ public class JwtTokenService {
                 .setExpiration(expiry)
                 .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    /**
+     * Ticket de vida corta (por defecto 60 s) que solo sirve para abrir el stream SSE. El EventSource del
+     * navegador no puede enviar la cabecera Authorization; el ticket va en {@code ?ticket=} y, si queda en un
+     * registro de acceso, ya expiro y no abre ningun otro endpoint.
+     */
+    public String generarTicketStream(Long usuarioId, String email, List<String> roles) {
+        Date ahora = new Date();
+        List<String> rolesNormalizados = (roles == null || roles.isEmpty())
+                ? List.of("COMPRADOR")
+                : roles.stream().map(JwtTokenService::normalizeRole).toList();
+        return Jwts.builder()
+                .setSubject(String.valueOf(usuarioId))
+                .claim("userId", usuarioId)
+                .claim("email", email != null ? email : "")
+                .claim("role", rolesNormalizados.get(0))
+                .claim("roles", rolesNormalizados)
+                .claim(CLAIM_PROPOSITO, PROPOSITO_STREAM)
+                .setIssuedAt(ahora)
+                .setExpiration(new Date(ahora.getTime() + ticketTtlSegundos * 1000L))
+                .signWith(signingKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public long ticketTtlSegundos() {
+        return ticketTtlSegundos;
+    }
+
+    /** Verdadero si el token es un ticket del stream (no un JWT de sesion). */
+    public boolean esTicketStream(String token) {
+        try {
+            return PROPOSITO_STREAM.equals(extractAllClaims(token).get(CLAIM_PROPOSITO));
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     public Claims extractAllClaims(String token) {
