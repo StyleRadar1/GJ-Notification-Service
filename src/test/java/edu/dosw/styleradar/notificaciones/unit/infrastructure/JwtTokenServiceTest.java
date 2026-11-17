@@ -31,6 +31,26 @@ class JwtTokenServiceTest {
     }
 
     @Test
+    @DisplayName("Debe soportar claves en texto plano usadas en CI y desarrollo sin decodificarlas incorrectamente como Base64")
+    void soportaClaveTextoPlanoLocal() {
+        String clavePlana = "solo_desarrollo_local_no_usar_en_produccion_styleradar_2026";
+        JwtTokenService service = new JwtTokenService(clavePlana, 3600000L);
+
+        // Simulamos un token firmado directamente con los bytes UTF-8 de la clave plana (como en CI / Postman)
+        String tokenPlano = Jwts.builder()
+                .setSubject("101")
+                .claim("userId", 101L)
+                .claim("role", "COMPRADOR")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 60000))
+                .signWith(Keys.hmacShaKeyFor(clavePlana.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS256)
+                .compact();
+
+        assertThat(service.isTokenValid(tokenPlano)).isTrue();
+        assertThat(service.extractUsuarioId(tokenPlano)).isEqualTo(101L);
+    }
+
+    @Test
     @DisplayName("Debe validar tokens emitidos externamente por ms-auth con sub=id y roles=lista")
     void validaTokenFormatoMsAuth() {
         JwtTokenService service = new JwtTokenService(BASE64_SECRET, 3600000L);

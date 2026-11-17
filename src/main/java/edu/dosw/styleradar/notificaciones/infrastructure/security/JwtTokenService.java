@@ -34,27 +34,19 @@ public class JwtTokenService {
         }
         String trimmed = secretKey.trim();
 
-        // 1. Try standard Base64 (ms-auth uses Base64-encoded 256-bit key)
-        try {
-            byte[] decoded = Base64.getDecoder().decode(trimmed);
-            if (decoded != null && decoded.length >= 32) {
-                return decoded;
+        // 1. Standard Base64 for 256-bit key (ms-auth): exactly 44 chars with valid Base64 alphabet [A-Za-z0-9+/=]
+        if (trimmed.length() == 44 && trimmed.matches("^[A-Za-z0-9+/]+=*$")) {
+            try {
+                byte[] decoded = Base64.getDecoder().decode(trimmed);
+                if (decoded != null && decoded.length == 32) {
+                    return decoded;
+                }
+            } catch (IllegalArgumentException ignored) {
+                // Not valid standard Base64
             }
-        } catch (IllegalArgumentException ignored) {
-            // Not valid standard Base64
         }
 
-        // 2. Try URL-safe Base64
-        try {
-            byte[] decoded = Base64.getUrlDecoder().decode(trimmed);
-            if (decoded != null && decoded.length >= 32) {
-                return decoded;
-            }
-        } catch (IllegalArgumentException ignored) {
-            // Not valid URL-safe Base64
-        }
-
-        // 3. Fallback to raw UTF-8 string bytes (padded to 32 bytes if shorter)
+        // 2. Fallback for plain-text keys in local/test configurations
         byte[] utf8Bytes = trimmed.getBytes(StandardCharsets.UTF_8);
         if (utf8Bytes.length < 32) {
             byte[] padded = new byte[32];
