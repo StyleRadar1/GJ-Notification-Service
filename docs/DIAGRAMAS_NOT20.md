@@ -8,6 +8,10 @@
 
 > **Regla de oro de StyleRadar:** cada diagrama va acompañado de su explicación técnica (qué representa) y de su justificación arquitectónica (por qué se diseñó así). Un diagrama sin texto no se recibe.
 
+> **Idioma:** los diagramas (`.drawio` e imágenes) están en inglés; los nombres de clases, métodos, tablas, columnas y colas se dejan como en el código. Esta explicación sigue en español.
+>
+> **Actualización del 17/11/2026:** reflejan el código de `develop` (`itemId` de texto, migración V6, `Alerta.activar()`, `ActivarAlertaUseCaseImpl`, `RateLimitFilter`, `MetricasConfig`).
+
 ## Plantilla de estilo
 
 Todos los diagramas siguen la plantilla de diagramas de StyleRadar: fondo blanco, tipografía Poppins y la paleta del curso.
@@ -45,7 +49,7 @@ Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archi
 
 El diagrama muestra la frontera de `ms-notificaciones` (puerto `8300`) y los sistemas con los que se comunica.
 
-1. **Frontend y API Gateway (`api-gateway`, `:8080`):** el usuario llega por HTTPS a través del gateway. Las rutas REST de `/api/v1/usuarios/{usuarioId}` y la suscripción SSE de la campana exigen un JWT Bearer.
+1. **Frontend y API Gateway (`api-gateway`, `:8080`):** el usuario llega por HTTPS a través del gateway. Las rutas REST de `/api/v1/users/{id}` y la suscripción SSE de la campana exigen un JWT Bearer (el stream también acepta un ticket de 60 s en `?ticket=`).
 2. **Broker de eventos (RabbitMQ, `:5672`):** el servicio consume 12 colas durables sobre el exchange `styleradar.exchange`:
    - `ms-inventario` (`:8200`) publica `InventarioActualizado`.
    - `ms-usuarios` (`:8120`) publica el estado de cuenta y las búsquedas guardadas.
@@ -111,7 +115,7 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 
 ### 3.1. Explicación técnica
 
-1. **Entidades:** `Notificacion`, `Alerta`, `PreferenciaAviso`, `BusquedaGuardadaCopia` y `EstadoCuentaCopia`. Los identificadores de usuario, ítem y búsqueda son `Long` y apuntan a otros servicios, por lo que no hay referencias a sus clases.
+1. **Entidades:** `Notificacion`, `Alerta`, `PreferenciaAviso`, `BusquedaGuardadaCopia` y `EstadoCuentaCopia`. Los identificadores de usuario y búsqueda son `Long` y el del ítem es `String` (UUID); todos apuntan a otros servicios, por lo que no hay referencias a sus clases. `Alerta` tiene `activar()` y `desactivar()`.
 2. **Relaciones por id:** `Notificacion` referencia a `Alerta` por `alertaId`, y `Alerta` referencia a `BusquedaGuardadaCopia` por `busquedaGuardadaId`. Son relaciones lógicas, no objetos enlazados.
 3. **Objetos de valor:** `CriterioBusquedaVO` (composición de la búsqueda guardada) y `DatosPrendaVO` (datos del evento de prenda).
 4. **Enumeraciones:** `TipoNotificacion` (9 tipos), `CanalNotificacion`, `CanalAviso` (`SOLO_PLATAFORMA` o `CORREO_Y_PLATAFORMA`), `TipoAlerta`, `EstadoAlerta` y `EstadoCuenta`.
@@ -136,7 +140,7 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 
 ### 4.1. Explicación técnica
 
-El esquema relacional de `notificaciones_db` (PostgreSQL 16) lo gestionan las migraciones Flyway `V1__init_schema.sql`, `V2__add_indexes.sql`, `V3__add_evento_id_notificaciones.sql`, `V4__create_preferencias_avisos.sql` y `V5__create_correos_pendientes.sql`. Hibernate solo lo valida (`ddl-auto: validate`).
+El esquema relacional de `notificaciones_db` (PostgreSQL 16) lo gestionan las migraciones Flyway `V1__init_schema.sql`, `V2__add_indexes.sql`, `V3__add_evento_id_notificaciones.sql`, `V4__create_preferencias_avisos.sql`, `V5__create_correos_pendientes.sql` y `V6__alter_item_id_to_varchar.sql` (`item_id` pasa a `VARCHAR(100)` en `alertas` y `notificaciones` para aceptar UUID). Hibernate solo lo valida (`ddl-auto: validate`).
 
 | Tabla | Propósito |
 | :--- | :--- |
@@ -204,7 +208,7 @@ El diagrama muestra el equipo de desarrollo, GitHub y los dos entornos de Azure.
 El diagrama muestra los dos recorridos principales del servicio.
 
 **Fase 1: crear una alerta (síncrono)**
-1. El frontend envía `POST /api/v1/usuarios/{usuarioId}/alertas` con el JWT al `AlertaController`.
+1. El frontend envía `POST /api/v1/users/{id}/alerts` con el JWT al `AlertaController`.
 2. El caso de uso consulta a `ms-item-catalogo` por OpenFeign que el ítem esté agotado. Si Catálogo no responde, la respuesta es `503` y no se crea la alerta.
 3. Se guarda la alerta en PostgreSQL, se publica `AlertaCreada` en el broker (la consume `ms-estadisticas`) y el cliente recibe `201 Created`.
 
