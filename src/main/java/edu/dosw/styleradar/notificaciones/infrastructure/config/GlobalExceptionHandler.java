@@ -8,6 +8,8 @@ import edu.dosw.styleradar.notificaciones.domain.exception.ServicioExternoNoDisp
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSourceResolvable;
@@ -37,7 +39,9 @@ public class GlobalExceptionHandler {
         String detail = ex.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining("; "));
-        return buildProblemDetail(HttpStatus.BAD_REQUEST, "Error de validacion en la solicitud", detail, request);
+        Map<String, String> errores = new LinkedHashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(e -> errores.merge(e.getField(), String.valueOf(e.getDefaultMessage()), (a, b) -> a + "; " + b));
+        return buildProblemDetail(HttpStatus.BAD_REQUEST, "Error de validacion en la solicitud", detail, request, errores);
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
@@ -49,7 +53,15 @@ public class GlobalExceptionHandler {
                 .flatMap(resultado -> resultado.getResolvableErrors().stream())
                 .map(MessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining("; "));
-        return buildProblemDetail(HttpStatus.BAD_REQUEST, "Error de validacion en la solicitud", detail, request);
+        Map<String, String> errores = new LinkedHashMap<>();
+        ex.getAllValidationResults().forEach(resultado -> {
+            String parametro = resultado.getMethodParameter().getParameterName();
+            String mensaje = resultado.getResolvableErrors().stream()
+                    .map(MessageSourceResolvable::getDefaultMessage)
+                    .collect(Collectors.joining("; "));
+            errores.merge(parametro != null ? parametro : "parametro", mensaje, (a, b) -> a + "; " + b);
+        });
+        return buildProblemDetail(HttpStatus.BAD_REQUEST, "Error de validacion en la solicitud", detail, request, errores);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -169,12 +181,26 @@ public class GlobalExceptionHandler {
             String detail,
             HttpServletRequest request
     ) {
+        return buildProblemDetail(status, title, detail, request, null);
+    }
+
+    /** {@code errores} lleva un mensaje por campo en los 400 de validacion; en los demas errores va vacio. */
+    private ResponseEntity<ProblemDetail> buildProblemDetail(
+            HttpStatus status,
+            String title,
+            String detail,
+            HttpServletRequest request,
+            Map<String, String> errores
+    ) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
         problem.setTitle(title);
         problem.setType(URI.create("https://styleradar.co/errors/" + status.value()));
         problem.setInstance(URI.create(request.getRequestURI()));
         problem.setProperty("timestamp", Instant.now().toString());
         problem.setProperty("mensaje", detail);
+        if (errores != null && !errores.isEmpty()) {
+            problem.setProperty("errors", errores);
+        }
         return ResponseEntity.status(status).body(problem);
     }
 }

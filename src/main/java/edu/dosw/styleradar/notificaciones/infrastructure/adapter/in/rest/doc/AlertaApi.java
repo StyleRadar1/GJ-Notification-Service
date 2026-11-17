@@ -56,7 +56,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "ValidacionFallida",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Validation Error\",\"status\":400,\"detail\":\"itemId must be positive; alert type is required\",\"instance\":\"/users/101/alerts\"}"
+                                    value = "{\"type\":\"https://styleradar.co/errors/400\",\"title\":\"Error de validacion en la solicitud\",\"status\":400,\"detail\":\"El tipo de alerta es obligatorio\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"El tipo de alerta es obligatorio\",\"errors\":{\"tipoAlerta\":\"El tipo de alerta es obligatorio\"}}"
                             )
                     )
             ),
@@ -68,7 +68,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "NoAutenticado",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Unauthorized\",\"status\":401,\"detail\":\"JWT token missing, invalid or expired\",\"instance\":\"/users/101/alerts\"}"
+                                    value = "{\"type\":\"https://styleradar.co/errors/401\",\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente, invalido o expirado\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"Token JWT ausente, invalido o expirado\"}"
                             )
                     )
             ),
@@ -80,7 +80,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "AccesoDenegado",
-                                    value = "{\"type\":\"https://styleradar.co/errors/403\",\"title\":\"Access Denied\",\"status\":403,\"detail\":\"No tienes autorizacion para acceder o modificar los recursos del usuario 202\",\"instance\":\"/users/202/alerts\"}"
+                                    value = "{\"type\":\"https://styleradar.co/errors/403\",\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion para acceder o modificar los recursos de otro usuario\",\"instance\":\"/api/v1/users/202/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"No tienes autorizacion para acceder o modificar los recursos de otro usuario\"}"
                             )
                     )
             ),
@@ -92,7 +92,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "AlertaDuplicada",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Conflict\",\"status\":409,\"detail\":\"An active alert already exists for this item/size\",\"instance\":\"/users/101/alerts\"}"
+                                    value = "{\"type\":\"https://styleradar.co/errors/409\",\"title\":\"Conflicto de estado del recurso\",\"status\":409,\"detail\":\"Ya existe una alerta activa configurada para este recurso\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"Ya existe una alerta activa configurada para este recurso\"}"
                             )
                     )
             ),
@@ -104,7 +104,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "ItemConStock",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Unprocessable Entity\",\"status\":422,\"detail\":\"Cannot create alert for an item that currently has stock\",\"instance\":\"/users/101/alerts\"}"
+                                    value = "{\"type\":\"https://styleradar.co/errors/422\",\"title\":\"Violacion de regla de negocio\",\"status\":422,\"detail\":\"No se puede crear una alerta de reposicion porque la prenda actualmente tiene stock disponible\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"No se puede crear una alerta de reposicion porque la prenda actualmente tiene stock disponible\"}"
                             )
                     )
             ),
@@ -116,7 +116,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "CatalogoCaido",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Service Unavailable\",\"status\":503,\"detail\":\"Catalog service did not respond\",\"instance\":\"/users/101/alerts\"}"
+                                    value = "{\"type\":\"https://styleradar.co/errors/503\",\"title\":\"Servicio externo no disponible\",\"status\":503,\"detail\":\"El catalogo no esta disponible en este momento, intente nuevamente mas tarde\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"El catalogo no esta disponible en este momento, intente nuevamente mas tarde\"}"
                             )
                     )
             )
@@ -237,7 +237,7 @@ public interface AlertaApi {
 
     @Operation(
             summary = "List user notifications",
-            description = "Retrieves user notifications. Without pagination parameters returns direct array. With 'page', 'size', 'read' or 'unreadOnly' returns paginated result."
+            description = "Retrieves user notifications, most recent first. Without 'page', 'size' or 'leida' it returns a direct array. With any of them it returns a page (content, page, size, totalElements, totalPages, hasNext, hasPrevious). 'leida=false' returns only unread notifications."
     )
     @ApiResponses({
             @ApiResponse(
@@ -249,12 +249,12 @@ public interface AlertaApi {
                                     @ExampleObject(
                                             name = "ArrayDirectoCompatibilidad",
                                             summary = "Without pagination parameters (direct array)",
-                                            value = "[{\"id\":901,\"usuarioId\":101,\"tipo\":\"REPOSICION_STOCK\",\"titulo\":\"Talla disponible\",\"mensaje\":\"El item 1045 volvio a tener stock en talla M\",\"leida\":false,\"fechaCreacion\":\"2026-11-06T08:00:00\",\"referenciaId\":\"1045\"}]"
+                                            value = "[{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"cicloReposicion\":1,\"tipo\":\"REPOSICION_STOCK\",\"canal\":\"IN_APP\",\"titulo\":\"Prenda disponible nuevamente\",\"mensaje\":\"Chaqueta Bomber Oversize Negra volvio a tener unidades en la talla M\",\"enlace\":\"/catalogo/prendas/3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"leida\":false,\"fechaCreacion\":\"2026-11-06T08:00:00\",\"fechaLectura\":null}]"
                                     ),
                                     @ExampleObject(
                                             name = "EstructuraPaginada",
-                                            summary = "With page, size, read, unreadOnly (paginated)",
-                                            value = "{\"content\":[{\"id\":901,\"usuarioId\":101,\"tipo\":\"REPOSICION_STOCK\",\"titulo\":\"Talla disponible\",\"mensaje\":\"El item 1045 volvio a tener stock en talla M\",\"leida\":false,\"fechaCreacion\":\"2026-11-06T08:00:00\",\"referenciaId\":\"1045\"}],\"page\":0,\"size\":20,\"totalElements\":1,\"totalPages\":1,\"first\":true,\"last\":true}"
+                                            summary = "With page, size or leida (paginated)",
+                                            value = "{\"content\":[{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"cicloReposicion\":1,\"tipo\":\"REPOSICION_STOCK\",\"canal\":\"IN_APP\",\"titulo\":\"Prenda disponible nuevamente\",\"mensaje\":\"Chaqueta Bomber Oversize Negra volvio a tener unidades en la talla M\",\"enlace\":\"/catalogo/prendas/3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"leida\":false,\"fechaCreacion\":\"2026-11-06T08:00:00\",\"fechaLectura\":null}],\"page\":0,\"size\":20,\"totalElements\":1,\"totalPages\":1,\"hasNext\":false,\"hasPrevious\":false}"
                                     )
                             }
                     )
@@ -277,10 +277,10 @@ public interface AlertaApi {
     })
     ResponseEntity<?> listarMisNotificaciones(
             @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
-            @Parameter(description = "Filter only unread notifications (English alias)", example = "false") Boolean unreadOnly,
-            @Parameter(description = "Filter only unread notifications (legacy)", example = "false") Boolean soloNoLeidas,
-            @Parameter(description = "Filter by read status (true=read, false=unread)", example = "false") Boolean read,
-            @Parameter(description = "Filter by read status (legacy)", example = "false") Boolean leida,
+            @Parameter(description = "Shortcut: true returns only unread notifications (same as leida=false)", example = "true") Boolean unreadOnly,
+            @Parameter(hidden = true) Boolean soloNoLeidas,
+            @Parameter(hidden = true) Boolean read,
+            @Parameter(description = "Filter by read status (true=read, false=unread). Activates the paginated response", example = "false") Boolean leida,
             @Parameter(description = "Page number (zero-indexed, >= 0)", example = "0") @Min(value = 0, message = "page debe ser 0 o mayor") Integer page,
             @Parameter(description = "Page size (1 to 100)", example = "20") @Min(value = 1, message = "size debe ser al menos 1") @Max(value = 100, message = "size no puede superar 100") Integer size
     );
