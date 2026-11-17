@@ -5,6 +5,7 @@ import edu.dosw.styleradar.notificaciones.application.dto.response.AlertaRespons
 import edu.dosw.styleradar.notificaciones.application.dto.response.ContadorNoLeidasResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.NotificacionResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.PaginaResponse;
+import edu.dosw.styleradar.notificaciones.application.dto.response.TicketStreamResponse;
 import edu.dosw.styleradar.notificaciones.application.mapper.in.AlertaDtoMapper;
 import edu.dosw.styleradar.notificaciones.application.mapper.in.NotificacionDtoMapper;
 import edu.dosw.styleradar.notificaciones.domain.model.Alerta;
@@ -15,6 +16,8 @@ import edu.dosw.styleradar.notificaciones.domain.port.in.ListarAlertasUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ListarNotificacionesUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.MarcarNotificacionLeidaUseCase;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.in.rest.doc.AlertaApi;
+import edu.dosw.styleradar.notificaciones.infrastructure.security.AuthenticatedUserPrincipal;
+import edu.dosw.styleradar.notificaciones.infrastructure.security.JwtTokenService;
 import edu.dosw.styleradar.notificaciones.infrastructure.security.SecurityContextUserExtractor;
 import edu.dosw.styleradar.notificaciones.infrastructure.sse.SseEmitterRegistry;
 import jakarta.validation.Valid;
@@ -50,6 +53,7 @@ public class AlertaController implements AlertaApi {
     private final NotificacionDtoMapper notificacionDtoMapper;
     private final SecurityContextUserExtractor userExtractor;
     private final SseEmitterRegistry sseRegistry;
+    private final JwtTokenService jwtTokenService;
 
     private static final int PAGINA_POR_DEFECTO = 0;
     private static final int TAMANO_POR_DEFECTO = 20;
@@ -192,6 +196,16 @@ public class AlertaController implements AlertaApi {
         listarNotificacionesUseCase.listarPosterioresA(usuarioId, ultimoId).forEach(notificacion ->
                 sseRegistry.enviarA(emitter, "notificacion", String.valueOf(notificacion.getId()),
                         notificacionDtoMapper.toResponse(notificacion)));
+    }
+
+    @Override
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping({"/notifications/stream-ticket", "/notificaciones/stream-ticket"})
+    public ResponseEntity<TicketStreamResponse> emitirTicketStream(@PathVariable("id") String id) {
+        userExtractor.validarAccesoUsuario(id);
+        AuthenticatedUserPrincipal principal = userExtractor.obtenerPrincipal();
+        String ticket = jwtTokenService.generarTicketStream(principal.usuarioId(), principal.email(), principal.roles());
+        return ResponseEntity.ok(new TicketStreamResponse(ticket, jwtTokenService.ticketTtlSegundos()));
     }
 
     private Long interpretarIdDeEvento(String valor) {

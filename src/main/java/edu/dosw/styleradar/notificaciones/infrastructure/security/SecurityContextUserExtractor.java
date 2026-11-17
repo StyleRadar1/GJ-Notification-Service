@@ -35,6 +35,14 @@ public class SecurityContextUserExtractor {
         throw new AccesoDenegadoException("No fue posible determinar el usuario autenticado");
     }
 
+    public AuthenticatedUserPrincipal obtenerPrincipal() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof AuthenticatedUserPrincipal principal) {
+            return principal;
+        }
+        throw new AccesoDenegadoException("No fue posible determinar el usuario autenticado");
+    }
+
     public Long validarAccesoUsuario(String usuarioId) {
         Long usuarioAutenticadoId = obtenerUsuarioAutenticadoId();
         if (usuarioId == null || usuarioId.isBlank() || "me".equalsIgnoreCase(usuarioId)) {

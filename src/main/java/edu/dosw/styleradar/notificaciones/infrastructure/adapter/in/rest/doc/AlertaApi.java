@@ -4,6 +4,7 @@ import edu.dosw.styleradar.notificaciones.application.dto.request.CrearAlertaReq
 import edu.dosw.styleradar.notificaciones.application.dto.response.AlertaResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.ContadorNoLeidasResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.NotificacionResponse;
+import edu.dosw.styleradar.notificaciones.application.dto.response.TicketStreamResponse;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import io.swagger.v3.oas.annotations.Operation;
@@ -349,5 +350,33 @@ public interface AlertaApi {
                     required = false,
                     example = "42"
             ) String ultimoEventoId
+    );
+
+    @Operation(
+            summary = "Get a short-lived ticket to open the SSE stream",
+            description = "The browser EventSource cannot send the Authorization header. Call this endpoint with the "
+                    + "normal Bearer JWT, then open the stream with ?ticket=<ticket>. The ticket lasts seconds and "
+                    + "only opens the stream; a session JWT in the URL is rejected."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ticket issued"),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "429",
+                    description = "Too many requests",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            )
+    })
+    ResponseEntity<TicketStreamResponse> emitirTicketStream(
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
     );
 }

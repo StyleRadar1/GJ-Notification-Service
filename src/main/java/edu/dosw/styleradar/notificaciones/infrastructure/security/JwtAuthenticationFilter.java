@@ -18,6 +18,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    /** Parametro de consulta con el ticket de vida corta del stream SSE (ver {@code JwtTokenService}). */
+    static final String PARAMETRO_TICKET = "ticket";
+
+    private static final List<String> RUTAS_STREAM = List.of("/notificaciones/stream", "/notifications/stream");
+
     private final JwtTokenService jwtTokenService;
 
     @Override
@@ -26,10 +31,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        String authHeader = request.getHeader("Authorization");
+        String token = extraerToken(request);
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+        if (token != null) {
             if (jwtTokenService.isTokenValid(token)
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
                 Long usuarioId = jwtTokenService.extractUsuarioId(token);
@@ -53,5 +57,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Un JWT de sesion solo se acepta en la cabecera Authorization. El stream SSE tambien acepta, y solo por
+     * GET, un ticket de vida corta en {@code ?ticket=}: un JWT de sesion en la URL se rechaza y un ticket en
+     * la cabecera tampoco sirve.
+     */
+    private String extraerToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            return jwtTokenService.esTicketStream(token) ? null : token;
+        }
+        if ("GET".equalsIgnoreCase(request.getMethod()) && esStream(request.getRequestURI())) {
+            String ticket = request.getParameter(PARAMETRO_TICKET);
+            if (ticket != null && !ticket.isBlank() && jwtTokenService.esTicketStream(ticket)) {
+                return ticket;
+            }
+        }
+        return null;
+    }
+
+    private boolean esStream(String uri) {
+        return uri != null && RUTAS_STREAM.stream().anyMatch(uri::endsWith);
     }
 }
