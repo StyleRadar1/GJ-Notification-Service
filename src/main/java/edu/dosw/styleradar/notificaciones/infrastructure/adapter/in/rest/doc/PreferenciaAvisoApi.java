@@ -18,7 +18,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 
 @Tag(
-        name = "Preferencias de Notificación",
+        name = "Notification Preferences",
         description = "Administración de canales de recepción por tipo de notificación bajo /api/v1/users/{id}/notification-preferences"
 )
 @SecurityRequirement(name = "bearerAuth")

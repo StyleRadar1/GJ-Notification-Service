@@ -25,7 +25,7 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("StyleRadar - API del Microservicio de Notificaciones y Alertas (ms-notificaciones)")
+                        .title("StyleRadar - Notification Service API (ms-notificaciones)")
                         .version("1.0.0")
                         .description("Documentación interactiva OpenAPI 3.0 para el Microservicio de Alertas y Notificaciones (DOSW - Equipo Guatoque Jiraguas). Permite gestionar alertas de reposición de stock, búsquedas guardadas, notificaciones multicanal y emisión en tiempo real vía Server-Sent Events (SSE).")
                         .contact(new Contact()

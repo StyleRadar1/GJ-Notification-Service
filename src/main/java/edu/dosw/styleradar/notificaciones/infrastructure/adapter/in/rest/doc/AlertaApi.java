@@ -24,7 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Tag(
-        name = "Alertas y Notificaciones",
+        name = "Alerts & Notifications",
         description = "Endpoints bajo /api/v1/users/{id} para gestionar alertas de stock, búsquedas guardadas y notificaciones en tiempo real (con validación de autorización)"
 )
 @SecurityRequirement(name = "bearerAuth")
@@ -242,10 +242,10 @@ public interface AlertaApi {
     })
     ResponseEntity<?> listarMisNotificaciones(
             @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
-            @Parameter(description = "Filtrar solo no leídas (alias en inglés)", example = "false") Boolean unreadOnly,
-            @Parameter(description = "Filtrar solo no leídas (alias en español)", example = "false") Boolean soloNoLeidas,
+            @Parameter(description = "Filtrar solo notificaciones no leídas", example = "false") Boolean unreadOnly,
+            @Parameter(hidden = true) Boolean soloNoLeidas,
             @Parameter(description = "Filtrar por estado de lectura (true=leídas, false=no leídas)", example = "false") Boolean read,
-            @Parameter(description = "Filtrar por estado de lectura (alias en español)", example = "false") Boolean leida,
+            @Parameter(hidden = true) Boolean leida,
             @Parameter(description = "Número de página (iniciando en 0, >= 0)", example = "0") @Min(value = 0, message = "page debe ser 0 o mayor") Integer page,
             @Parameter(description = "Tamaño de página (1 a 100)", example = "20") @Min(value = 1, message = "size debe ser al menos 1") @Max(value = 100, message = "size no puede superar 100") Integer size
     );
