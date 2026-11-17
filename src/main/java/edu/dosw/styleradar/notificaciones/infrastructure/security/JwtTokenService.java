@@ -6,8 +6,10 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Base64;
+import java.util.Collection;
 import java.util.Date;
-import java.util.Map;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -21,26 +23,65 @@ public class JwtTokenService {
             @Value("${application.security.jwt.secret-key}") String secretKey,
             @Value("${application.security.jwt.expiration-ms:86400000}") long expirationMs
     ) {
-        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
-        if (keyBytes.length < 32) {
-            byte[] padded = new byte[32];
-            System.arraycopy(keyBytes, 0, padded, 0, keyBytes.length);
-            keyBytes = padded;
-        }
+        byte[] keyBytes = resolveKeyBytes(secretKey);
         this.signingKey = Keys.hmacShaKeyFor(keyBytes);
         this.expirationMs = expirationMs;
     }
 
+    private static byte[] resolveKeyBytes(String secretKey) {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalArgumentException("JWT secret key must not be null or blank");
+        }
+        String trimmed = secretKey.trim();
+
+        // 1. Try standard Base64 (ms-auth uses Base64-encoded 256-bit key)
+        try {
+            byte[] decoded = Base64.getDecoder().decode(trimmed);
+            if (decoded != null && decoded.length >= 32) {
+                return decoded;
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Not valid standard Base64
+        }
+
+        // 2. Try URL-safe Base64
+        try {
+            byte[] decoded = Base64.getUrlDecoder().decode(trimmed);
+            if (decoded != null && decoded.length >= 32) {
+                return decoded;
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Not valid URL-safe Base64
+        }
+
+        // 3. Fallback to raw UTF-8 string bytes (padded to 32 bytes if shorter)
+        byte[] utf8Bytes = trimmed.getBytes(StandardCharsets.UTF_8);
+        if (utf8Bytes.length < 32) {
+            byte[] padded = new byte[32];
+            System.arraycopy(utf8Bytes, 0, padded, 0, utf8Bytes.length);
+            return padded;
+        }
+        return utf8Bytes;
+    }
+
     public String generateToken(Long usuarioId, String email, String role) {
+        return generateToken(usuarioId, email, role != null ? List.of(role) : List.of("COMPRADOR"));
+    }
+
+    public String generateToken(Long usuarioId, String email, List<String> roles) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
+        List<String> normalizedRoles = (roles == null || roles.isEmpty())
+                ? List.of("COMPRADOR")
+                : roles.stream().map(JwtTokenService::normalizeRole).toList();
+        String primaryRole = normalizedRoles.get(0);
+
         return Jwts.builder()
                 .setSubject(String.valueOf(usuarioId))
-                .addClaims(Map.of(
-                        "userId", usuarioId,
-                        "email", email != null ? email : "",
-                        "role", role != null ? role : "COMPRADOR"
-                ))
+                .claim("userId", usuarioId)
+                .claim("email", email != null ? email : "")
+                .claim("role", primaryRole)
+                .claim("roles", normalizedRoles)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(signingKey, SignatureAlgorithm.HS256)
@@ -71,24 +112,69 @@ public class JwtTokenService {
             return number.longValue();
         }
         if (userIdClaim instanceof String text && !text.isBlank()) {
-            return Long.parseLong(text);
+            try {
+                return Long.parseLong(text.trim());
+            } catch (NumberFormatException ignored) {
+            }
         }
-        return Long.parseLong(claims.getSubject());
+        String subject = claims.getSubject();
+        if (subject != null && !subject.isBlank()) {
+            try {
+                return Long.parseLong(subject.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return null;
     }
 
     public String extractEmail(String token) {
         Claims claims = extractAllClaims(token);
         Object email = claims.get("email");
-        return email != null ? email.toString() : claims.getSubject();
+        if (email != null && !email.toString().isBlank()) {
+            return email.toString();
+        }
+        return claims.getSubject();
+    }
+
+    public List<String> extractRoles(String token) {
+        Claims claims = extractAllClaims(token);
+        Object rolesObj = claims.get("roles");
+        if (rolesObj instanceof Collection<?> col) {
+            List<String> list = col.stream()
+                    .filter(java.util.Objects::nonNull)
+                    .map(Object::toString)
+                    .map(JwtTokenService::normalizeRole)
+                    .filter(r -> !r.isBlank())
+                    .toList();
+            if (!list.isEmpty()) {
+                return list;
+            }
+        }
+        Object singleRole = claims.get("role");
+        if (singleRole != null) {
+            String norm = normalizeRole(singleRole.toString());
+            if (!norm.isBlank()) {
+                return List.of(norm);
+            }
+        }
+        return List.of("COMPRADOR");
     }
 
     public String extractRole(String token) {
-        Claims claims = extractAllClaims(token);
-        Object role = claims.get("role");
-        if (role == null) {
-            return "COMPRADOR";
+        List<String> roles = extractRoles(token);
+        for (String r : roles) {
+            if ("ADMIN_STYLERADAR".equalsIgnoreCase(r) || "ADMIN".equalsIgnoreCase(r)) {
+                return r;
+            }
         }
-        String roleStr = role.toString().toUpperCase();
+        return roles.isEmpty() ? "COMPRADOR" : roles.get(0);
+    }
+
+    public static String normalizeRole(String rawRole) {
+        if (rawRole == null) {
+            return "";
+        }
+        String roleStr = rawRole.trim().toUpperCase();
         return roleStr.startsWith("ROLE_") ? roleStr.substring(5) : roleStr;
     }
 }
