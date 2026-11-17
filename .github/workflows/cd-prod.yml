@@ -78,7 +78,7 @@ jobs:
 
       - name: Deploy and configure Azure App Service PROD
         if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME_PROD != ''
-        uses: azure/cli@v2
+        uses: azure/cli@v3
         with:
           inlineScript: |
             SHORT_SHA="${GITHUB_SHA::7}"
