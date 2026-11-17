@@ -21,7 +21,7 @@ public class CatalogoClientAdapter implements CatalogoClientPort {
     private final CatalogoFeignClient catalogoFeignClient;
 
     @Override
-    public boolean verificarItemAgotado(Long itemId, String tallaObjetivo) {
+    public boolean verificarItemAgotado(String itemId, String tallaObjetivo) {
         CatalogoDisponibilidadItemResponse disp = consultarDisponibilidad(itemId);
         if (tallaObjetivo != null && !tallaObjetivo.isBlank() && disp.tallasConStock() != null) {
             String norm = tallaObjetivo.trim().toUpperCase(Locale.ROOT);
@@ -34,7 +34,7 @@ public class CatalogoClientAdapter implements CatalogoClientPort {
         return disp.stockTotal() == null || disp.stockTotal() <= 0;
     }
 
-    private CatalogoDisponibilidadItemResponse consultarDisponibilidad(Long itemId) {
+    private CatalogoDisponibilidadItemResponse consultarDisponibilidad(String itemId) {
         CatalogoDisponibilidadItemResponse disp;
         try {
             disp = catalogoFeignClient.consultarDisponibilidad(itemId);

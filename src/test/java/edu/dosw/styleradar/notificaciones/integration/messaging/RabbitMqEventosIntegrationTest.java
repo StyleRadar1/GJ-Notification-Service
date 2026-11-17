@@ -101,7 +101,7 @@ class RabbitMqEventosIntegrationTest {
     void reposicionGeneraLaNotificacion() {
         Alerta alerta = crearAlerta();
 
-        publicar("styleradar.inventario.actualizado", inventario(ITEM_ID, 0, 5, 1));
+        publicar("styleradar.inventario.actualizado", inventario(String.valueOf(ITEM_ID), 0, 5, 1));
 
         await().atMost(Duration.ofSeconds(20))
                 .untilAsserted(() -> assertThat(ciclosNotificados(alerta)).containsExactly(1));
@@ -112,8 +112,8 @@ class RabbitMqEventosIntegrationTest {
     void eventoQueNoEsReposicionNoGeneraNotificacion() {
         Alerta alerta = crearAlerta();
 
-        publicar("styleradar.inventario.actualizado", inventario(ITEM_ID, 5, 8, 1));
-        publicar("styleradar.inventario.actualizado", inventario(ITEM_ID, 0, 5, 2));
+        publicar("styleradar.inventario.actualizado", inventario(String.valueOf(ITEM_ID), 5, 8, 1));
+        publicar("styleradar.inventario.actualizado", inventario(String.valueOf(ITEM_ID), 0, 5, 2));
 
         await().atMost(Duration.ofSeconds(20))
                 .untilAsserted(() -> assertThat(ciclosNotificados(alerta)).containsExactly(2));
@@ -125,7 +125,7 @@ class RabbitMqEventosIntegrationTest {
         doThrow(new IllegalStateException("base de datos no disponible"))
                 .when(procesarEventosExternosUseCase).procesarDisponibilidadPrenda(any());
 
-        publicar("styleradar.inventario.actualizado", inventario(ITEM_ID, 0, 5, 1));
+        publicar("styleradar.inventario.actualizado", inventario(String.valueOf(ITEM_ID), 0, 5, 1));
 
         assertThat(rabbitTemplate.receive(DLQ, 20_000)).isNotNull();
         verify(procesarEventosExternosUseCase, times(3)).procesarDisponibilidadPrenda(any());
@@ -160,7 +160,7 @@ class RabbitMqEventosIntegrationTest {
         Alerta alerta = crearAlerta();
 
         publicar("styleradar.catalogo.prenda.retirada",
-                new PrendaRetiradaEventPayload("evt-cat-1", ITEM_ID, "Retirada por la tienda", LocalDateTime.now()));
+                new PrendaRetiradaEventPayload("evt-cat-1", String.valueOf(ITEM_ID), "Retirada por la tienda", LocalDateTime.now()));
 
         await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> assertThat(jdbcTemplate.queryForObject(
                 "SELECT estado FROM alertas WHERE id = ?", String.class, alerta.getId()))
@@ -175,7 +175,7 @@ class RabbitMqEventosIntegrationTest {
         publicar("styleradar.usuarios.estado.cambiado", estadoCuenta("INACTIVO"));
         await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> assertThat(estadoGuardado()).containsExactly("INACTIVO"));
 
-        publicar("styleradar.inventario.actualizado", inventario(ITEM_ID, 0, 5, 1));
+        publicar("styleradar.inventario.actualizado", inventario(String.valueOf(ITEM_ID), 0, 5, 1));
         verify(procesarEventosExternosUseCase, timeout(20_000)).procesarDisponibilidadPrenda(any());
         await().during(Duration.ofMillis(500)).atMost(Duration.ofSeconds(5))
                 .untilAsserted(() -> assertThat(ciclosNotificados(alerta)).isEmpty());
@@ -183,7 +183,7 @@ class RabbitMqEventosIntegrationTest {
         publicar("styleradar.usuarios.estado.cambiado", estadoCuenta("ACTIVO"));
         await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> assertThat(estadoGuardado()).containsExactly("ACTIVO"));
 
-        publicar("styleradar.inventario.actualizado", inventario(ITEM_ID, 0, 5, 2));
+        publicar("styleradar.inventario.actualizado", inventario(String.valueOf(ITEM_ID), 0, 5, 2));
         await().atMost(Duration.ofSeconds(20))
                 .untilAsserted(() -> assertThat(ciclosNotificados(alerta)).containsExactly(2));
     }
@@ -195,11 +195,11 @@ class RabbitMqEventosIntegrationTest {
         await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> assertThat(busquedaActiva()).containsExactly(true));
         Alerta alerta = crearAlertaDeBusqueda();
 
-        publicar("styleradar.catalogo.prenda.publicada", prenda(ITEM_ID + 1, "CALZADO"));
-        publicar("styleradar.catalogo.prenda.publicada", prenda(ITEM_ID + 2, "CHAQUETAS"));
+        publicar("styleradar.catalogo.prenda.publicada", prenda(String.valueOf(ITEM_ID + 1), "CALZADO"));
+        publicar("styleradar.catalogo.prenda.publicada", prenda(String.valueOf(ITEM_ID + 2), "CHAQUETAS"));
 
         await().atMost(Duration.ofSeconds(20))
-                .untilAsserted(() -> assertThat(itemsNotificados(alerta)).containsExactly(ITEM_ID + 2));
+                .untilAsserted(() -> assertThat(itemsNotificados(alerta)).containsExactly(String.valueOf(ITEM_ID + 2)));
     }
 
     @Test
@@ -221,7 +221,7 @@ class RabbitMqEventosIntegrationTest {
     private Alerta crearAlertaDeBusqueda() {
         LocalDateTime ahora = LocalDateTime.now();
         return alertaRepositoryPort.guardar(new Alerta(
-                null, USUARIO_ID, TipoAlerta.BUSQUEDA_GUARDADA, null, null, BUSQUEDA_ID,
+                null, USUARIO_ID, TipoAlerta.BUSQUEDA_GUARDADA, (String) null, null, BUSQUEDA_ID,
                 CanalNotificacion.IN_APP, EstadoAlerta.ACTIVA, ahora, ahora));
     }
 
@@ -231,10 +231,10 @@ class RabbitMqEventosIntegrationTest {
                 null, null, null, new BigDecimal("200000"), null, accion, LocalDateTime.now());
     }
 
-    private PrendaPublicadaEventPayload prenda(Long itemId, String categoria) {
+    private PrendaPublicadaEventPayload prenda(String itemId, String categoria) {
         return new PrendaPublicadaEventPayload(
                 "evt-pre-" + itemId, itemId, "Prenda " + itemId, categoria, "NEGRO", List.of("M", "L"),
-                "BogotaStreet", "STREETWEAR", new BigDecimal("185000"), 5, 12L, "CHAPINERO", LocalDateTime.now());
+                "BogotaStreet", "STREETWEAR", new BigDecimal("185000"), 5, "12", "CHAPINERO", LocalDateTime.now());
     }
 
     private List<Boolean> busquedaActiva() {
@@ -242,9 +242,9 @@ class RabbitMqEventosIntegrationTest {
                 "SELECT activa FROM busquedas_guardadas_copia WHERE busqueda_id = ?", Boolean.class, BUSQUEDA_ID);
     }
 
-    private List<Long> itemsNotificados(Alerta alerta) {
+    private List<String> itemsNotificados(Alerta alerta) {
         return jdbcTemplate.queryForList(
-                "SELECT item_id FROM notificaciones WHERE alerta_id = ? ORDER BY item_id", Long.class, alerta.getId());
+                "SELECT item_id FROM notificaciones WHERE alerta_id = ? ORDER BY item_id", String.class, alerta.getId());
     }
 
     private void publicar(String routingKey, Object payload) {
@@ -254,14 +254,14 @@ class RabbitMqEventosIntegrationTest {
     private Alerta crearAlerta() {
         LocalDateTime ahora = LocalDateTime.now();
         return alertaRepositoryPort.guardar(new Alerta(
-                null, USUARIO_ID, TipoAlerta.ITEM_AGOTADO, ITEM_ID, null, null,
+                null, USUARIO_ID, TipoAlerta.ITEM_AGOTADO, String.valueOf(ITEM_ID), null, null,
                 CanalNotificacion.IN_APP, EstadoAlerta.ACTIVA, ahora, ahora));
     }
 
-    private InventarioActualizadoEventPayload inventario(Long itemId, Integer anterior, Integer actual, Integer ciclo) {
+    private InventarioActualizadoEventPayload inventario(String itemId, Integer anterior, Integer actual, Integer ciclo) {
         return new InventarioActualizadoEventPayload(
                 "evt-inv-" + ciclo, itemId, "Chaqueta Bomber", "CHAQUETAS", "NEGRO", "M", "BogotaStreet",
-                "STREETWEAR", new BigDecimal("185000"), anterior, actual, ciclo, 12L, "CHAPINERO", LocalDateTime.now());
+                "STREETWEAR", new BigDecimal("185000"), anterior, actual, ciclo, "12", "CHAPINERO", LocalDateTime.now());
     }
 
     private UsuarioEstadoCambiadoEventPayload estadoCuenta(String estado) {

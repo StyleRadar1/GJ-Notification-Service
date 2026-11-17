@@ -6,7 +6,7 @@ import java.util.List;
 /** Prenda de segunda mano vendida; los demas interesados (con conversacion abierta) reciben el aviso. */
 public record PrendaVendidaEventPayload(
         String eventoId,
-        Long publicacionId,
+        String publicacionId,
         String nombrePrenda,
         Long compradorId,
         List<Long> interesadosIds,

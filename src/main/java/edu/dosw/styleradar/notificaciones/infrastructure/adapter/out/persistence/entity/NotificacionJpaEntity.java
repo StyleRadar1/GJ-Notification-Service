@@ -54,8 +54,8 @@ public class NotificacionJpaEntity {
     @Column(name = "alerta_id")
     private Long alertaId;
 
-    @Column(name = "item_id")
-    private Long itemId;
+    @Column(name = "item_id", length = 100)
+    private String itemId;
 
     @Column(name = "ciclo_reposicion")
     private Integer cicloReposicion;

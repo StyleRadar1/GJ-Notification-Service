@@ -55,14 +55,14 @@ class NotificacionGeneralizadaPersistenciaTest {
     @DisplayName("Una notificacion de alerta existente sigue funcionando con su restriccion unica")
     void laNotificacionDeAlertaSigueFuncionandoConSuRestriccionUnica() {
         Notificacion guardada = notificacionRepositoryPort.guardar(
-                nueva(TipoNotificacion.REPOSICION_STOCK, 590_001L, 590_002L, 1));
+                nueva(TipoNotificacion.REPOSICION_STOCK, 590_001L, "590002", 1));
 
         assertThat(guardada.getId()).isNotNull();
-        assertThat(notificacionRepositoryPort.existePorAlertaItemYCiclo(590_001L, 590_002L, 1)).isTrue();
-        assertThat(notificacionRepositoryPort.existePorAlertaItemYCiclo(590_001L, 590_002L, 2)).isFalse();
+        assertThat(notificacionRepositoryPort.existePorAlertaItemYCiclo(590_001L, "590002", 1)).isTrue();
+        assertThat(notificacionRepositoryPort.existePorAlertaItemYCiclo(590_001L, "590002", 2)).isFalse();
     }
 
-    private Notificacion nueva(TipoNotificacion tipo, Long alertaId, Long itemId, Integer ciclo) {
+    private Notificacion nueva(TipoNotificacion tipo, Long alertaId, String itemId, Integer ciclo) {
         return new Notificacion(null, USUARIO_ID, alertaId, itemId, ciclo, tipo, CanalNotificacion.IN_APP,
                 "Titulo " + tipo, "Mensaje " + tipo, "/destino/" + tipo.name().toLowerCase(), false,
                 LocalDateTime.now(), null);

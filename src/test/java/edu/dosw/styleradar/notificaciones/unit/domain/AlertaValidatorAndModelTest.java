@@ -37,14 +37,14 @@ class AlertaValidatorAndModelTest {
     void debeValidarAlertaItemAgotadoValida() {
         // Arrange
         Alerta alerta = new Alerta(
-                1L, 100L, TipoAlerta.ITEM_AGOTADO, 50L, "M", null,
+                1L, 100L, TipoAlerta.ITEM_AGOTADO, "50", "M", null,
                 CanalNotificacion.IN_APP, EstadoAlerta.ACTIVA, LocalDateTime.now(), LocalDateTime.now()
         );
         EstadoCuentaCopia cuenta = new EstadoCuentaCopia(100L, "user@styleradar.co", EstadoCuenta.ACTIVO, LocalDateTime.now());
 
         // Act
         validator.validarCreacionAlerta(alerta, cuenta);
-        validator.validarItemAgotadoEnCatalogo(true, 50L);
+        validator.validarItemAgotadoEnCatalogo(true, "50");
         validator.validarNoDuplicada(false);
         validator.validarPropiedadAlerta(alerta, 100L);
 
@@ -74,7 +74,7 @@ class AlertaValidatorAndModelTest {
     void debeRechazarCuentaInactiva() {
         // Arrange
         Alerta alerta = new Alerta(
-                null, 100L, TipoAlerta.ITEM_AGOTADO, 50L, "M", null,
+                null, 100L, TipoAlerta.ITEM_AGOTADO, "50", "M", null,
                 CanalNotificacion.IN_APP, EstadoAlerta.ACTIVA, null, null
         );
         EstadoCuentaCopia cuentaInactiva = new EstadoCuentaCopia(100L, "u@sr.co", EstadoCuenta.INACTIVO, LocalDateTime.now());
@@ -89,10 +89,10 @@ class AlertaValidatorAndModelTest {
     @DisplayName("NOT-02 - Debe rechazar combinacion invalida de itemId y busquedaGuardadaId")
     void debeRechazarCombinacionesMutuamenteExcluyentes() {
         // Arrange
-        Alerta itemSinId = new Alerta(null, 10L, TipoAlerta.ITEM_AGOTADO, null, "L", null, null, null, null, null);
-        Alerta itemConBusqueda = new Alerta(null, 10L, TipoAlerta.ITEM_AGOTADO, 5L, "L", 9L, null, null, null, null);
-        Alerta busquedaSinId = new Alerta(null, 10L, TipoAlerta.BUSQUEDA_GUARDADA, null, null, null, null, null, null, null);
-        Alerta busquedaConItem = new Alerta(null, 10L, TipoAlerta.BUSQUEDA_GUARDADA, 5L, null, 9L, null, null, null, null);
+        Alerta itemSinId = new Alerta(null, 10L, TipoAlerta.ITEM_AGOTADO, (String) null, "L", null, null, null, null, null);
+        Alerta itemConBusqueda = new Alerta(null, 10L, TipoAlerta.ITEM_AGOTADO, "5", "L", 9L, null, null, null, null);
+        Alerta busquedaSinId = new Alerta(null, 10L, TipoAlerta.BUSQUEDA_GUARDADA, (String) null, null, null, null, null, null, null);
+        Alerta busquedaConItem = new Alerta(null, 10L, TipoAlerta.BUSQUEDA_GUARDADA, "5", null, 9L, null, null, null, null);
 
         // Act & Assert
         assertThatThrownBy(() -> validator.validarCreacionAlerta(itemSinId, null))
@@ -108,7 +108,7 @@ class AlertaValidatorAndModelTest {
     @Test
     @DisplayName("NOT-10 - Debe rechazar alerta de item agotado cuando el catalogo reporta stock disponible")
     void debeRechazarItemConStockEnCatalogo() {
-        assertThatThrownBy(() -> validator.validarItemAgotadoEnCatalogo(false, 99L))
+        assertThatThrownBy(() -> validator.validarItemAgotadoEnCatalogo(false, "99"))
                 .isInstanceOf(ReglaDeNegocioException.class)
                 .hasMessageContaining("99");
     }
@@ -135,7 +135,7 @@ class AlertaValidatorAndModelTest {
     @Test
     @DisplayName("NOT-02 - Debe lanzar ConflictoException en duplicados y AccesoDenegadoException en propiedad ajena")
     void debeRechazarDuplicadosYPropiedadAjena() {
-        Alerta alerta = new Alerta(1L, 10L, TipoAlerta.ITEM_AGOTADO, 5L, "M", null, null, null, null, null);
+        Alerta alerta = new Alerta(1L, 10L, TipoAlerta.ITEM_AGOTADO, "5", "M", null, null, null, null, null);
         assertThatThrownBy(() -> validator.validarNoDuplicada(true))
                 .isInstanceOf(ConflictoException.class);
         assertThatThrownBy(() -> validator.validarPropiedadAlerta(alerta, 20L))
@@ -150,7 +150,7 @@ class AlertaValidatorAndModelTest {
         alerta.setId(1L);
         alerta.setUsuarioId(2L);
         alerta.setTipoAlerta(TipoAlerta.ITEM_AGOTADO);
-        alerta.setItemId(3L);
+        alerta.setItemId("3");
         alerta.setTallaObjetivo("S");
         alerta.setBusquedaGuardadaId(null);
         alerta.setCanal(CanalNotificacion.EMAIL);
@@ -162,7 +162,7 @@ class AlertaValidatorAndModelTest {
         notificacion.setId(10L);
         notificacion.setUsuarioId(2L);
         notificacion.setAlertaId(1L);
-        notificacion.setItemId(3L);
+        notificacion.setItemId("3");
         notificacion.setCicloReposicion(1);
         notificacion.setTipo(TipoNotificacion.REPOSICION_STOCK);
         notificacion.setCanal(CanalNotificacion.IN_APP);

@@ -16,8 +16,8 @@ public record NotificacionResponse(
         @Schema(description = "Identificador de la alerta origen (opcional)", example = "501")
         Long alertaId,
 
-        @Schema(description = "Identificador de la prenda asociada (opcional)", example = "1045")
-        Long itemId,
+        @Schema(description = "Identificador de la prenda asociada (UUID o numerico, opcional)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        String itemId,
 
         @Schema(description = "Ciclo de reposicion de stock (idempotencia)", example = "1")
         Integer cicloReposicion,

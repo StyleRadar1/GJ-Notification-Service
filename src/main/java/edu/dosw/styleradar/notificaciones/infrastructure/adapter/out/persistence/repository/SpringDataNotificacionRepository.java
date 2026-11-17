@@ -26,7 +26,7 @@ public interface SpringDataNotificacionRepository extends JpaRepository<Notifica
 
     long countByUsuarioIdAndLeidaFalse(Long usuarioId);
 
-    boolean existsByAlertaIdAndItemIdAndCicloReposicion(Long alertaId, Long itemId, Integer cicloReposicion);
+    boolean existsByAlertaIdAndItemIdAndCicloReposicion(Long alertaId, String itemId, Integer cicloReposicion);
 
     boolean existsByEventoIdAndUsuarioId(String eventoId, Long usuarioId);
 

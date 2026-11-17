@@ -107,11 +107,11 @@ class AlertaControllerAndInfrastructureTest {
         String tokenUsuario = jwtTokenService.generateToken(501L, "mateo@styleradar.co", "COMPRADOR");
         String tokenOtroUsuario = jwtTokenService.generateToken(999L, "otro@styleradar.co", "COMPRADOR");
 
-        when(catalogoFeignClient.consultarDisponibilidad(1045L))
-                .thenReturn(new CatalogoDisponibilidadItemResponse(1045L, 0, List.of()));
+        when(catalogoFeignClient.consultarDisponibilidad("1045"))
+                .thenReturn(new CatalogoDisponibilidadItemResponse("1045", 0, List.of()));
 
         CrearAlertaRequest crearRequest = new CrearAlertaRequest(
-                TipoAlerta.ITEM_AGOTADO, 1045L, "M", null, CanalNotificacion.IN_APP
+                TipoAlerta.ITEM_AGOTADO, "1045", "M", null, CanalNotificacion.IN_APP
         );
 
         // Act & Assert 1: Sin token retorna 401
@@ -125,7 +125,7 @@ class AlertaControllerAndInfrastructureTest {
                         .content(objectMapper.writeValueAsString(crearRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.usuarioId").value(501))
-                .andExpect(jsonPath("$.itemId").value(1045))
+                .andExpect(jsonPath("$.itemId").value("1045"))
                 .andExpect(jsonPath("$.estado").value("ACTIVA"))
                 .andReturn()
                 .getResponse()
@@ -153,8 +153,8 @@ class AlertaControllerAndInfrastructureTest {
 
         // Act & Assert 6: Simular evento de reposicion de stock por RabbitListener
         eventsListener.onInventarioActualizado(new InventarioActualizadoEventPayload(
-                "evt-1", 1045L, "Chaqueta Bomber", "CHAQUETAS", "NEGRO", "M",
-                "BogotaStreet", "STREETWEAR", new BigDecimal("180000"), 0, 5, 1, 10L, "CHAPINERO", LocalDateTime.now()
+                "evt-1", "1045", "Chaqueta Bomber", "CHAQUETAS", "NEGRO", "M",
+                "BogotaStreet", "STREETWEAR", new BigDecimal("180000"), 0, 5, 1, "10", "CHAPINERO", LocalDateTime.now()
         ));
 
         // Act & Assert 7: Verificar contador de no leidas y listado
@@ -166,7 +166,7 @@ class AlertaControllerAndInfrastructureTest {
         String notifListJson = mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?soloNoLeidas=true")
                         .header("Authorization", "Bearer " + tokenUsuario))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].itemId").value(1045))
+                .andExpect(jsonPath("$[0].itemId").value("1045"))
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
@@ -216,11 +216,11 @@ class AlertaControllerAndInfrastructureTest {
                 .andExpect(status().isBadRequest());
 
         // 422 cuando el item tiene stock disponible en catalogo
-        when(catalogoFeignClient.consultarDisponibilidad(2000L))
-                .thenReturn(new CatalogoDisponibilidadItemResponse(2000L, 4, List.of("M", "L")));
+        when(catalogoFeignClient.consultarDisponibilidad("2000"))
+                .thenReturn(new CatalogoDisponibilidadItemResponse("2000", 4, List.of("M", "L")));
 
         CrearAlertaRequest conStock = new CrearAlertaRequest(
-                TipoAlerta.ITEM_AGOTADO, 2000L, "M", null, CanalNotificacion.IN_APP
+                TipoAlerta.ITEM_AGOTADO, "2000", "M", null, CanalNotificacion.IN_APP
         );
         mockMvc.perform(post("/api/v1/usuarios/me/alertas")
                         .header("Authorization", "Bearer " + token)
@@ -251,8 +251,8 @@ class AlertaControllerAndInfrastructureTest {
         assertThat(sseRegistry.contarSuscripcionesActivas(601L)).isEqualTo(1);
 
         eventsListener.onPrendaPublicada(new PrendaPublicadaEventPayload(
-                "evt-pub-1", 3001L, "Blazer Lino Sastre", "SASTRERIA", "BEIGE", List.of("M"),
-                "Atelier", "SASTRE", new BigDecimal("320000"), 3, 7L, "USAQUEN", LocalDateTime.now()
+                "evt-pub-1", "3001", "Blazer Lino Sastre", "SASTRERIA", "BEIGE", List.of("M"),
+                "Atelier", "SASTRE", new BigDecimal("320000"), 3, "7", "USAQUEN", LocalDateTime.now()
         ));
 
         // Mensajes, donaciones y moderacion
@@ -263,7 +263,7 @@ class AlertaControllerAndInfrastructureTest {
                 "evt-don-1", 80L, 601L, "Fundacion Moda Circular", "APROBADA", "Cumple requisitos", LocalDateTime.now()
         ));
         eventsListener.onModeracionPrendaCambiada(new ModeracionPrendaCambiadaEventPayload(
-                "evt-mod-1", 3001L, 601L, "Blazer Lino", "RETIRADA", "Imagen borrosa", LocalDateTime.now()
+                "evt-mod-1", "3001", 601L, "Blazer Lino", "RETIRADA", "Imagen borrosa", LocalDateTime.now()
         ));
         eventsListener.onUsuarioEstadoCambiado(new UsuarioEstadoCambiadoEventPayload(
                 "evt-usr-1", 601L, "antonia@sr.co", "ACTIVO", LocalDateTime.now()
@@ -302,19 +302,19 @@ class AlertaControllerAndInfrastructureTest {
     void debeVerificarAdaptadoresDeSalidaYConfiguracion() {
         // 1. Idempotencia en NotificacionRepositoryAdapter ante clave unica (alerta_id, item_id, ciclo_reposicion)
         Notificacion n1 = new Notificacion(
-                null, 701L, 55L, 1045L, 3, TipoNotificacion.REPOSICION_STOCK,
+                null, 701L, 55L, "1045", 3, TipoNotificacion.REPOSICION_STOCK,
                 CanalNotificacion.IN_APP, "T1", "M1", "/1", false, LocalDateTime.now(), null
         );
         Notificacion guardada1 = notificacionRepositoryPort.guardar(n1);
         assertThat(guardada1.getId()).isNotNull();
 
         Notificacion duplicada = new Notificacion(
-                null, 701L, 55L, 1045L, 3, TipoNotificacion.REPOSICION_STOCK,
+                null, 701L, 55L, "1045", 3, TipoNotificacion.REPOSICION_STOCK,
                 CanalNotificacion.IN_APP, "T1", "M1", "/1", false, LocalDateTime.now(), null
         );
         Notificacion resultadoDuplicado = notificacionRepositoryPort.guardar(duplicada);
         assertThat(resultadoDuplicado).isNotNull();
-        assertThat(notificacionRepositoryPort.existePorAlertaItemYCiclo(55L, 1045L, 3)).isTrue();
+        assertThat(notificacionRepositoryPort.existePorAlertaItemYCiclo(55L, "1045", 3)).isTrue();
 
         // 2. BusquedaGuardadaCopia eliminar y EstadoCuentaCopia
         BusquedaGuardadaCopia copia = new BusquedaGuardadaCopia(
@@ -330,7 +330,7 @@ class AlertaControllerAndInfrastructureTest {
         RabbitTemplate mockRabbit = mock(RabbitTemplate.class);
         RabbitMqEventPublisherAdapter publisher = new RabbitMqEventPublisherAdapter(mockRabbit);
         AlertaCreadaDomainEvent evt = new AlertaCreadaDomainEvent(
-                "id-1", 1L, 701L, TipoAlerta.ITEM_AGOTADO, 1045L, null, CanalNotificacion.IN_APP, LocalDateTime.now()
+                "id-1", 1L, 701L, TipoAlerta.ITEM_AGOTADO, "1045", null, CanalNotificacion.IN_APP, LocalDateTime.now()
         );
         publisher.publicarAlertaCreada(evt);
         verify(mockRabbit).convertAndSend(any(), any(), any(AlertaCreadaDomainEvent.class));
@@ -339,7 +339,7 @@ class AlertaControllerAndInfrastructureTest {
         CatalogoFeignClient failingFeign = mock(CatalogoFeignClient.class);
         when(failingFeign.consultarDisponibilidad(any())).thenThrow(new RuntimeException("Connection refused"));
         CatalogoClientAdapter clientAdapter = new CatalogoClientAdapter(failingFeign);
-        assertThatThrownBy(() -> clientAdapter.verificarItemAgotado(1045L, "M"))
+        assertThatThrownBy(() -> clientAdapter.verificarItemAgotado("1045", "M"))
                 .isInstanceOf(ServicioExternoNoDisponibleException.class);
 
         // 5. Verificar beans de RabbitMqConfig

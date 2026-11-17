@@ -27,7 +27,7 @@ public interface NotificacionRepositoryPort {
 
     int marcarTodasComoLeidasPorUsuario(Long usuarioId);
 
-    boolean existePorAlertaItemYCiclo(Long alertaId, Long itemId, Integer cicloReposicion);
+    boolean existePorAlertaItemYCiclo(Long alertaId, String itemId, Integer cicloReposicion);
 
     boolean existePorEventoYUsuario(String eventoId, Long usuarioId);
 }

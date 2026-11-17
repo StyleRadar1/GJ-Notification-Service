@@ -43,8 +43,8 @@ public class AlertaJpaEntity {
     @Column(name = "tipo_alerta", nullable = false, length = 40)
     private TipoAlerta tipoAlerta;
 
-    @Column(name = "item_id")
-    private Long itemId;
+    @Column(name = "item_id", length = 100)
+    private String itemId;
 
     @Column(name = "talla_objetivo", length = 20)
     private String tallaObjetivo;

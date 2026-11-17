@@ -11,12 +11,12 @@
 ### 1.1 `InventarioActualizado` (Emisor: `ms-inventario`)
 - **Routing Key:** `styleradar.inventario.actualizado`
 - **Cola Destino:** `styleradar.notificaciones.inventario-actualizado.q`
-- **Propósito:** Notificar una reposición de stock o cambio de unidades por prenda/talla/sede. Solo se notifica cuando la prenda se repone de stock cero (`stockAnterior == 0` y `stockActual > 0`); cualquier otro cambio de stock se ignora. El `cicloReposicion` preserva la restricción de idempotencia `(alerta_id, item_id, ciclo_reposicion)`.
+- **Propósito:** Notificar una reposición de stock o cambio de unidades por prenda/talla/sede. Se notifica cuando la prenda se repone (`stockAnterior == 0` o `stockAnterior == null` según backlog RES-133, y `stockActual > 0`); cualquier otro cambio de stock se ignora. El `cicloReposicion` preserva la restricción de idempotencia `(alerta_id, item_id, ciclo_reposicion)`.
 
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
 | `eventoId` | `String (UUID)` | Sí | Identificador único del evento |
-| `itemId` | `Long` | Sí | ID de la prenda o ítem de catálogo |
+| `itemId` | `String (UUID / texto)` | Sí | ID de la prenda o ítem de catálogo (UUID estándar o numérico como texto) |
 | `nombrePrenda` | `String` | Sí | Nombre descriptivo de la prenda |
 | `categoria` | `String` | Sí | Categoría comercial (ej. `CHAQUETAS`, `CALZADO`) |
 | `color` | `String` | No | Color principal de la prenda |
@@ -24,10 +24,10 @@
 | `marca` | `String` | No | Marca o diseñador |
 | `estilo` | `String` | No | Arquetipo o estilo (`STREETWEAR`, `SASTRE`, etc.) |
 | `precio` | `BigDecimal` | Sí | Precio unitario vigente |
-| `stockAnterior` | `Integer` | Sí | Stock antes de la actualización |
-| `stockActual` | `Integer` | Sí | Nuevo stock disponible (con `stockAnterior == 0` y `> 0` dispara la evaluación de alertas) |
+| `stockAnterior` | `Integer` | No | Stock antes de la actualización (opcional por backlog RES-133; si es `null` y `stockActual > 0`, se procesa) |
+| `stockActual` | `Integer` | Sí | Nuevo stock disponible (con `> 0` dispara la evaluación de alertas) |
 | `cicloReposicion` | `Integer` | Sí | Número secuencial de ciclo de reposición del ítem |
-| `tiendaId` | `Long` | Sí | ID de la tienda aliada |
+| `tiendaId` | `String (UUID / texto)` | Sí | ID de la tienda aliada (UUID estándar o numérico) |
 | `localidad` | `String` | No | Localidad o zona geográfica de la sede en Bogotá |
 | `fechaEvento` | `LocalDateTime` | Sí | Marca de tiempo ISO-8601 |
 
@@ -62,7 +62,7 @@
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
 | `eventoId` | `String (UUID)` | Sí | Identificador único del evento |
-| `itemId` | `Long` | Sí | ID de la nueva prenda |
+| `itemId` | `String (UUID / texto)` | Sí | ID de la nueva prenda (UUID estándar o numérico) |
 | `nombrePrenda` | `String` | Sí | Nombre de la prenda |
 | `categoria` | `String` | Sí | Categoría comercial |
 | `color` | `String` | No | Color principal |
@@ -71,7 +71,7 @@
 | `estilo` | `String` | No | Arquetipo o estilo |
 | `precio` | `BigDecimal` | Sí | Precio de publicación |
 | `stockTotal` | `Integer` | Sí | Stock inicial total |
-| `tiendaId` | `Long` | Sí | ID de la tienda |
+| `tiendaId` | `String (UUID / texto)` | Sí | ID de la tienda (UUID o numérico) |
 | `localidad` | `String` | No | Localidad de la sede en Bogotá |
 | `fechaPublicacion` | `LocalDateTime` | Sí | Fecha y hora de publicación |
 
@@ -167,7 +167,7 @@
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
 | `eventoId` | `String` | Sí | Identificador del evento |
-| `itemId` | `Long` | Sí | ID de la prenda retirada |
+| `itemId` | `String (UUID / texto)` | Sí | ID de la prenda retirada (UUID o numérico) |
 | `motivo` | `String` | No | Motivo del retiro (eliminada por el dueño, moderación, etc.) |
 | `fechaEvento` | `LocalDateTime` | Sí | Fecha y hora del retiro |
 
@@ -175,7 +175,7 @@
 ```json
 {
   "eventoId": "evt-cat-30188",
-  "itemId": 1045,
+  "itemId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "motivo": "ELIMINADA_POR_DUENO",
   "fechaEvento": "2026-11-02T13:00:00"
 }
@@ -216,7 +216,7 @@
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
 | `eventoId` | `String` | Sí | Identificador del evento (clave de idempotencia) |
-| `publicacionId` | `Long` | Sí | ID de la publicación vendida |
+| `publicacionId` | `String (UUID / texto)` | Sí | ID de la publicación vendida (UUID o numérico) |
 | `nombrePrenda` | `String` | No | Nombre de la prenda |
 | `compradorId` | `Long` | No | Usuario que compró (no recibe el aviso) |
 | `interesadosIds` | `List<Long>` | No | Usuarios con conversación abierta sobre la prenda |

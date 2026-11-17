@@ -36,7 +36,7 @@ class EvaluadorCriteriosMatcherTest {
                 "CHAPINERO"
         );
         DatosPrendaVO prenda = new DatosPrendaVO(
-                1045L,
+                "1045",
                 "Chaqueta Bomber Oversize",
                 "Chaquetas",
                 "Negro",
@@ -46,7 +46,7 @@ class EvaluadorCriteriosMatcherTest {
                 new BigDecimal("185000"),
                 5,
                 1,
-                12L,
+                "12",
                 "Chapinero"
         );
 
@@ -63,24 +63,24 @@ class EvaluadorCriteriosMatcherTest {
                 new BigDecimal("100000"), new BigDecimal("200000"), "CHAPINERO"
         );
         DatosPrendaVO sinStock = new DatosPrendaVO(
-                1L, "Chaqueta Bomber", "CHAQUETAS", "NEGRO", List.of("M"),
-                "BogotaStreet", "STREETWEAR", new BigDecimal("150000"), 0, 1, 1L, "CHAPINERO"
+                "1", "Chaqueta Bomber", "CHAQUETAS", "NEGRO", List.of("M"),
+                "BogotaStreet", "STREETWEAR", new BigDecimal("150000"), 0, 1, "1", "CHAPINERO"
         );
         DatosPrendaVO cara = new DatosPrendaVO(
-                1L, "Chaqueta Bomber", "CHAQUETAS", "NEGRO", List.of("M"),
-                "BogotaStreet", "STREETWEAR", new BigDecimal("250000"), 3, 1, 1L, "CHAPINERO"
+                "1", "Chaqueta Bomber", "CHAQUETAS", "NEGRO", List.of("M"),
+                "BogotaStreet", "STREETWEAR", new BigDecimal("250000"), 3, 1, "1", "CHAPINERO"
         );
         DatosPrendaVO barata = new DatosPrendaVO(
-                1L, "Chaqueta Bomber", "CHAQUETAS", "NEGRO", List.of("M"),
-                "BogotaStreet", "STREETWEAR", new BigDecimal("50000"), 3, 1, 1L, "CHAPINERO"
+                "1", "Chaqueta Bomber", "CHAQUETAS", "NEGRO", List.of("M"),
+                "BogotaStreet", "STREETWEAR", new BigDecimal("50000"), 3, 1, "1", "CHAPINERO"
         );
         DatosPrendaVO otraTalla = new DatosPrendaVO(
-                1L, "Chaqueta Bomber", "CHAQUETAS", "NEGRO", List.of("XL"),
-                "BogotaStreet", "STREETWEAR", new BigDecimal("150000"), 3, 1, 1L, "CHAPINERO"
+                "1", "Chaqueta Bomber", "CHAQUETAS", "NEGRO", List.of("XL"),
+                "BogotaStreet", "STREETWEAR", new BigDecimal("150000"), 3, 1, "1", "CHAPINERO"
         );
         DatosPrendaVO otroColor = new DatosPrendaVO(
-                1L, "Chaqueta Bomber", "CHAQUETAS", "BLANCO", List.of("M"),
-                "BogotaStreet", "STREETWEAR", new BigDecimal("150000"), 3, 1, 1L, "CHAPINERO"
+                "1", "Chaqueta Bomber", "CHAQUETAS", "BLANCO", List.of("M"),
+                "BogotaStreet", "STREETWEAR", new BigDecimal("150000"), 3, 1, "1", "CHAPINERO"
         );
 
         // Act & Assert
@@ -98,15 +98,15 @@ class EvaluadorCriteriosMatcherTest {
     void debeEvaluarCoincidenciaItemAgotado() {
         // Arrange
         DatosPrendaVO prenda = new DatosPrendaVO(
-                1045L, "Pantalon Cargo", "PANTALONES", "VERDE", List.of("32", "34"),
-                "UrbanCo", "STREETWEAR", new BigDecimal("140000"), 4, 2, 5L, "USAQUEN"
+                "1045", "Pantalon Cargo", "PANTALONES", "VERDE", List.of("32", "34"),
+                "UrbanCo", "STREETWEAR", new BigDecimal("140000"), 4, 2, "5", "USAQUEN"
         );
 
         // Act & Assert
-        assertThat(matcher.coincideItemAgotado(1045L, "32", prenda)).isTrue();
-        assertThat(matcher.coincideItemAgotado(1045L, null, prenda)).isTrue();
-        assertThat(matcher.coincideItemAgotado(1045L, "38", prenda)).isFalse();
-        assertThat(matcher.coincideItemAgotado(9999L, "32", prenda)).isFalse();
+        assertThat(matcher.coincideItemAgotado("1045", "32", prenda)).isTrue();
+        assertThat(matcher.coincideItemAgotado("1045", null, prenda)).isTrue();
+        assertThat(matcher.coincideItemAgotado("1045", "38", prenda)).isFalse();
+        assertThat(matcher.coincideItemAgotado("9999", "32", prenda)).isFalse();
     }
 }
 

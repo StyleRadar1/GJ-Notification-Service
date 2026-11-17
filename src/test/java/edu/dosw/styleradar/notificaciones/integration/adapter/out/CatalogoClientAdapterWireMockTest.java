@@ -44,20 +44,30 @@ class CatalogoClientAdapterWireMockTest {
     @DisplayName("NOT-10 - Debe considerar agotado un item sin stock en Catalogo")
     void debeConsiderarAgotadoUnItemSinStock() {
         catalogo.stubFor(get(urlEqualTo(RUTA_ITEM)).willReturn(json(
-                "{\"itemId\":1045,\"stockTotal\":0,\"tallasConStock\":[]}")));
+                "{\"itemId\":\"1045\",\"stockTotal\":0,\"tallasConStock\":[]}")));
 
-        assertThat(catalogoClientPort.verificarItemAgotado(1045L, null)).isTrue();
+        assertThat(catalogoClientPort.verificarItemAgotado("1045", null)).isTrue();
     }
 
     @Test
     @DisplayName("NOT-10 - Debe considerar disponible un item con stock en Catalogo")
     void debeConsiderarDisponibleUnItemConStock() {
         catalogo.stubFor(get(urlEqualTo(RUTA_ITEM)).willReturn(json(
-                "{\"itemId\":1045,\"stockTotal\":8,\"tallasConStock\":[\"M\",\"L\"]}")));
+                "{\"itemId\":\"1045\",\"stockTotal\":8,\"tallasConStock\":[\"M\",\"L\"]}")));
 
-        assertThat(catalogoClientPort.verificarItemAgotado(1045L, null)).isFalse();
-        assertThat(catalogoClientPort.verificarItemAgotado(1045L, "m")).isFalse();
-        assertThat(catalogoClientPort.verificarItemAgotado(1045L, "XL")).isTrue();
+        assertThat(catalogoClientPort.verificarItemAgotado("1045", null)).isFalse();
+        assertThat(catalogoClientPort.verificarItemAgotado("1045", "m")).isFalse();
+        assertThat(catalogoClientPort.verificarItemAgotado("1045", "XL")).isTrue();
+    }
+
+    @Test
+    @DisplayName("NOT-10 - Debe soportar identificador UUID al consultar Catalogo")
+    void debeSoportarIdentificadorUuid() {
+        String uuid = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        catalogo.stubFor(get(urlEqualTo("/api/v1/catalogo/items/" + uuid + "/disponibilidad")).willReturn(json(
+                "{\"itemId\":\"" + uuid + "\",\"stockTotal\":0,\"tallasConStock\":[]}")));
+
+        assertThat(catalogoClientPort.verificarItemAgotado(uuid, null)).isTrue();
     }
 
     @Test
@@ -65,7 +75,7 @@ class CatalogoClientAdapterWireMockTest {
     void debeRechazarItemInexistente() {
         catalogo.stubFor(get(urlEqualTo(RUTA_ITEM)).willReturn(aResponse().withStatus(404)));
 
-        assertThatThrownBy(() -> catalogoClientPort.verificarItemAgotado(1045L, null))
+        assertThatThrownBy(() -> catalogoClientPort.verificarItemAgotado("1045", null))
                 .isInstanceOf(ReglaDeNegocioException.class)
                 .hasMessageContaining("1045");
     }
@@ -75,7 +85,7 @@ class CatalogoClientAdapterWireMockTest {
     void debeIndicarServicioNoDisponibleCuandoCatalogoFalla() {
         catalogo.stubFor(get(urlEqualTo(RUTA_ITEM)).willReturn(aResponse().withStatus(500)));
 
-        assertThatThrownBy(() -> catalogoClientPort.verificarItemAgotado(1045L, null))
+        assertThatThrownBy(() -> catalogoClientPort.verificarItemAgotado("1045", null))
                 .isInstanceOf(ServicioExternoNoDisponibleException.class);
     }
 
@@ -85,7 +95,7 @@ class CatalogoClientAdapterWireMockTest {
         catalogo.stubFor(get(urlEqualTo(RUTA_ITEM))
                 .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)));
 
-        assertThatThrownBy(() -> catalogoClientPort.verificarItemAgotado(1045L, null))
+        assertThatThrownBy(() -> catalogoClientPort.verificarItemAgotado("1045", null))
                 .isInstanceOf(ServicioExternoNoDisponibleException.class);
     }
 

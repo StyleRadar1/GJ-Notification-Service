@@ -11,7 +11,11 @@ public interface ProcesarEventosExternosUseCase {
 
     List<Notificacion> procesarDisponibilidadPrenda(DatosPrendaVO datosPrenda);
 
-    void desactivarAlertasPorItemEliminado(Long itemId);
+    void desactivarAlertasPorItemEliminado(String itemId);
+
+    default void desactivarAlertasPorItemEliminado(Long itemId) {
+        desactivarAlertasPorItemEliminado(itemId != null ? itemId.toString() : null);
+    }
 
     void sincronizarBusquedaGuardada(BusquedaGuardadaCopia busqueda, boolean eliminada);
 
@@ -23,7 +27,7 @@ public interface ProcesarEventosExternosUseCase {
             String titulo,
             String mensaje,
             String enlace,
-            Long itemId
+            String itemId
     ) {
         return generarNotificacionDirecta(usuarioId, tipo, titulo, mensaje, enlace, itemId, null);
     }
@@ -38,7 +42,7 @@ public interface ProcesarEventosExternosUseCase {
             String titulo,
             String mensaje,
             String enlace,
-            Long itemId,
+            String itemId,
             String eventoId
     );
 
