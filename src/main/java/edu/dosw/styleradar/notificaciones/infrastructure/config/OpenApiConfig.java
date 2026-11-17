@@ -25,16 +25,16 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("StyleRadar - Notification Service API (ms-notificaciones)")
+                        .title("StyleRadar - API del Microservicio de Notificaciones y Alertas (ms-notificaciones)")
                         .version("1.0.0")
-                        .description("Official OpenAPI 3.0 interactive documentation for the Notification & Alert Microservice (DOSW - Equipo Guatoque Jiraguas). Manages stock alerts, saved searches, multichannel notifications and real-time SSE stream.")
+                        .description("Documentación interactiva OpenAPI 3.0 para el Microservicio de Alertas y Notificaciones (DOSW - Equipo Guatoque Jiraguas). Permite gestionar alertas de reposición de stock, búsquedas guardadas, notificaciones multicanal y emisión en tiempo real vía Server-Sent Events (SSE).")
                         .contact(new Contact()
-                                .name("StyleRadar - Squad Notificaciones (GJ)")
+                                .name("StyleRadar - Equipo Notificaciones (GJ)")
                                 .email("notificaciones@styleradar.co")))
                 .servers(List.of(
-                        new io.swagger.v3.oas.models.servers.Server().url("http://localhost:8300").description("Local Environment / Docker Compose (ms-notificaciones :8300)"),
-                        new io.swagger.v3.oas.models.servers.Server().url("https://styleradar-notificaciones-qa.azurewebsites.net").description("QA Quality & Staging Environment (ms-notificaciones)"),
-                        new io.swagger.v3.oas.models.servers.Server().url("https://styleradar-notificaciones-prod.azurewebsites.net").description("PROD Production Environment (ms-notificaciones)")
+                        new io.swagger.v3.oas.models.servers.Server().url("http://localhost:8300").description("Entorno Local / Docker Compose (ms-notificaciones :8300)"),
+                        new io.swagger.v3.oas.models.servers.Server().url("https://styleradar-notificaciones-qa.azurewebsites.net").description("Entorno de Pruebas y Calidad QA (ms-notificaciones)"),
+                        new io.swagger.v3.oas.models.servers.Server().url("https://styleradar-notificaciones-prod.azurewebsites.net").description("Entorno de Producción PROD (ms-notificaciones)")
                 ));
     }
 
