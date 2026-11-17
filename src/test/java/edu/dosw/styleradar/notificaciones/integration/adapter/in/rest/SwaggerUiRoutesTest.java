@@ -37,4 +37,28 @@ class SwaggerUiRoutesTest {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void todosLosEndpointsExpuestosEnOpenApiComienzanConApiV1() throws Exception {
+        String json = mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        com.fasterxml.jackson.databind.JsonNode root = new com.fasterxml.jackson.databind.ObjectMapper().readTree(json);
+        com.fasterxml.jackson.databind.JsonNode paths = root.get("paths");
+        org.assertj.core.api.Assertions.assertThat(paths).isNotNull();
+
+        java.util.Iterator<String> fieldNames = paths.fieldNames();
+        org.assertj.core.api.Assertions.assertThat(fieldNames.hasNext()).isTrue();
+
+        while (fieldNames.hasNext()) {
+            String path = fieldNames.next();
+            org.assertj.core.api.Assertions.assertThat(path)
+                    .as("El path de Swagger/OpenAPI debe comenzar con /api/v1: " + path)
+                    .startsWith("/api/v1/");
+            org.assertj.core.api.Assertions.assertThat(path)
+                    .as("El path no debe contener /me: " + path)
+                    .doesNotContain("/me");
+        }
+    }
 }

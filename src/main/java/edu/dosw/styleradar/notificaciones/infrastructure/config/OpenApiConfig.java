@@ -44,8 +44,8 @@ public class OpenApiConfig {
             if (openApi.getPaths() != null) {
                 Paths filtered = new Paths();
                 openApi.getPaths().forEach((path, pathItem) -> {
-                    // Only display clean canonical English endpoints under /users/{id}/ in Swagger UI
-                    if (path.startsWith("/users/{id}/")
+                    // Only display clean canonical English endpoints under /api/v1/users/{id}/ in Swagger UI
+                    if (path.startsWith("/api/v1/users/{id}/")
                             && !path.contains("alertas")
                             && !path.contains("notificaciones")
                             && !path.contains("preferencias-avisos")
@@ -54,7 +54,7 @@ public class OpenApiConfig {
                             && !path.contains("conteo")
                             && !path.contains("contador")
                             && !path.contains("unread-count")
-                            && !path.startsWith("/users/{id}/preferences")) {
+                            && !path.startsWith("/api/v1/users/{id}/preferences")) {
                         filtered.addPathItem(path, pathItem);
                     }
                 });

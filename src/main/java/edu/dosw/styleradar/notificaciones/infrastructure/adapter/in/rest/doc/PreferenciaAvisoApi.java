@@ -19,7 +19,7 @@ import org.springframework.http.ResponseEntity;
 
 @Tag(
         name = "Notification Preferences",
-        description = "Manage notification delivery channels per notification type under /users/{id}/notification-preferences"
+        description = "Manage notification delivery channels per notification type under /api/v1/users/{id}/notification-preferences"
 )
 @SecurityRequirement(name = "bearerAuth")
 public interface PreferenciaAvisoApi {

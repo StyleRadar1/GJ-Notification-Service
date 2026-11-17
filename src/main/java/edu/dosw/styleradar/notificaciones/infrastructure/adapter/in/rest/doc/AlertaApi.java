@@ -25,7 +25,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Tag(
         name = "Alerts & Notifications",
-        description = "Endpoints under /users/{id} to manage stock alerts, saved searches and real-time notifications (with authorization validation)"
+        description = "Endpoints under /api/v1/users/{id} to manage stock alerts, saved searches and real-time notifications (with authorization validation)"
 )
 @SecurityRequirement(name = "bearerAuth")
 public interface AlertaApi {

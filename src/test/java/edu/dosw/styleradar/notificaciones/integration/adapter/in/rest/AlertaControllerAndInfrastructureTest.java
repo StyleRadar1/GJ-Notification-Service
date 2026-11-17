@@ -487,7 +487,24 @@ class AlertaControllerAndInfrastructureTest {
     void accesoConUsuarioIdExplicitoValidaAutenticacion() throws Exception {
         String token101 = jwtTokenService.generateToken(101L, "user101@styleradar.co", "COMPRADOR");
 
-        // 1. Endpoints canonicos en INGLES con ID propio 101 -> 200 OK
+        // 1. Endpoints canonicos comenzando con /api/v1/users/{id} en INGLES con ID propio 101 -> 200 OK
+        mockMvc.perform(get("/api/v1/users/101/notifications")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/users/101/alerts")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/users/101/notification-preferences")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/users/101/notifications/unread/count")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        // 1.1 Rutas alias directas /users/{id} -> 200 OK
         mockMvc.perform(get("/users/101/notifications")
                         .header("Authorization", "Bearer " + token101))
                 .andExpect(status().isOk());
