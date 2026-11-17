@@ -3,6 +3,8 @@ package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistenc
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.entity.NotificacionJpaEntity;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,9 +18,17 @@ public interface SpringDataNotificacionRepository extends JpaRepository<Notifica
 
     List<NotificacionJpaEntity> findByUsuarioIdAndLeidaOrderByFechaCreacionDesc(Long usuarioId, boolean leida);
 
+    Page<NotificacionJpaEntity> findByUsuarioId(Long usuarioId, Pageable pageable);
+
+    Page<NotificacionJpaEntity> findByUsuarioIdAndLeida(Long usuarioId, boolean leida, Pageable pageable);
+
+    List<NotificacionJpaEntity> findByUsuarioIdAndIdGreaterThanOrderByIdAsc(Long usuarioId, Long id);
+
     long countByUsuarioIdAndLeidaFalse(Long usuarioId);
 
-    boolean existsByAlertaIdAndItemIdAndCicloReposicion(Long alertaId, Long itemId, Integer cicloReposicion);
+    boolean existsByAlertaIdAndItemIdAndCicloReposicion(Long alertaId, String itemId, Integer cicloReposicion);
+
+    boolean existsByEventoIdAndUsuarioId(String eventoId, Long usuarioId);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE NotificacionJpaEntity n SET n.leida = true, n.fechaLectura = :fechaLectura " +

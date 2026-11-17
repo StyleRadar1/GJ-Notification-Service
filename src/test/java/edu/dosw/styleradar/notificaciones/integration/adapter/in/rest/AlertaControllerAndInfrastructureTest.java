@@ -41,8 +41,8 @@ import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.external.Ca
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.external.CatalogoFeignClient;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.external.dto.CatalogoDisponibilidadItemResponse;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.messaging.RabbitMqEventPublisherAdapter;
-import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.security.JwtTokenService;
-import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.sse.SseRealTimeNotificationAdapter;
+import edu.dosw.styleradar.notificaciones.infrastructure.security.JwtTokenService;
+import edu.dosw.styleradar.notificaciones.infrastructure.sse.SseEmitterRegistry;
 import edu.dosw.styleradar.notificaciones.infrastructure.config.RabbitMqConfig;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -92,7 +92,7 @@ class AlertaControllerAndInfrastructureTest {
     private NotificacionesEventsListener eventsListener;
 
     @Autowired
-    private SseRealTimeNotificationAdapter sseAdapter;
+    private SseEmitterRegistry sseRegistry;
 
     @Autowired
     private RabbitMqConfig rabbitMqConfig;
@@ -107,11 +107,11 @@ class AlertaControllerAndInfrastructureTest {
         String tokenUsuario = jwtTokenService.generateToken(501L, "mateo@styleradar.co", "COMPRADOR");
         String tokenOtroUsuario = jwtTokenService.generateToken(999L, "otro@styleradar.co", "COMPRADOR");
 
-        when(catalogoFeignClient.consultarDisponibilidad(1045L))
-                .thenReturn(new CatalogoDisponibilidadItemResponse(1045L, 0, List.of()));
+        when(catalogoFeignClient.consultarDisponibilidad("1045"))
+                .thenReturn(new CatalogoDisponibilidadItemResponse("1045", 0, List.of()));
 
         CrearAlertaRequest crearRequest = new CrearAlertaRequest(
-                TipoAlerta.ITEM_AGOTADO, 1045L, "M", null, CanalNotificacion.IN_APP
+                TipoAlerta.ITEM_AGOTADO, "1045", "M", null, CanalNotificacion.IN_APP
         );
 
         // Act & Assert 1: Sin token retorna 401
@@ -125,7 +125,7 @@ class AlertaControllerAndInfrastructureTest {
                         .content(objectMapper.writeValueAsString(crearRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.usuarioId").value(501))
-                .andExpect(jsonPath("$.itemId").value(1045))
+                .andExpect(jsonPath("$.itemId").value("1045"))
                 .andExpect(jsonPath("$.estado").value("ACTIVA"))
                 .andReturn()
                 .getResponse()
@@ -153,8 +153,8 @@ class AlertaControllerAndInfrastructureTest {
 
         // Act & Assert 6: Simular evento de reposicion de stock por RabbitListener
         eventsListener.onInventarioActualizado(new InventarioActualizadoEventPayload(
-                "evt-1", 1045L, "Chaqueta Bomber", "CHAQUETAS", "NEGRO", "M",
-                "BogotaStreet", "STREETWEAR", new BigDecimal("180000"), 0, 5, 1, 10L, "CHAPINERO", LocalDateTime.now()
+                "evt-1", "1045", "Chaqueta Bomber", "CHAQUETAS", "NEGRO", "M",
+                "BogotaStreet", "STREETWEAR", new BigDecimal("180000"), 0, 5, 1, "10", "CHAPINERO", LocalDateTime.now()
         ));
 
         // Act & Assert 7: Verificar contador de no leidas y listado
@@ -166,7 +166,7 @@ class AlertaControllerAndInfrastructureTest {
         String notifListJson = mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?soloNoLeidas=true")
                         .header("Authorization", "Bearer " + tokenUsuario))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].itemId").value(1045))
+                .andExpect(jsonPath("$[0].itemId").value("1045"))
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
@@ -216,11 +216,11 @@ class AlertaControllerAndInfrastructureTest {
                 .andExpect(status().isBadRequest());
 
         // 422 cuando el item tiene stock disponible en catalogo
-        when(catalogoFeignClient.consultarDisponibilidad(2000L))
-                .thenReturn(new CatalogoDisponibilidadItemResponse(2000L, 4, List.of("M", "L")));
+        when(catalogoFeignClient.consultarDisponibilidad("2000"))
+                .thenReturn(new CatalogoDisponibilidadItemResponse("2000", 4, List.of("M", "L")));
 
         CrearAlertaRequest conStock = new CrearAlertaRequest(
-                TipoAlerta.ITEM_AGOTADO, 2000L, "M", null, CanalNotificacion.IN_APP
+                TipoAlerta.ITEM_AGOTADO, "2000", "M", null, CanalNotificacion.IN_APP
         );
         mockMvc.perform(post("/api/v1/usuarios/me/alertas")
                         .header("Authorization", "Bearer " + token)
@@ -247,12 +247,12 @@ class AlertaControllerAndInfrastructureTest {
         BusquedaGuardadaCopia copia = busquedaGuardadaCopiaRepositoryPort.buscarPorId(400L).orElseThrow();
         assertThat(copia.isActiva()).isTrue();
 
-        SseEmitter emitter = sseAdapter.registrarSuscripcion(601L);
-        assertThat(sseAdapter.contarSuscripcionesActivas(601L)).isEqualTo(1);
+        SseEmitter emitter = sseRegistry.registrar(601L);
+        assertThat(sseRegistry.contarSuscripcionesActivas(601L)).isEqualTo(1);
 
         eventsListener.onPrendaPublicada(new PrendaPublicadaEventPayload(
-                "evt-pub-1", 3001L, "Blazer Lino Sastre", "SASTRERIA", "BEIGE", List.of("M"),
-                "Atelier", "SASTRE", new BigDecimal("320000"), 3, 7L, "USAQUEN", LocalDateTime.now()
+                "evt-pub-1", "3001", "Blazer Lino Sastre", "SASTRERIA", "BEIGE", List.of("M"),
+                "Atelier", "SASTRE", new BigDecimal("320000"), 3, "7", "USAQUEN", LocalDateTime.now()
         ));
 
         // Mensajes, donaciones y moderacion
@@ -263,7 +263,7 @@ class AlertaControllerAndInfrastructureTest {
                 "evt-don-1", 80L, 601L, "Fundacion Moda Circular", "APROBADA", "Cumple requisitos", LocalDateTime.now()
         ));
         eventsListener.onModeracionPrendaCambiada(new ModeracionPrendaCambiadaEventPayload(
-                "evt-mod-1", 3001L, 601L, "Blazer Lino", "RETIRADA", "Imagen borrosa", LocalDateTime.now()
+                "evt-mod-1", "3001", 601L, "Blazer Lino", "RETIRADA", "Imagen borrosa", LocalDateTime.now()
         ));
         eventsListener.onUsuarioEstadoCambiado(new UsuarioEstadoCambiadoEventPayload(
                 "evt-usr-1", 601L, "antonia@sr.co", "ACTIVO", LocalDateTime.now()
@@ -302,19 +302,19 @@ class AlertaControllerAndInfrastructureTest {
     void debeVerificarAdaptadoresDeSalidaYConfiguracion() {
         // 1. Idempotencia en NotificacionRepositoryAdapter ante clave unica (alerta_id, item_id, ciclo_reposicion)
         Notificacion n1 = new Notificacion(
-                null, 701L, 55L, 1045L, 3, TipoNotificacion.REPOSICION_STOCK,
+                null, 701L, 55L, "1045", 3, TipoNotificacion.REPOSICION_STOCK,
                 CanalNotificacion.IN_APP, "T1", "M1", "/1", false, LocalDateTime.now(), null
         );
         Notificacion guardada1 = notificacionRepositoryPort.guardar(n1);
         assertThat(guardada1.getId()).isNotNull();
 
         Notificacion duplicada = new Notificacion(
-                null, 701L, 55L, 1045L, 3, TipoNotificacion.REPOSICION_STOCK,
+                null, 701L, 55L, "1045", 3, TipoNotificacion.REPOSICION_STOCK,
                 CanalNotificacion.IN_APP, "T1", "M1", "/1", false, LocalDateTime.now(), null
         );
         Notificacion resultadoDuplicado = notificacionRepositoryPort.guardar(duplicada);
         assertThat(resultadoDuplicado).isNotNull();
-        assertThat(notificacionRepositoryPort.existePorAlertaItemYCiclo(55L, 1045L, 3)).isTrue();
+        assertThat(notificacionRepositoryPort.existePorAlertaItemYCiclo(55L, "1045", 3)).isTrue();
 
         // 2. BusquedaGuardadaCopia eliminar y EstadoCuentaCopia
         BusquedaGuardadaCopia copia = new BusquedaGuardadaCopia(
@@ -330,7 +330,7 @@ class AlertaControllerAndInfrastructureTest {
         RabbitTemplate mockRabbit = mock(RabbitTemplate.class);
         RabbitMqEventPublisherAdapter publisher = new RabbitMqEventPublisherAdapter(mockRabbit);
         AlertaCreadaDomainEvent evt = new AlertaCreadaDomainEvent(
-                "id-1", 1L, 701L, TipoAlerta.ITEM_AGOTADO, 1045L, null, CanalNotificacion.IN_APP, LocalDateTime.now()
+                "id-1", 1L, 701L, TipoAlerta.ITEM_AGOTADO, "1045", null, CanalNotificacion.IN_APP, LocalDateTime.now()
         );
         publisher.publicarAlertaCreada(evt);
         verify(mockRabbit).convertAndSend(any(), any(), any(AlertaCreadaDomainEvent.class));
@@ -339,7 +339,7 @@ class AlertaControllerAndInfrastructureTest {
         CatalogoFeignClient failingFeign = mock(CatalogoFeignClient.class);
         when(failingFeign.consultarDisponibilidad(any())).thenThrow(new RuntimeException("Connection refused"));
         CatalogoClientAdapter clientAdapter = new CatalogoClientAdapter(failingFeign);
-        assertThatThrownBy(() -> clientAdapter.verificarItemAgotado(1045L, "M"))
+        assertThatThrownBy(() -> clientAdapter.verificarItemAgotado("1045", "M"))
                 .isInstanceOf(ServicioExternoNoDisponibleException.class);
 
         // 5. Verificar beans de RabbitMqConfig
@@ -354,5 +354,213 @@ class AlertaControllerAndInfrastructureTest {
         assertThat(rabbitMqConfig.donationChangedQueue()).isNotNull();
         assertThat(rabbitMqConfig.moderationChangedQueue()).isNotNull();
         assertThat(rabbitMqConfig.jackson2JsonMessageConverter()).isNotNull();
+    }
+
+    private static final long USUARIO_PAGINAS = 7_801L;
+
+    private void sembrarDoceNotificaciones() {
+        LocalDateTime base = LocalDateTime.of(2026, 11, 14, 8, 0);
+        for (int i = 0; i < 12; i++) {
+            // las de indice 0, 3, 6 y 9 estan leidas; la mas reciente es la 11
+            notificacionRepositoryPort.guardar(new Notificacion(
+                    null, USUARIO_PAGINAS, null, null, null, TipoNotificacion.MENSAJE_NUEVO, CanalNotificacion.IN_APP,
+                    "Aviso " + i, "Mensaje " + i, "/chat/conversaciones/" + i, i % 3 == 0,
+                    base.plusMinutes(i), null));
+        }
+        notificacionRepositoryPort.guardar(new Notificacion(
+                null, 7_802L, null, null, null, TipoNotificacion.MENSAJE_NUEVO, CanalNotificacion.IN_APP,
+                "De otro usuario", "No debe aparecer", null, false, base, null));
+    }
+
+    @Test
+    @DisplayName("GJ-118 - La bandeja pagina con page y size y devuelve los metadatos de la pagina")
+    void bandejaPaginaConMetadatos() throws Exception {
+        sembrarDoceNotificaciones();
+        String token = jwtTokenService.generateToken(USUARIO_PAGINAS, "pag@styleradar.co", "COMPRADOR");
+
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=0&size=5")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(5))
+                .andExpect(jsonPath("$.content[0].titulo").value("Aviso 11"))
+                .andExpect(jsonPath("$.content[4].titulo").value("Aviso 7"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(12))
+                .andExpect(jsonPath("$.totalPages").value(3))
+                .andExpect(jsonPath("$.hasNext").value(true))
+                .andExpect(jsonPath("$.hasPrevious").value(false));
+
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=2&size=5")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[1].titulo").value("Aviso 0"))
+                .andExpect(jsonPath("$.hasNext").value(false))
+                .andExpect(jsonPath("$.hasPrevious").value(true));
+
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=9&size=5")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(12))
+                .andExpect(jsonPath("$.hasNext").value(false));
+
+        // Con solo page, el tamano por defecto es 20
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=0")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.content.length()").value(12))
+                .andExpect(jsonPath("$.totalPages").value(1));
+    }
+
+    @Test
+    @DisplayName("GJ-118 - El filtro de leidas sigue funcionando junto con la paginacion y sin ella")
+    void bandejaFiltraPorLeidaYMantieneLaListaCompleta() throws Exception {
+        sembrarDoceNotificaciones();
+        String token = jwtTokenService.generateToken(USUARIO_PAGINAS, "pag@styleradar.co", "COMPRADOR");
+
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?leida=false&size=5")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(8))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.content[0].leida").value(false));
+
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?leida=true")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(4))
+                .andExpect(jsonPath("$.content[0].leida").value(true));
+
+        // soloNoLeidas=true con paginacion equivale a leida=false
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?soloNoLeidas=true&page=0&size=20")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(8));
+
+        // Sin page, size ni leida: la lista completa de siempre (un arreglo), solo del usuario
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(12));
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?soloNoLeidas=true")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(8));
+    }
+
+    @Test
+    @DisplayName("GJ-118 - Un size mayor que 100, un size menor que 1 o un page negativo responden 400, y sin JWT 401")
+    void bandejaRechazaParametrosDePaginaInvalidos() throws Exception {
+        String token = jwtTokenService.generateToken(USUARIO_PAGINAS, "pag@styleradar.co", "COMPRADOR");
+
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?size=101")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.detail").value("size no puede superar 100"));
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?size=0")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("size debe ser al menos 1"));
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=-1")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("page debe ser 0 o mayor"));
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=abc")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+        // El limite exacto es valido
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?size=100")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(100));
+        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=0&size=5"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Path con /users/{id} explicito: responde 200 cuando coincide con el token JWT y 403 cuando no coincide (en ingles y espanol)")
+    void accesoConUsuarioIdExplicitoValidaAutenticacion() throws Exception {
+        String token101 = jwtTokenService.generateToken(101L, "user101@styleradar.co", "COMPRADOR");
+
+        // 1. Endpoints canonicos comenzando con /api/v1/users/{id} en INGLES con ID propio 101 -> 200 OK
+        mockMvc.perform(get("/api/v1/users/101/notifications")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/users/101/alerts")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/users/101/notification-preferences")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/users/101/notifications/unread/count")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        // 1.1 Rutas alias directas /users/{id} -> 200 OK
+        mockMvc.perform(get("/users/101/notifications")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/101/alerts")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/101/notification-preferences")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/101/notifications/unread/count")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        // 2. Compatibilidad con endpoints en espanol con ID propio 101 -> 200 OK
+        mockMvc.perform(get("/users/101/notificaciones")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/users/101/alertas")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/101/preferencias-avisos")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isOk());
+
+        // 3. Intento de acceder a endpoints en ingles de otro usuario (202) -> 403 Forbidden
+        mockMvc.perform(get("/users/202/notifications")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.detail").value("No tienes autorizacion para acceder o modificar los recursos del usuario 202"));
+
+        mockMvc.perform(get("/users/202/alerts")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+
+        mockMvc.perform(get("/users/202/notification-preferences")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+
+        // 4. Intento de acceder a /users/{id}/notificaciones de otro usuario (202) -> 403 Forbidden
+        mockMvc.perform(get("/users/202/notificaciones")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+
+        // 5. Intento de acceder a /api/v1/users/{id}/alertas de otro usuario (202) -> 403 Forbidden
+        mockMvc.perform(get("/api/v1/users/202/alertas")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
     }
 }

@@ -6,7 +6,7 @@ import java.util.List;
 
 public record PrendaPublicadaEventPayload(
         String eventoId,
-        Long itemId,
+        String itemId,
         String nombrePrenda,
         String categoria,
         String color,
@@ -15,7 +15,7 @@ public record PrendaPublicadaEventPayload(
         String estilo,
         BigDecimal precio,
         Integer stockTotal,
-        Long tiendaId,
+        String tiendaId,
         String localidad,
         LocalDateTime fechaPublicacion
 ) {

@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public record DatosPrendaVO(
-        Long itemId,
+        String itemId,
         String nombrePrenda,
         String categoria,
         String color,
@@ -14,7 +14,7 @@ public record DatosPrendaVO(
         BigDecimal precio,
         Integer stockDisponible,
         Integer cicloReposicion,
-        Long tiendaId,
+        String tiendaId,
         String localidad
 ) {
 }

@@ -38,7 +38,7 @@ import org.springframework.test.context.ActiveProfiles;
 class NotificacionesConcurrenciaTest {
 
     private static final long USUARIO_ID = 8801L;
-    private static final long ITEM_ID = 88001L;
+    private static final String ITEM_ID = "88001";
 
     @Autowired
     private ProcesarEventosExternosUseCase procesarEventosExternosUseCase;
@@ -130,7 +130,7 @@ class NotificacionesConcurrenciaTest {
 
     private DatosPrendaVO prendaConCiclo(int ciclo) {
         return new DatosPrendaVO(ITEM_ID, "Chaqueta Bomber", "CHAQUETAS", "NEGRO", List.of("M"),
-                "BogotaStreet", "STREETWEAR", new BigDecimal("185000"), 8, ciclo, 12L, "CHAPINERO");
+                "BogotaStreet", "STREETWEAR", new BigDecimal("185000"), 8, ciclo, "12", "CHAPINERO");
     }
 
     private int contarNotificaciones(Long alertaId, int ciclo) {

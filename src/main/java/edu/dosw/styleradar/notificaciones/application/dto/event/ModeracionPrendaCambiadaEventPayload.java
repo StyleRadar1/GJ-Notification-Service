@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record ModeracionPrendaCambiadaEventPayload(
         String eventoId,
-        Long itemId,
+        String itemId,
         Long propietarioUsuarioId,
         String nombrePrenda,
         String estadoModeracion,

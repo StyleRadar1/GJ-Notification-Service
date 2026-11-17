@@ -2,18 +2,26 @@ package edu.dosw.styleradar.notificaciones.unit.infrastructure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import edu.dosw.styleradar.notificaciones.application.dto.event.FundacionDesactivadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.InventarioActualizadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaRetiradaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.UsuarioEstadoCambiadoEventPayload;
 import edu.dosw.styleradar.notificaciones.domain.model.DatosPrendaVO;
+import edu.dosw.styleradar.notificaciones.domain.model.TipoNotificacion;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ProcesarEventosExternosUseCase;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.in.amqp.NotificacionesEventsListener;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +46,7 @@ class NotificacionesEventsListenerTest {
 
         ArgumentCaptor<DatosPrendaVO> captor = ArgumentCaptor.forClass(DatosPrendaVO.class);
         verify(useCase).procesarDisponibilidadPrenda(captor.capture());
-        assertThat(captor.getValue().itemId()).isEqualTo(1045L);
+        assertThat(captor.getValue().itemId()).isEqualTo("1045");
         assertThat(captor.getValue().stockDisponible()).isEqualTo(8);
         assertThat(captor.getValue().cicloReposicion()).isEqualTo(2);
     }
@@ -60,12 +68,38 @@ class NotificacionesEventsListenerTest {
     }
 
     @Test
-    @DisplayName("NOT-06 - Un evento sin stock anterior es invalido y va directo a la cola de errores")
-    void eventoSinStockAnteriorEsInvalido() {
-        assertThatThrownBy(() -> listener.onInventarioActualizado(inventario(null, 8, 2)))
+    @DisplayName("NOT-06 / RES-133 - Un evento sin stock anterior se procesa como reposicion si stockActual > 0")
+    void eventoSinStockAnteriorSeProcesaSiStockActualEsMayorACero() {
+        listener.onInventarioActualizado(inventario(null, 8, 2));
+
+        ArgumentCaptor<DatosPrendaVO> captor = ArgumentCaptor.forClass(DatosPrendaVO.class);
+        verify(useCase).procesarDisponibilidadPrenda(captor.capture());
+        assertThat(captor.getValue().itemId()).isEqualTo("1045");
+        assertThat(captor.getValue().stockDisponible()).isEqualTo(8);
+    }
+
+    @Test
+    @DisplayName("NOT-06 - Un evento sin stock actual es invalido y va directo a la cola de errores")
+    void eventoSinStockActualEsInvalido() {
+        assertThatThrownBy(() -> listener.onInventarioActualizado(inventario(0, null, 2)))
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
 
         verifyNoInteractions(useCase);
+    }
+
+    @Test
+    @DisplayName("NOT-06 - Un evento con itemId UUID se procesa correctamente")
+    void eventoConItemIdUuidSeProcesaCorrectamente() {
+        String uuid = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        InventarioActualizadoEventPayload payload = new InventarioActualizadoEventPayload(
+                "evt-inv-uuid", uuid, "Camisa Lino", "CAMISAS", "BLANCO", "L", "BogotaStreet", "SASTRE",
+                new BigDecimal("120000"), 0, 4, 1, "15", "USAQUEN", LocalDateTime.now());
+
+        listener.onInventarioActualizado(payload);
+
+        ArgumentCaptor<DatosPrendaVO> captor = ArgumentCaptor.forClass(DatosPrendaVO.class);
+        verify(useCase).procesarDisponibilidadPrenda(captor.capture());
+        assertThat(captor.getValue().itemId()).isEqualTo(uuid);
     }
 
     @Test
@@ -83,15 +117,15 @@ class NotificacionesEventsListenerTest {
     @Test
     @DisplayName("NOT-08 - Una prenda retirada desactiva las alertas del item")
     void prendaRetiradaDesactivaLasAlertasDelItem() {
-        listener.onPrendaRetirada(new PrendaRetiradaEventPayload("evt-cat-1", 55L, "Retirada por la tienda", LocalDateTime.now()));
+        listener.onPrendaRetirada(new PrendaRetiradaEventPayload("evt-cat-1", "55", "Retirada por la tienda", LocalDateTime.now()));
 
-        verify(useCase).desactivarAlertasPorItemEliminado(55L);
+        verify(useCase).desactivarAlertasPorItemEliminado("55");
     }
 
     @Test
     @DisplayName("NOT-08 - Un evento de prenda retirada sin item es invalido y va directo a la cola de errores")
     void prendaRetiradaSinItemEsInvalida() {
-        assertThatThrownBy(() -> listener.onPrendaRetirada(new PrendaRetiradaEventPayload("evt-cat-2", null, null, null)))
+        assertThatThrownBy(() -> listener.onPrendaRetirada(new PrendaRetiradaEventPayload("evt-cat-2", (String) null, null, null)))
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
         assertThatThrownBy(() -> listener.onPrendaRetirada(null))
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
@@ -99,9 +133,71 @@ class NotificacionesEventsListenerTest {
         verifyNoInteractions(useCase);
     }
 
+    @Test
+    @DisplayName("GJ-117 - Una fundacion desactivada avisa a cada donante afectado, con su motivo y la clave del evento")
+    void fundacionDesactivadaAvisaACadaDonante() {
+        listener.onFundacionDesactivada(new FundacionDesactivadaEventPayload(
+                "evt-fun-1", 7L, "Fundacion Sol", List.of(101L, 102L), "cerro sus operaciones", LocalDateTime.now()));
+
+        verify(useCase).generarNotificacionDirecta(eq(101L), eq(TipoNotificacion.CAMBIO_DONACION),
+                eq("Fundacion desactivada"),
+                eq("La fundacion Fundacion Sol ha sido desactivada: cerro sus operaciones"),
+                eq("/donaciones"), eq(null), eq("evt-fun-1"));
+        verify(useCase).generarNotificacionDirecta(eq(102L), eq(TipoNotificacion.CAMBIO_DONACION),
+                eq("Fundacion desactivada"), any(), eq("/donaciones"), eq(null), eq("evt-fun-1"));
+    }
+
+    @Test
+    @DisplayName("GJ-117 - Sin motivo ni nombre el mensaje queda completo y sin dos puntos sobrantes")
+    void fundacionDesactivadaSinMotivoNiNombre() {
+        listener.onFundacionDesactivada(new FundacionDesactivadaEventPayload(
+                "evt-fun-2", 7L, null, List.of(101L), " ", null));
+
+        verify(useCase).generarNotificacionDirecta(eq(101L), eq(TipoNotificacion.CAMBIO_DONACION),
+                eq("Fundacion desactivada"), eq("La fundacion una fundacion aliada ha sido desactivada"),
+                eq("/donaciones"), eq(null), eq("evt-fun-2"));
+    }
+
+    @Test
+    @DisplayName("GJ-117 - Sin donantes afectados no hay a quien avisar y el evento termina sin error")
+    void fundacionDesactivadaSinDonantesTerminaLimpio() {
+        listener.onFundacionDesactivada(new FundacionDesactivadaEventPayload("evt-fun-3", 7L, "X", null, null, null));
+        listener.onFundacionDesactivada(new FundacionDesactivadaEventPayload("evt-fun-4", 7L, "X", List.of(), null, null));
+
+        verifyNoInteractions(useCase);
+    }
+
+    @Test
+    @DisplayName("GJ-117 - Un donante nulo dentro de la lista se omite")
+    void fundacionDesactivadaOmiteDonantesNulos() {
+        listener.onFundacionDesactivada(new FundacionDesactivadaEventPayload(
+                "evt-fun-5", 7L, "X", Arrays.asList(null, 105L), null, null));
+
+        verify(useCase, times(1)).generarNotificacionDirecta(any(), any(), any(), any(), any(), any(), any());
+        verify(useCase).generarNotificacionDirecta(eq(105L), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("GJ-117 - Sin fundacionId, sin eventoId o sin payload el evento va a la cola de errores")
+    void fundacionDesactivadaInvalidaVaALaDlq() {
+        assertThatThrownBy(() -> listener.onFundacionDesactivada(new FundacionDesactivadaEventPayload(
+                "evt-fun-6", null, "X", List.of(1L), null, null)))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+        assertThatThrownBy(() -> listener.onFundacionDesactivada(new FundacionDesactivadaEventPayload(
+                null, 7L, "X", List.of(1L), null, null)))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+        assertThatThrownBy(() -> listener.onFundacionDesactivada(new FundacionDesactivadaEventPayload(
+                "  ", 7L, "X", List.of(1L), null, null)))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+        assertThatThrownBy(() -> listener.onFundacionDesactivada(null))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+
+        verify(useCase, never()).generarNotificacionDirecta(any(), any(), any(), any(), any(), any(), any());
+    }
+
     private InventarioActualizadoEventPayload inventario(Integer anterior, Integer actual, Integer ciclo) {
         return new InventarioActualizadoEventPayload(
-                "evt-inv-1", 1045L, "Chaqueta Bomber", "CHAQUETAS", "NEGRO", "M", "BogotaStreet", "STREETWEAR",
-                new BigDecimal("185000"), anterior, actual, ciclo, 12L, "CHAPINERO", LocalDateTime.now());
+                "evt-inv-1", "1045", "Chaqueta Bomber", "CHAQUETAS", "NEGRO", "M", "BogotaStreet", "STREETWEAR",
+                new BigDecimal("185000"), anterior, actual, ciclo, "12", "CHAPINERO", LocalDateTime.now());
     }
 }

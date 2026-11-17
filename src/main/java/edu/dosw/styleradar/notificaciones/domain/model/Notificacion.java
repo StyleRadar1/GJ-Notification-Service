@@ -7,7 +7,7 @@ public class Notificacion {
     private Long id;
     private Long usuarioId;
     private Long alertaId;
-    private Long itemId;
+    private String itemId;
     private Integer cicloReposicion;
     private TipoNotificacion tipo;
     private CanalNotificacion canal;
@@ -17,6 +17,8 @@ public class Notificacion {
     private boolean leida;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaLectura;
+    /** Evento externo que origino la notificacion; permite descartar entregas repetidas. Puede ser nulo. */
+    private String eventoId;
 
     public Notificacion() {
     }
@@ -25,7 +27,7 @@ public class Notificacion {
             Long id,
             Long usuarioId,
             Long alertaId,
-            Long itemId,
+            String itemId,
             Integer cicloReposicion,
             TipoNotificacion tipo,
             CanalNotificacion canal,
@@ -82,12 +84,16 @@ public class Notificacion {
         this.alertaId = alertaId;
     }
 
-    public Long getItemId() {
+    public String getItemId() {
         return itemId;
     }
 
-    public void setItemId(Long itemId) {
+    public void setItemId(String itemId) {
         this.itemId = itemId;
+    }
+
+    public void setItemId(Long itemId) {
+        this.itemId = itemId != null ? itemId.toString() : null;
     }
 
     public Integer getCicloReposicion() {
@@ -160,5 +166,13 @@ public class Notificacion {
 
     public void setFechaLectura(LocalDateTime fechaLectura) {
         this.fechaLectura = fechaLectura;
+    }
+
+    public String getEventoId() {
+        return eventoId;
+    }
+
+    public void setEventoId(String eventoId) {
+        this.eventoId = eventoId;
     }
 }

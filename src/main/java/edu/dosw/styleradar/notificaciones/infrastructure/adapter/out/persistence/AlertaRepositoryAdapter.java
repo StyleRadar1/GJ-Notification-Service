@@ -1,6 +1,6 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence;
 
-import edu.dosw.styleradar.notificaciones.application.mapper.out.AlertaEntityMapper;
+import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.mapper.AlertaEntityMapper;
 import edu.dosw.styleradar.notificaciones.domain.model.Alerta;
 import edu.dosw.styleradar.notificaciones.domain.model.EstadoAlerta;
 import edu.dosw.styleradar.notificaciones.domain.model.TipoAlerta;
@@ -46,7 +46,7 @@ public class AlertaRepositoryAdapter implements AlertaRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Alerta> listarActivasPorItem(Long itemId) {
+    public List<Alerta> listarActivasPorItem(String itemId) {
         return repository.findByItemIdAndEstado(itemId, EstadoAlerta.ACTIVA)
                 .stream()
                 .map(mapper::toDomain)
@@ -73,7 +73,7 @@ public class AlertaRepositoryAdapter implements AlertaRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existeActivaParaItem(Long usuarioId, Long itemId, String tallaObjetivo) {
+    public boolean existeActivaParaItem(Long usuarioId, String itemId, String tallaObjetivo) {
         if (tallaObjetivo == null || tallaObjetivo.isBlank()) {
             return repository.existsByUsuarioIdAndItemIdAndEstado(usuarioId, itemId, EstadoAlerta.ACTIVA);
         }
@@ -90,7 +90,7 @@ public class AlertaRepositoryAdapter implements AlertaRepositoryPort {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int desactivarPorItem(Long itemId) {
+    public int desactivarPorItem(String itemId) {
         return repository.actualizarEstadoPorItem(
                 itemId, EstadoAlerta.ACTIVA, EstadoAlerta.DESACTIVADA, LocalDateTime.now());
     }

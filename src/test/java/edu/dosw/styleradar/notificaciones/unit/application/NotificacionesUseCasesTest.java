@@ -98,7 +98,8 @@ class NotificacionesUseCasesTest {
                 busquedaGuardadaCopiaRepositoryPort,
                 estadoCuentaCopiaRepositoryPort,
                 realTimeNotificationPort,
-                matcher
+                matcher,
+                org.mockito.Mockito.mock(edu.dosw.styleradar.notificaciones.domain.port.in.EnviarAvisoPorCorreoUseCase.class)
         );
     }
 
@@ -106,10 +107,10 @@ class NotificacionesUseCasesTest {
     @DisplayName("NOT-03, NOT-10 y NOT-16 - Debe crear alerta de item agotado y publicar evento AlertaCreada")
     void debeCrearAlertaItemAgotadoYPublicarEvento() {
         // Arrange
-        Alerta nueva = new Alerta(null, 501L, TipoAlerta.ITEM_AGOTADO, 1045L, "M", null, null, null, null, null);
+        Alerta nueva = new Alerta(null, 501L, TipoAlerta.ITEM_AGOTADO, "1045", "M", null, null, null, null, null);
         when(estadoCuentaCopiaRepositoryPort.buscarPorUsuarioId(501L)).thenReturn(Optional.empty());
-        when(alertaRepositoryPort.existeActivaParaItem(501L, 1045L, "M")).thenReturn(false);
-        when(catalogoClientPort.verificarItemAgotado(1045L, "M")).thenReturn(true);
+        when(alertaRepositoryPort.existeActivaParaItem(501L, "1045", "M")).thenReturn(false);
+        when(catalogoClientPort.verificarItemAgotado("1045", "M")).thenReturn(true);
         when(alertaRepositoryPort.guardar(any(Alerta.class))).thenAnswer(inv -> {
             Alerta arg = inv.getArgument(0);
             arg.setId(77L);
@@ -130,7 +131,7 @@ class NotificacionesUseCasesTest {
     @DisplayName("NOT-03 y NOT-08 - Debe crear alerta de busqueda guardada activa")
     void debeCrearAlertaBusquedaGuardada() {
         // Arrange
-        Alerta nueva = new Alerta(null, 501L, TipoAlerta.BUSQUEDA_GUARDADA, null, null, 300L, CanalNotificacion.EMAIL, null, null, null);
+        Alerta nueva = new Alerta(null, 501L, TipoAlerta.BUSQUEDA_GUARDADA, (String) null, null, 300L, CanalNotificacion.EMAIL, null, null, null);
         BusquedaGuardadaCopia copia = new BusquedaGuardadaCopia(300L, 501L, "Chaquetas", null, true, LocalDateTime.now());
         when(estadoCuentaCopiaRepositoryPort.buscarPorUsuarioId(501L)).thenReturn(Optional.empty());
         when(busquedaGuardadaCopiaRepositoryPort.buscarPorId(300L)).thenReturn(Optional.of(copia));
@@ -153,16 +154,16 @@ class NotificacionesUseCasesTest {
     @DisplayName("NOT-10 - Debe rechazar alerta si el item tiene stock disponible en catalogo o si ya existe alerta activa")
     void debeRechazarItemConStockODuplicado() {
         // Arrange
-        Alerta nueva = new Alerta(null, 501L, TipoAlerta.ITEM_AGOTADO, 1045L, "M", null, null, null, null, null);
+        Alerta nueva = new Alerta(null, 501L, TipoAlerta.ITEM_AGOTADO, "1045", "M", null, null, null, null, null);
         when(estadoCuentaCopiaRepositoryPort.buscarPorUsuarioId(501L)).thenReturn(Optional.empty());
-        when(alertaRepositoryPort.existeActivaParaItem(501L, 1045L, "M")).thenReturn(false);
-        when(catalogoClientPort.verificarItemAgotado(1045L, "M")).thenReturn(false);
+        when(alertaRepositoryPort.existeActivaParaItem(501L, "1045", "M")).thenReturn(false);
+        when(catalogoClientPort.verificarItemAgotado("1045", "M")).thenReturn(false);
 
         // Act & Assert
         assertThatThrownBy(() -> crearAlertaUseCase.crearAlerta(nueva))
                 .isInstanceOf(ReglaDeNegocioException.class);
 
-        when(alertaRepositoryPort.existeActivaParaItem(501L, 1045L, "M")).thenReturn(true);
+        when(alertaRepositoryPort.existeActivaParaItem(501L, "1045", "M")).thenReturn(true);
         assertThatThrownBy(() -> crearAlertaUseCase.crearAlerta(nueva))
                 .isInstanceOf(ConflictoException.class);
         verify(alertaRepositoryPort, never()).guardar(any());
@@ -172,7 +173,7 @@ class NotificacionesUseCasesTest {
     @DisplayName("NOT-03 - Debe listar y desactivar alertas validando propiedad del usuario")
     void debeListarYDesactivarAlertas() {
         // Arrange
-        Alerta existente = new Alerta(10L, 501L, TipoAlerta.ITEM_AGOTADO, 1045L, "M", null,
+        Alerta existente = new Alerta(10L, 501L, TipoAlerta.ITEM_AGOTADO, "1045", "M", null,
                 CanalNotificacion.IN_APP, EstadoAlerta.ACTIVA, LocalDateTime.now(), LocalDateTime.now());
         when(alertaRepositoryPort.listarPorUsuario(501L)).thenReturn(List.of(existente));
         when(alertaRepositoryPort.buscarPorId(10L)).thenReturn(Optional.of(existente));
@@ -197,7 +198,7 @@ class NotificacionesUseCasesTest {
     @DisplayName("NOT-13 - Debe listar notificaciones, contar no leidas y marcar individual o todas como leidas")
     void debeGestionarLecturaDeNotificaciones() {
         // Arrange
-        Notificacion notif = new Notificacion(5L, 501L, 10L, 1045L, 1, TipoNotificacion.REPOSICION_STOCK,
+        Notificacion notif = new Notificacion(5L, 501L, 10L, "1045", 1, TipoNotificacion.REPOSICION_STOCK,
                 CanalNotificacion.IN_APP, "Titulo", "Mensaje", "/catalogo/prendas/1045", false, LocalDateTime.now(), null);
         when(notificacionRepositoryPort.listarPorUsuario(501L, true)).thenReturn(List.of(notif));
         when(notificacionRepositoryPort.contarNoLeidasPorUsuario(501L)).thenReturn(3L);
@@ -229,14 +230,14 @@ class NotificacionesUseCasesTest {
     void debeProcesarDisponibilidadPrendaConIdempotenciaYEstadoCuenta() {
         // Arrange
         DatosPrendaVO prenda = new DatosPrendaVO(
-                1045L, "Chaqueta Bomber", "CHAQUETAS", "NEGRO", List.of("M"),
-                "BogotaStreet", "STREETWEAR", new BigDecimal("180000"), 5, 2, 12L, "CHAPINERO"
+                "1045", "Chaqueta Bomber", "CHAQUETAS", "NEGRO", List.of("M"),
+                "BogotaStreet", "STREETWEAR", new BigDecimal("180000"), 5, 2, "12", "CHAPINERO"
         );
-        Alerta alertaItem = new Alerta(1L, 501L, TipoAlerta.ITEM_AGOTADO, 1045L, "M", null,
+        Alerta alertaItem = new Alerta(1L, 501L, TipoAlerta.ITEM_AGOTADO, "1045", "M", null,
                 CanalNotificacion.IN_APP, EstadoAlerta.ACTIVA, LocalDateTime.now(), LocalDateTime.now());
-        Alerta alertaInactivo = new Alerta(2L, 502L, TipoAlerta.ITEM_AGOTADO, 1045L, "M", null,
+        Alerta alertaInactivo = new Alerta(2L, 502L, TipoAlerta.ITEM_AGOTADO, "1045", "M", null,
                 CanalNotificacion.IN_APP, EstadoAlerta.ACTIVA, LocalDateTime.now(), LocalDateTime.now());
-        Alerta alertaBusqueda = new Alerta(3L, 503L, TipoAlerta.BUSQUEDA_GUARDADA, null, null, 300L,
+        Alerta alertaBusqueda = new Alerta(3L, 503L, TipoAlerta.BUSQUEDA_GUARDADA, (String) null, null, 300L,
                 CanalNotificacion.IN_APP, EstadoAlerta.ACTIVA, LocalDateTime.now(), LocalDateTime.now());
 
         CriterioBusquedaVO criterios = new CriterioBusquedaVO(
@@ -244,7 +245,7 @@ class NotificacionesUseCasesTest {
         );
         BusquedaGuardadaCopia copia = new BusquedaGuardadaCopia(300L, 503L, "Mis Chaquetas", criterios, true, LocalDateTime.now());
 
-        when(alertaRepositoryPort.listarActivasPorItem(1045L)).thenReturn(List.of(alertaItem, alertaInactivo));
+        when(alertaRepositoryPort.listarActivasPorItem("1045")).thenReturn(List.of(alertaItem, alertaInactivo));
         when(alertaRepositoryPort.listarActivasPorTipo(TipoAlerta.BUSQUEDA_GUARDADA)).thenReturn(List.of(alertaBusqueda));
         when(busquedaGuardadaCopiaRepositoryPort.buscarPorId(300L)).thenReturn(Optional.of(copia));
 
@@ -254,8 +255,8 @@ class NotificacionesUseCasesTest {
                 .thenReturn(Optional.of(new EstadoCuentaCopia(502L, "u2@sr.co", EstadoCuenta.INACTIVO, LocalDateTime.now())));
         when(estadoCuentaCopiaRepositoryPort.buscarPorUsuarioId(503L)).thenReturn(Optional.empty());
 
-        when(notificacionRepositoryPort.existePorAlertaItemYCiclo(1L, 1045L, 2)).thenReturn(false);
-        when(notificacionRepositoryPort.existePorAlertaItemYCiclo(3L, 1045L, 2)).thenReturn(false);
+        when(notificacionRepositoryPort.existePorAlertaItemYCiclo(1L, "1045", 2)).thenReturn(false);
+        when(notificacionRepositoryPort.existePorAlertaItemYCiclo(3L, "1045", 2)).thenReturn(false);
         when(notificacionRepositoryPort.guardar(any(Notificacion.class))).thenAnswer(inv -> {
             Notificacion n = inv.getArgument(0);
             n.setId(99L);
@@ -276,21 +277,51 @@ class NotificacionesUseCasesTest {
         // Arrange
         BusquedaGuardadaCopia copia = new BusquedaGuardadaCopia(300L, 501L, "Busqueda", null, true, LocalDateTime.now());
         when(estadoCuentaCopiaRepositoryPort.buscarPorUsuarioId(501L)).thenReturn(Optional.empty());
-        when(notificacionRepositoryPort.guardar(any(Notificacion.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(notificacionRepositoryPort.guardar(any(Notificacion.class))).thenAnswer(inv -> {
+            Notificacion n = inv.getArgument(0);
+            n.setId(7L);
+            return n;
+        });
 
         // Act
         procesarEventosExternosUseCase.sincronizarBusquedaGuardada(copia, false);
         procesarEventosExternosUseCase.sincronizarBusquedaGuardada(copia, true);
-        procesarEventosExternosUseCase.desactivarAlertasPorItemEliminado(1045L);
+        procesarEventosExternosUseCase.desactivarAlertasPorItemEliminado("1045");
         procesarEventosExternosUseCase.actualizarEstadoCuenta(501L, "u@sr.co", EstadoCuenta.ACTIVO);
         Notificacion directa = procesarEventosExternosUseCase.generarNotificacionDirecta(
-                501L, TipoNotificacion.MENSAJE_NUEVO, "Chat", "Hola", "/chat/1", null);
+                501L, TipoNotificacion.MENSAJE_NUEVO, "Chat", "Hola", "/chat/1", (String) null);
 
         // Assert
         assertThat(directa).isNotNull();
         assertThat(directa.getTipo()).isEqualTo(TipoNotificacion.MENSAJE_NUEVO);
         verify(alertaRepositoryPort).desactivarPorBusquedaGuardada(300L);
-        verify(alertaRepositoryPort).desactivarPorItem(1045L);
+        verify(alertaRepositoryPort).desactivarPorItem("1045");
         verify(estadoCuentaCopiaRepositoryPort).guardar(any(EstadoCuentaCopia.class));
+    }
+
+    @Test
+    @DisplayName("GJ-65 - Un evento ya procesado para el usuario no genera otra notificacion ni emite en tiempo real")
+    void eventoYaProcesadoNoDuplica() {
+        when(notificacionRepositoryPort.existePorEventoYUsuario("evt-1", 501L)).thenReturn(true);
+
+        Notificacion resultado = procesarEventosExternosUseCase.generarNotificacionDirecta(
+                501L, TipoNotificacion.MENSAJE_NUEVO, "Chat", "Hola", "/chat/1", null, "evt-1");
+
+        assertThat(resultado).isNull();
+        verify(notificacionRepositoryPort, never()).guardar(any(Notificacion.class));
+        verify(realTimeNotificationPort, never()).emitirNotificacionTiempoReal(any(), any());
+    }
+
+    @Test
+    @DisplayName("GJ-65 - Si la base rechaza el duplicado (carrera entre dos consumidores) no se emite en tiempo real")
+    void duplicadoRechazadoPorLaBaseNoEmite() {
+        when(notificacionRepositoryPort.existePorEventoYUsuario("evt-2", 501L)).thenReturn(false);
+        when(notificacionRepositoryPort.guardar(any(Notificacion.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Notificacion resultado = procesarEventosExternosUseCase.generarNotificacionDirecta(
+                501L, TipoNotificacion.MENSAJE_NUEVO, "Chat", "Hola", "/chat/1", null, "evt-2");
+
+        assertThat(resultado).isNull();
+        verify(realTimeNotificationPort, never()).emitirNotificacionTiempoReal(any(), any());
     }
 }

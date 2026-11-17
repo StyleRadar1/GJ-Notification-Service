@@ -56,7 +56,7 @@ jobs:
       RABBITMQ_USER_QA: ${{ secrets.RABBITMQ_USER_QA }}
       RABBITMQ_PASSWORD_QA: ${{ secrets.RABBITMQ_PASSWORD_QA }}
       RABBITMQ_VHOST_QA: ${{ secrets.RABBITMQ_VHOST_QA || '/' }}
-      RABBITMQ_SSL_VERIFY_HOSTNAME_QA: ${{ secrets.RABBITMQ_SSL_VERIFY_HOSTNAME_QA || 'false' }}
+      RABBITMQ_SSL_VERIFY_HOSTNAME_QA: ${{ secrets.RABBITMQ_SSL_VERIFY_HOSTNAME_QA || 'true' }}
       CATALOG_SERVICE_URL_QA: ${{ secrets.CATALOG_SERVICE_URL_QA || 'http://localhost:8220' }}
       JWT_SECRET_QA: ${{ secrets.JWT_SECRET_QA }}
     steps:
@@ -117,23 +117,41 @@ jobs:
             -X POST http://localhost:15672/api/exchanges/%2F/styleradar.exchange/publish \
             -d '{"properties":{"content_type":"application/json"},"routing_key":"styleradar.inventario.actualizado","payload":"{}","payload_encoding":"string"}'
 
-          sleep 3
-
-          DLQ_JSON=$(curl -fsS -u guest:guest http://localhost:15672/api/queues/%2F/styleradar.notificaciones.dlq)
-          echo "Estado DLQ styleradar.notificaciones.dlq: $DLQ_JSON"
-          python3 -c 'import json, sys; data = json.loads(sys.argv[1]); assert data.get("messages", 0) >= 1, f"Se esperaba >= 1 mensaje en DLQ, obtenido: {data}"' "$DLQ_JSON"
+          DLQ_OK=0
+          for i in $(seq 1 10); do
+            DLQ_JSON=$(curl -fsS -u guest:guest http://localhost:15672/api/queues/%2F/styleradar.notificaciones.dlq || true)
+            MSG_COUNT=$(python3 -c 'import json, sys; data = json.loads(sys.argv[1]); print(data.get("messages", 0))' "$DLQ_JSON" 2>/dev/null || echo 0)
+            if [ "$MSG_COUNT" -ge 1 ]; then
+              echo "Mensaje detectado en DLQ: $MSG_COUNT mensaje(s)"
+              DLQ_OK=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$DLQ_OK" -ne 1 ]; then
+            echo "Estado DLQ styleradar.notificaciones.dlq: $DLQ_JSON"
+            docker compose logs --tail=100 ms-notificaciones
+            exit 1
+          fi
 
           JWT_SECRET_VAL=$(grep '^JWT_SECRET=' .env | cut -d'=' -f2-)
           JWT_TOKEN=$(JWT_SECRET_ENV="$JWT_SECRET_VAL" python3 -c "
           import os, json, hmac, hashlib, base64, time
           def b64u(data):
               return base64.urlsafe_b64encode(data).rstrip(b'=').decode('ascii')
-          secret = os.environ['JWT_SECRET_ENV'].encode('utf-8')
+          raw_secret = os.environ['JWT_SECRET_ENV'].strip()
+          if len(raw_secret) == 44 and raw_secret.endswith('='):
+              try:
+                  secret = base64.b64decode(raw_secret)
+              except Exception:
+                  secret = raw_secret.encode('utf-8')
+          else:
+              secret = raw_secret.encode('utf-8')
           if len(secret) < 32:
               secret = secret.ljust(32, b'\0')
           now = int(time.time())
           header = b64u(json.dumps({'alg': 'HS256', 'typ': 'JWT'}, separators=(',', ':')).encode('utf-8'))
-          payload = b64u(json.dumps({'sub': '101', 'userId': 101, 'email': 'oscar@styleradar.co', 'role': 'COMPRADOR', 'iat': now, 'exp': now + 3600}, separators=(',', ':')).encode('utf-8'))
+          payload = b64u(json.dumps({'sub': '101', 'userId': 101, 'email': 'oscar@styleradar.co', 'role': 'COMPRADOR', 'roles': ['COMPRADOR'], 'iat': now, 'exp': now + 3600}, separators=(',', ':')).encode('utf-8'))
           sig = b64u(hmac.new(secret, f'{header}.{payload}'.encode('ascii'), hashlib.sha256).digest())
           print(f'{header}.{payload}.{sig}')
           ")
@@ -162,10 +180,11 @@ jobs:
         if: always()
         run: docker compose down -v
 
-      - name: Log in to Docker Hub
+      - name: Log in to Container Registry (Docker Hub or ACR)
         if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
         uses: docker/login-action@v3
         with:
+          registry: ${{ contains(env.DOCKERHUB_USERNAME, 'azurecr.io') || contains(env.DOCKERHUB_NAMESPACE, 'azurecr.io') && (env.DOCKERHUB_NAMESPACE || 'acrstyleradarqa.azurecr.io') || '' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -204,6 +223,7 @@ jobs:
                 WEBSITES_PORT=8300 \
                 PORT=8300 \
                 SPRING_PROFILES_ACTIVE=prod \
+                SWAGGER_ENABLED=true \
                 DB_HOST="${DB_HOST_QA}" \
                 DB_PORT="${DB_PORT_QA}" \
                 DB_NAME="${DB_NAME_QA}" \
@@ -220,12 +240,23 @@ jobs:
                 RABBITMQ_SSL_ENABLED=true \
                 RABBITMQ_SSL_VERIFY_HOSTNAME="${RABBITMQ_SSL_VERIFY_HOSTNAME_QA}" \
                 CATALOG_SERVICE_URL="${CATALOG_SERVICE_URL_QA}" \
-                JWT_SECRET="${JWT_SECRET_QA}"
+                JWT_SECRET="${JWT_SECRET_QA}" \
+                WEBSITES_CONTAINER_START_TIME_LIMIT=1800 \
+                MANAGEMENT_HEALTH_REDIS_ENABLED=false \
+                MANAGEMENT_HEALTH_MAIL_ENABLED=false \
+                SPRING_AUTOCONFIGURE_EXCLUDE="org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration" \
+                CORS_ALLOWED_ORIGINS="http://localhost:5173"
+            REGISTRY_URL="https://index.docker.io/v1"
+            if echo "$DOCKERHUB_NAMESPACE" | grep -q "azurecr.io"; then
+              REGISTRY_URL="https://${DOCKERHUB_NAMESPACE}"
+            fi
             az webapp config container set \
               --name "${AZURE_WEBAPP_NAME_QA}" \
               --resource-group "$RG" \
               --container-image-name "${IMAGE_TAG}" \
-              --container-registry-url "https://index.docker.io/v1" \
+              --container-registry-url "${REGISTRY_URL}" \
+              --container-registry-user "${DOCKERHUB_USERNAME}" \
+              --container-registry-password "${DOCKERHUB_TOKEN}" \
               --output none
             az webapp restart --name "${AZURE_WEBAPP_NAME_QA}" --resource-group "$RG"
 
@@ -252,20 +283,64 @@ jobs:
             import os, json, hmac, hashlib, base64, time
             def b64u(data):
                 return base64.urlsafe_b64encode(data).rstrip(b'=').decode('ascii')
-            secret = os.environ['JWT_SECRET_ENV'].encode('utf-8')
+            raw_secret = os.environ['JWT_SECRET_ENV'].strip()
+            if len(raw_secret) == 44 and raw_secret.endswith('='):
+                try:
+                    secret = base64.b64decode(raw_secret)
+                except Exception:
+                    secret = raw_secret.encode('utf-8')
+            else:
+                secret = raw_secret.encode('utf-8')
             if len(secret) < 32:
                 secret = secret.ljust(32, b'\0')
             now = int(time.time())
             header = b64u(json.dumps({'alg': 'HS256', 'typ': 'JWT'}, separators=(',', ':')).encode('utf-8'))
-            payload = b64u(json.dumps({'sub': '101', 'userId': 101, 'email': 'oscar@styleradar.co', 'role': 'COMPRADOR', 'iat': now, 'exp': now + 3600}, separators=(',', ':')).encode('utf-8'))
+            payload = b64u(json.dumps({'sub': '101', 'userId': 101, 'email': 'oscar@styleradar.co', 'role': 'COMPRADOR', 'roles': ['COMPRADOR'], 'iat': now, 'exp': now + 3600}, separators=(',', ':')).encode('utf-8'))
             sig = b64u(hmac.new(secret, f'{header}.{payload}'.encode('ascii'), hashlib.sha256).digest())
             print(f'{header}.{payload}.{sig}')
             ")
             mkdir -p target/newman
-            npx --yes newman@6.2.1 run postman/styleradar-notificaciones.postman_collection.json \
-              --env-var "baseUrl=${BASE_URL}" \
-              --env-var "jwtToken=$JWT_TOKEN_QA" \
-              --reporters cli,json,junit \
-              --reporter-json-export target/newman/newman-report-qa.json \
-              --reporter-junit-export target/newman/newman-report-qa.xml
+
+            # QA corre en un plan compartido y sin Always On: tras un rato sin trafico, o con el plan cargado,
+            # una peticion puede tardar minutos o terminar en 504 sin que el codigo falle. Se calienta el
+            # servicio y cada carpeta se intenta dos veces antes de dar la prueba por fallida.
+            echo "Calentando el servicio en QA..."
+            curl -sS --max-time 120 -o /dev/null "${BASE_URL}/v3/api-docs" || true
+
+            ejecutar_newman() {
+              carpeta="$1"
+              nombre="$2"
+              for intento in 1 2; do
+                if npx --yes newman@6.2.1 run postman/styleradar-notificaciones.postman_collection.json \
+                  --folder "$carpeta" \
+                  --env-var "baseUrl=${BASE_URL}" \
+                  --env-var "jwtToken=$JWT_TOKEN_QA" \
+                  --timeout-request 120000 \
+                  --reporters cli,json,junit \
+                  --reporter-json-export "target/newman/newman-report-qa-${nombre}.json" \
+                  --reporter-junit-export "target/newman/newman-report-qa-${nombre}.xml"; then
+                  return 0
+                fi
+                echo "Intento ${intento} de 2 fallido en la carpeta '${carpeta}'."
+                if [ "$intento" -lt 2 ]; then
+                  sleep 30
+                fi
+              done
+              return 1
+            }
+
+            echo "Ejecutando carpeta de pruebas independientes..."
+            ejecutar_newman "Pruebas Independientes ms-notificaciones" independientes
+
+            CATALOG_HEALTH_OK=0
+            if curl -fsS --max-time 5 "${CATALOG_SERVICE_URL_QA}/actuator/health" > /dev/null 2>&1; then
+              CATALOG_HEALTH_OK=1
+            fi
+
+            if [ "$CATALOG_HEALTH_OK" -eq 1 ]; then
+              echo "ms-item-catalogo respondio en QA (${CATALOG_SERVICE_URL_QA}). Ejecutando pruebas dependientes de catalogo..."
+              ejecutar_newman "Pruebas Dependientes ms-item-catalogo" dependientes
+            else
+              echo "ms-item-catalogo NO esta disponible en QA (${CATALOG_SERVICE_URL_QA}). Pruebas de catalogo omitidas por dependencia externa."
+            fi
           fi

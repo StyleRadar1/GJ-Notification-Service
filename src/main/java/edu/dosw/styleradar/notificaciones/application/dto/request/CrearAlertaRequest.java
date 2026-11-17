@@ -13,9 +13,9 @@ public record CrearAlertaRequest(
         @NotNull(message = "El tipo de alerta es obligatorio")
         TipoAlerta tipoAlerta,
 
-        @Schema(description = "ID de la prenda agotada (obligatorio si tipoAlerta es ITEM_AGOTADO)", example = "1045")
-        @Positive(message = "El itemId debe ser un numero positivo")
-        Long itemId,
+        @Schema(description = "ID de la prenda agotada (UUID o alfanumerico; obligatorio si tipoAlerta es ITEM_AGOTADO)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        @Size(max = 100, message = "El itemId no puede superar los 100 caracteres")
+        String itemId,
 
         @Schema(description = "Talla especifica deseada (opcional)", example = "M")
         @Size(max = 20, message = "La talla objetivo no puede superar los 20 caracteres")

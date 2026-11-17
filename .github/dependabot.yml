@@ -1,0 +1,35 @@
+# A03 (cadena de suministro): Dependabot revisa cada semana las dependencias de Maven, las acciones de
+# GitHub Actions y la imagen base de Docker, y abre un PR por cada actualizacion de seguridad o version.
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    target-branch: "develop"
+    labels: ["dependencies"]
+    groups:
+      spring-boot:
+        patterns: ["org.springframework.boot*", "org.springframework*"]
+    # Spring Boot 3.2 / Java 21: las versiones mayores se revisan a mano
+    ignore:
+      - dependency-name: "org.springframework.boot:*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    target-branch: "develop"
+    labels: ["dependencies", "ci"]
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    target-branch: "develop"
+    labels: ["dependencies", "docker"]

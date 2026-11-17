@@ -8,7 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.external.CatalogoFeignClient;
-import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.security.JwtTokenService;
+import edu.dosw.styleradar.notificaciones.infrastructure.security.JwtTokenService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,13 +37,13 @@ class CatalogoNoDisponibleHttpTest {
     @DisplayName("NOT-10 - Debe responder 503 y no crear la alerta cuando Catalogo no responde")
     void debeResponder503YNoCrearLaAlertaCuandoCatalogoNoResponde() throws Exception {
         String token = jwtTokenService.generateToken(7001L, "sin.catalogo@styleradar.co", "COMPRADOR");
-        when(catalogoFeignClient.consultarDisponibilidad(3001L))
+        when(catalogoFeignClient.consultarDisponibilidad("3001"))
                 .thenThrow(new IllegalStateException("catalogo caido"));
 
         mockMvc.perform(post("/api/v1/usuarios/me/alertas")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":3001,\"canal\":\"IN_APP\"}"))
+                        .content("{\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"3001\",\"canal\":\"IN_APP\"}"))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.title").value("Servicio externo no disponible"));
 

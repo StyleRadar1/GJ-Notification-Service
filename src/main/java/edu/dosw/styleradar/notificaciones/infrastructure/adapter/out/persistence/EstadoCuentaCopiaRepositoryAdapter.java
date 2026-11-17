@@ -1,6 +1,6 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence;
 
-import edu.dosw.styleradar.notificaciones.application.mapper.out.EstadoCuentaCopiaEntityMapper;
+import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.mapper.EstadoCuentaCopiaEntityMapper;
 import edu.dosw.styleradar.notificaciones.domain.model.EstadoCuentaCopia;
 import edu.dosw.styleradar.notificaciones.domain.port.out.EstadoCuentaCopiaRepositoryPort;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.entity.EstadoCuentaCopiaJpaEntity;

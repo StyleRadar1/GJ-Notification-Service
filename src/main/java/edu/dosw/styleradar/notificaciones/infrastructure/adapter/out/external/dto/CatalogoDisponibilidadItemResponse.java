@@ -3,7 +3,7 @@ package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.external.d
 import java.util.List;
 
 public record CatalogoDisponibilidadItemResponse(
-        Long itemId,
+        String itemId,
         Integer stockTotal,
         List<String> tallasConStock
 ) {

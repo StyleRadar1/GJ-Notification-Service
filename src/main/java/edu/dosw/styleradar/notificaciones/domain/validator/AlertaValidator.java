@@ -27,7 +27,7 @@ public class AlertaValidator {
         }
 
         if (TipoAlerta.ITEM_AGOTADO.equals(alerta.getTipoAlerta())) {
-            if (alerta.getItemId() == null || alerta.getItemId() <= 0) {
+            if (alerta.getItemId() == null || alerta.getItemId().isBlank()) {
                 throw new ReglaDeNegocioException("Para alertas de item agotado se debe especificar un itemId valido");
             }
             if (alerta.getBusquedaGuardadaId() != null) {
@@ -37,17 +37,21 @@ public class AlertaValidator {
             if (alerta.getBusquedaGuardadaId() == null || alerta.getBusquedaGuardadaId() <= 0) {
                 throw new ReglaDeNegocioException("Para alertas de busqueda guardada se debe especificar un busquedaGuardadaId valido");
             }
-            if (alerta.getItemId() != null) {
+            if (alerta.getItemId() != null && !alerta.getItemId().isBlank()) {
                 throw new ReglaDeNegocioException("Una alerta de busqueda guardada no puede asociarse simultaneamente a un item especifico");
             }
         }
     }
 
-    public void validarItemAgotadoEnCatalogo(boolean estaAgotado, Long itemId) {
+    public void validarItemAgotadoEnCatalogo(boolean estaAgotado, String itemId) {
         if (!estaAgotado) {
             throw new ReglaDeNegocioException(
                     "No se puede crear una alerta de reposicion porque el item " + itemId + " actualmente tiene stock disponible");
         }
+    }
+
+    public void validarItemAgotadoEnCatalogo(boolean estaAgotado, Long itemId) {
+        validarItemAgotadoEnCatalogo(estaAgotado, itemId != null ? itemId.toString() : null);
     }
 
     public void validarBusquedaGuardadaActiva(BusquedaGuardadaCopia busqueda, Long usuarioId) {

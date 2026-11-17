@@ -2,12 +2,17 @@ package edu.dosw.styleradar.notificaciones.infrastructure.adapter.in.amqp;
 
 import edu.dosw.styleradar.notificaciones.application.dto.event.BusquedaGuardadaSincronizadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.DonacionEstadoCambiadoEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.FundacionDesactivadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.InventarioActualizadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.MensajeEnviadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.ModeracionPrendaCambiadaEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.PagoConfirmadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaPublicadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaRetiradaEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaVendidaEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.SolicitudDonacionCreadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.UsuarioEstadoCambiadoEventPayload;
+import edu.dosw.styleradar.notificaciones.domain.exception.RecursoNoEncontradoException;
 import edu.dosw.styleradar.notificaciones.domain.model.BusquedaGuardadaCopia;
 import edu.dosw.styleradar.notificaciones.domain.model.CriterioBusquedaVO;
 import edu.dosw.styleradar.notificaciones.domain.model.DatosPrendaVO;
@@ -38,11 +43,11 @@ public class NotificacionesEventsListener {
 
     @RabbitListener(queues = "${application.messaging.queues.inventory-updated:styleradar.notificaciones.inventario-actualizado.q}")
     public void onInventarioActualizado(InventarioActualizadoEventPayload payload) {
-        if (payload == null || payload.itemId() == null) {
+        if (payload == null || payload.itemId() == null || payload.itemId().isBlank()) {
             throw payloadInvalido("InventarioActualizado", "sin itemId");
         }
-        if (payload.stockAnterior() == null || payload.stockActual() == null) {
-            throw payloadInvalido("InventarioActualizado", "sin stockAnterior o stockActual");
+        if (payload.stockActual() == null) {
+            throw payloadInvalido("InventarioActualizado", "sin stockActual");
         }
         if (!payload.esReposicion()) {
             log.debug("InventarioActualizado del item {} no es una reposicion (stock {} a {}), se ignora",
@@ -68,7 +73,7 @@ public class NotificacionesEventsListener {
 
     @RabbitListener(queues = "${application.messaging.queues.garment-published:styleradar.notificaciones.prenda-publicada.q}")
     public void onPrendaPublicada(PrendaPublicadaEventPayload payload) {
-        if (payload == null || payload.itemId() == null) {
+        if (payload == null || payload.itemId() == null || payload.itemId().isBlank()) {
             throw payloadInvalido("PrendaPublicada", "sin itemId");
         }
         DatosPrendaVO datosPrenda = new DatosPrendaVO(
@@ -142,7 +147,8 @@ public class NotificacionesEventsListener {
                 "Nuevo mensaje de " + remitente,
                 payload.resumenContenido() != null ? payload.resumenContenido() : "Tienes un nuevo mensaje en el chat.",
                 "/chat/conversaciones/" + payload.conversacionId(),
-                null
+                null,
+                payload.eventoId()
         );
     }
 
@@ -152,23 +158,21 @@ public class NotificacionesEventsListener {
             throw payloadInvalido("DonacionEstadoCambiado", "incompleto");
         }
         String fundacion = payload.nombreFundacion() != null ? payload.nombreFundacion() : "la fundacion aliada";
-        String detalle = "Tu donacion con " + fundacion + " cambio a estado " + payload.nuevoEstado();
-        if (payload.motivo() != null && !payload.motivo().isBlank()) {
-            detalle += ". Motivo: " + payload.motivo();
-        }
+        String detalle = detalleDeDonacion(payload.nuevoEstado(), fundacion, payload.motivo());
         procesarEventosExternosUseCase.generarNotificacionDirecta(
                 payload.donanteId(),
                 TipoNotificacion.CAMBIO_DONACION,
                 "Actualizacion de tu donacion #" + payload.donacionId(),
                 detalle,
                 "/donaciones/" + payload.donacionId(),
-                null
+                null,
+                payload.eventoId()
         );
     }
 
     @RabbitListener(queues = "${application.messaging.queues.moderation-changed:styleradar.notificaciones.moderacion-cambiada.q}")
     public void onModeracionPrendaCambiada(ModeracionPrendaCambiadaEventPayload payload) {
-        if (payload == null || payload.propietarioUsuarioId() == null || payload.itemId() == null) {
+        if (payload == null || payload.propietarioUsuarioId() == null || payload.itemId() == null || payload.itemId().isBlank()) {
             throw payloadInvalido("ModeracionPrendaCambiada", "incompleto");
         }
         if ("RETIRADA".equalsIgnoreCase(payload.estadoModeracion())
@@ -185,16 +189,125 @@ public class NotificacionesEventsListener {
                 "Estado de moderacion actualizado",
                 detalle,
                 "/catalogo/mis-prendas/" + payload.itemId(),
-                payload.itemId()
+                payload.itemId(),
+                payload.eventoId()
         );
     }
 
     @RabbitListener(queues = "${application.messaging.queues.garment-deleted:styleradar.notificaciones.prenda-retirada.q}")
     public void onPrendaRetirada(PrendaRetiradaEventPayload payload) {
-        if (payload == null || payload.itemId() == null) {
+        if (payload == null || payload.itemId() == null || payload.itemId().isBlank()) {
             throw payloadInvalido("PrendaRetirada", "sin itemId");
         }
         procesarEventosExternosUseCase.desactivarAlertasPorItemEliminado(payload.itemId());
+    }
+
+    @RabbitListener(queues = "${application.messaging.queues.donation-requested:styleradar.notificaciones.solicitud-donacion.q}")
+    public void onSolicitudDonacionCreada(SolicitudDonacionCreadaEventPayload payload) {
+        if (payload == null || payload.fundacionUsuarioId() == null || payload.donacionId() == null) {
+            throw payloadInvalido("SolicitudDonacionCreada", "incompleto");
+        }
+        String donante = payload.nombreDonante() != null ? payload.nombreDonante() : "Una persona";
+        String detalle = donante + " quiere donar a tu fundacion";
+        if (payload.resumen() != null && !payload.resumen().isBlank()) {
+            detalle += ": " + payload.resumen();
+        }
+        procesarEventosExternosUseCase.generarNotificacionDirecta(
+                payload.fundacionUsuarioId(),
+                TipoNotificacion.SOLICITUD_DONACION,
+                "Nueva solicitud de donacion #" + payload.donacionId(),
+                detalle,
+                "/donaciones/" + payload.donacionId(),
+                null,
+                payload.eventoId()
+        );
+    }
+
+    @RabbitListener(queues = "${application.messaging.queues.garment-sold:styleradar.notificaciones.prenda-vendida.q}")
+    public void onPrendaVendida(PrendaVendidaEventPayload payload) {
+        if (payload == null || payload.publicacionId() == null || payload.publicacionId().isBlank()) {
+            throw payloadInvalido("PrendaVendida", "sin publicacionId");
+        }
+        String prenda = payload.nombrePrenda() != null ? payload.nombrePrenda() : "La prenda";
+        List<Long> interesados = payload.interesadosIds() != null ? payload.interesadosIds() : List.of();
+        for (Long interesadoId : interesados) {
+            if (interesadoId == null || interesadoId.equals(payload.compradorId())) {
+                continue;
+            }
+            procesarEventosExternosUseCase.generarNotificacionDirecta(
+                    interesadoId,
+                    TipoNotificacion.PRENDA_VENDIDA,
+                    "Una prenda que te interesaba ya no esta disponible",
+                    prenda + " se vendio y ya no esta disponible.",
+                    "/segunda-mano/" + payload.publicacionId(),
+                    null,
+                    payload.eventoId()
+            );
+        }
+    }
+
+    @RabbitListener(queues = "${application.messaging.queues.payment-confirmed:styleradar.notificaciones.pago-confirmado.q}")
+    public void onPagoConfirmado(PagoConfirmadoEventPayload payload) {
+        if (payload == null || payload.usuarioId() == null) {
+            throw payloadInvalido("PagoConfirmado", "sin usuarioId");
+        }
+        try {
+            procesarEventosExternosUseCase.generarNotificacionPagoConfirmado(
+                    payload.usuarioId(), payload.plan(), payload.eventoId());
+        } catch (RecursoNoEncontradoException ex) {
+            log.error("PagoConfirmado de un usuario desconocido ({}), se envia a la cola de errores", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex.getMessage(), ex);
+        }
+    }
+
+    @RabbitListener(queues = "${application.messaging.queues.foundation-deactivated:styleradar.notificaciones.fundacion-desactivada.q}")
+    public void onFundacionDesactivada(FundacionDesactivadaEventPayload payload) {
+        if (payload == null || payload.fundacionId() == null
+                || payload.eventoId() == null || payload.eventoId().isBlank()) {
+            throw payloadInvalido("FundacionDesactivada", "sin fundacionId o eventoId");
+        }
+        List<Long> donantes = payload.donantesAfectadosIds();
+        if (donantes == null || donantes.isEmpty()) {
+            log.warn("FundacionDesactivada {} sin donantes afectados, no hay a quien avisar", payload.fundacionId());
+            return;
+        }
+        String fundacion = payload.nombreFundacion() != null && !payload.nombreFundacion().isBlank()
+                ? payload.nombreFundacion() : "una fundacion aliada";
+        String mensaje = "La fundacion " + fundacion + " ha sido desactivada"
+                + (payload.motivo() != null && !payload.motivo().isBlank() ? ": " + payload.motivo() : "");
+        for (Long donanteId : donantes) {
+            if (donanteId == null) {
+                continue;
+            }
+            // La clave de idempotencia es (eventoId, donanteId): un evento repetido no duplica el aviso.
+            procesarEventosExternosUseCase.generarNotificacionDirecta(
+                    donanteId,
+                    TipoNotificacion.CAMBIO_DONACION,
+                    "Fundacion desactivada",
+                    mensaje,
+                    "/donaciones",
+                    null,
+                    payload.eventoId()
+            );
+        }
+    }
+
+    private String detalleDeDonacion(String estado, String fundacion, String motivo) {
+        String normalizado = estado != null ? estado.toUpperCase() : "";
+        String detalle;
+        if (normalizado.contains("APROB")) {
+            detalle = "Tu donacion con " + fundacion + " fue aprobada";
+        } else if (normalizado.contains("RECHAZ")) {
+            detalle = "Tu donacion con " + fundacion + " fue rechazada";
+        } else if (normalizado.contains("CITA")) {
+            detalle = "Se programo una cita para entregar tu donacion a " + fundacion;
+        } else {
+            detalle = "Tu donacion con " + fundacion + " cambio a estado " + estado;
+        }
+        if (motivo != null && !motivo.isBlank()) {
+            detalle += ". Motivo: " + motivo;
+        }
+        return detalle;
     }
 
     private AmqpRejectAndDontRequeueException payloadInvalido(String evento, String detalle) {

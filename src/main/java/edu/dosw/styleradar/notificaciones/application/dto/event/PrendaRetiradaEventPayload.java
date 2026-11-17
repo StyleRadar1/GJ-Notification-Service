@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record PrendaRetiradaEventPayload(
         String eventoId,
-        Long itemId,
+        String itemId,
         String motivo,
         LocalDateTime fechaEvento
 ) {

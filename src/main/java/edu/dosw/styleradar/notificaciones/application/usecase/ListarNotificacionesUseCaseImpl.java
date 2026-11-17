@@ -3,6 +3,7 @@ package edu.dosw.styleradar.notificaciones.application.usecase;
 import edu.dosw.styleradar.notificaciones.application.service.NotificacionApplicationService;
 import edu.dosw.styleradar.notificaciones.application.service.impl.NotificacionApplicationServiceImpl;
 import edu.dosw.styleradar.notificaciones.domain.model.Notificacion;
+import edu.dosw.styleradar.notificaciones.domain.model.Pagina;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ListarNotificacionesUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.out.NotificacionRepositoryPort;
 import java.util.List;
@@ -20,6 +21,16 @@ public class ListarNotificacionesUseCaseImpl implements ListarNotificacionesUseC
     @Override
     public List<Notificacion> listarNotificacionesPorUsuario(Long usuarioId, Boolean soloNoLeidas) {
         return notificacionApplicationService.listarNotificacionesPorUsuario(usuarioId, soloNoLeidas);
+    }
+
+    @Override
+    public List<Notificacion> listarPosterioresA(Long usuarioId, Long ultimoId) {
+        return notificacionApplicationService.listarPosterioresA(usuarioId, ultimoId);
+    }
+
+    @Override
+    public Pagina<Notificacion> listarNotificacionesPaginadas(Long usuarioId, Boolean leida, int page, int size) {
+        return notificacionApplicationService.listarNotificacionesPaginadas(usuarioId, leida, page, size);
     }
 
     @Override

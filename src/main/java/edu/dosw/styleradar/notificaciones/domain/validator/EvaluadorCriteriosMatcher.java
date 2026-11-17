@@ -47,7 +47,7 @@ public class EvaluadorCriteriosMatcher {
         return true;
     }
 
-    public boolean coincideItemAgotado(Long alertaItemId, String tallaObjetivo, DatosPrendaVO prenda) {
+    public boolean coincideItemAgotado(String alertaItemId, String tallaObjetivo, DatosPrendaVO prenda) {
         if (alertaItemId == null || prenda == null || !alertaItemId.equals(prenda.itemId())) {
             return false;
         }
@@ -55,6 +55,10 @@ public class EvaluadorCriteriosMatcher {
             return false;
         }
         return coincideTalla(tallaObjetivo, prenda.tallasDisponibles());
+    }
+
+    public boolean coincideItemAgotado(Long alertaItemId, String tallaObjetivo, DatosPrendaVO prenda) {
+        return coincideItemAgotado(alertaItemId != null ? alertaItemId.toString() : null, tallaObjetivo, prenda);
     }
 
     private boolean coincideTextoLibre(String textoFiltro, String nombrePrenda, String marca, String categoria) {
