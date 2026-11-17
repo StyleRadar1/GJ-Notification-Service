@@ -36,6 +36,9 @@ application:
       max-attempts: ${MAIL_PENDING_MAX_ATTEMPTS:3}
     retry-delay-ms: ${MAIL_RETRY_DELAY_MS:60000}
   security:
+    # el stream SSE tambien acepta el token en ?access_token= (el EventSource nativo no envia cabeceras)
+    sse-query-token:
+      enabled: ${SSE_QUERY_TOKEN_ENABLED:true}
     jwt:
       secret-key: ${JWT_SECRET}
       expiration-ms: ${JWT_EXPIRATION_MS:86400000}
