@@ -221,3 +221,55 @@ El mismo mecanismo atiende los demás eventos: prenda publicada, estado de cuent
 - **Una llamada síncrona y el resto por eventos:** solo crear la alerta necesita una respuesta inmediata; la reposición se procesa sin acoplar a Inventario con Notificaciones.
 - **Reintentos y cola de errores:** un fallo transitorio no pierde el evento y un mensaje inválido no bloquea la cola.
 - **Idempotencia:** como el broker puede entregar un evento más de una vez, la restricción única de la base de datos evita notificaciones repetidas.
+
+---
+
+## 7. Diagrama de componentes general (ecosistema StyleRadar)
+
+<p align="center">
+  <img src="./images/diagrama-componentes-general.png" alt="Diagrama de componentes general del ecosistema StyleRadar" width="95%" />
+</p>
+
+> Este diagrama lo elaboró el equipo de arquitectura y es el mismo para todos los microservicios. Se conserva aquí como referencia; el detalle de `ms-notificaciones` está en las secciones 1 a 6. Fuente editable: [`uml/diagrama-componentes-general.drawio`](./uml/diagrama-componentes-general.drawio).
+
+### 7.1. Explicación técnica
+
+El diagrama muestra el backend completo de StyleRadar dentro de un recuadro punteado («Back Ecosystem»).
+
+1. **Cliente y entrada:** la aplicación web (*StyleRadar Client*) habla solo con el **API Gateway**, que reparte las llamadas a cada microservicio.
+2. **Microservicios:** `ms-auth`, `ms-usuarios`, `ms-tiendas`, `ms-notificaciones`, `ms-inventario`, `ms-itemcatalogo`, `ms-segunda-vida`, `ms-chat`, `ms-playlist`, `ms-pagos`, `ms-geolocalizacion`, `ms-probador-virtual` y `ms-estadisticas`. Cada uno tiene su propia base de datos (`usuarios_db`, `notificaciones_db`, `catalogo_db`, etc.).
+3. **Mensajería y caché:** hay colas de RabbitMQ para Notificaciones, Pagos y Estadísticas, y una instancia de Redis compartida.
+4. **Sistemas externos:** Google OAuth, la API de MercadoPago, Azure Blob Storage y la API de FASHN AI.
+5. **Interfaces:** las interfaces proporcionadas y requeridas (círculo y semicírculo) marcan quién ofrece y quién consume cada servicio.
+
+**Lo que corresponde a `ms-notificaciones`:** su base `notificaciones_db`, su cola de RabbitMQ y su entrada por el API Gateway. Los eventos que consume y publica están en [CONTRATOS_EVENTOS_NOT21.md](./CONTRATOS_EVENTOS_NOT21.md).
+
+### 7.2. Justificación arquitectónica
+
+- **Una base por servicio:** ningún servicio lee la base de otro; se comunican por HTTP a través de las interfaces o por eventos de RabbitMQ.
+- **Una sola puerta de entrada:** el API Gateway concentra la autenticación y el enrutamiento, así que el cliente no conoce los puertos de los servicios.
+
+---
+
+## 8. Diagrama de despliegue general (ecosistema StyleRadar)
+
+<p align="center">
+  <img src="./images/diagrama-despliegue-general.png" alt="Diagrama de despliegue general del ecosistema StyleRadar" width="95%" />
+</p>
+
+> Elaborado por el equipo de arquitectura. Se conserva como referencia; el despliegue propio de `ms-notificaciones` (QA y PROD en Azure) está en la sección 5. Fuente editable: [`uml/diagrama-despliegue-general.drawio`](./uml/diagrama-despliegue-general.drawio). La imagen se generó a partir del archivo `.drawio`.
+
+### 8.1. Explicación técnica
+
+1. **Aplicación web:** el artefacto *Web Application* se despliega contra el **API Gateway** (`8080`).
+2. **Contenedores:** cada microservicio es una *Container App* con su puerto: Auth `8100`, User `8120`, Store `8140`, Item Catalog `8220`, Inventory `8200`, Payments `8400`, Donations `8520`, Chat `8320`, Playlist `8260`, Geolocation `8240`, Virtual Try-on `8520`, **Notification `8300`** y Analytics `8420`.
+3. **PostgreSQL:** un servidor con una base por servicio (Auth, User, Item Catalog, Store, Inventory, Payments, Donations, Chat, Geolocation, Playlist, Virtual Try-on, Notification y Analytics).
+4. **Redis:** espacios para Auth, Payments, Notification, Chat y Analytics.
+5. **RabbitMQ:** un dispositivo `RabbitMQAdapter` al que se conectan los servicios que publican o consumen eventos.
+
+> **Por confirmar con el equipo de arquitectura:** en el diagrama, Donations y Virtual Try-on figuran con el mismo puerto `8520`. Dos contenedores no pueden compartir puerto en la misma máquina; conviene confirmar el valor correcto.
+
+### 8.2. Justificación arquitectónica
+
+- **Contenedor por servicio:** cada microservicio se despliega y escala por separado.
+- **Bases y caché separadas por servicio:** un fallo o una migración en una base no afecta a los demás servicios.

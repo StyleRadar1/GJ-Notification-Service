@@ -279,6 +279,32 @@ flowchart LR
 * **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 5)](docs/DIAGRAMAS_NOT20.md#5-diagrama-de-despliegue)
 * **Descripcion:** Modela la topologia de ejecucion y despliegue continuo: estacion de desarrollo, pipeline de CI/CD en GitHub Actions, repositorio de imagenes en Azure Container Registry, y los ambientes de QA y PROD en Azure App Service (cada uno con su base de datos y su vhost del broker).
 
+---
+
+#### 6. Diagrama de Componentes General (Ecosistema StyleRadar)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-componentes-general.drawio`](docs/uml/diagrama-componentes-general.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 7)](docs/DIAGRAMAS_NOT20.md#7-diagrama-de-componentes-general-ecosistema-styleradar)
+* **Descripcion:** Vista de todo el backend de StyleRadar, compartida por los equipos: el cliente web, el API Gateway, los 13 microservicios con su base de datos propia, las colas de RabbitMQ (Notificaciones, Pagos y Estadisticas), Redis y los sistemas externos (Google OAuth, MercadoPago, Azure Blob Storage y FASHN AI). `ms-notificaciones` aparece con su base `notificaciones_db` y su cola de RabbitMQ. El diagrama lo elaboro el equipo de arquitectura; este servicio solo lo conserva como referencia.
+
+<p align="center">
+  <a href="docs/images/diagrama-componentes-general.png" target="_blank">
+    <img src="docs/images/diagrama-componentes-general.png" alt="Diagrama de Componentes General del ecosistema StyleRadar" width="100%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
+---
+
+#### 7. Diagrama de Despliegue General (Ecosistema StyleRadar)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-despliegue-general.drawio`](docs/uml/diagrama-despliegue-general.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 8)](docs/DIAGRAMAS_NOT20.md#8-diagrama-de-despliegue-general-ecosistema-styleradar)
+* **Descripcion:** Topologia de ejecucion de todo el ecosistema: la aplicacion web entra por el API Gateway (`8080`) y cada microservicio corre como contenedor en su puerto, con su base en el servidor de PostgreSQL, su espacio en Redis cuando lo usa y su conexion al broker RabbitMQ. `ms-notificaciones` corre en el puerto `8300`. El de este servicio en detalle es el diagrama 5.
+
+<p align="center">
+  <a href="docs/images/diagrama-despliegue-general.png" target="_blank">
+    <img src="docs/images/diagrama-despliegue-general.png" alt="Diagrama de Despliegue General del ecosistema StyleRadar" width="100%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
 ### Estructura Oficial de Paquetes en `src/main/java/`
 
 ```text
