@@ -539,7 +539,7 @@ class AlertaControllerAndInfrastructureTest {
                         .header("Authorization", "Bearer " + token101))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))
-                .andExpect(jsonPath("$.detail").value("No tienes autorizacion para acceder o modificar los recursos del usuario 202"));
+                .andExpect(jsonPath("$.detail").value("No tienes autorizacion para acceder o modificar los recursos de otro usuario"));
 
         mockMvc.perform(get("/users/202/alerts")
                         .header("Authorization", "Bearer " + token101))

@@ -19,7 +19,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class AlertaApplicationServiceImpl implements AlertaApplicationService {
 
@@ -87,12 +89,53 @@ public class AlertaApplicationServiceImpl implements AlertaApplicationService {
 
     @Override
     public Alerta desactivarAlerta(Long alertaId, Long usuarioId) {
-        Alerta alerta = alertaRepositoryPort.buscarPorId(alertaId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro la alerta con ID: " + alertaId));
+        Alerta alerta = buscarAlerta(alertaId);
 
         alertaValidator.validarPropiedadAlerta(alerta, usuarioId);
         alerta.desactivar();
         return alertaRepositoryPort.guardar(alerta);
+    }
+
+    /**
+     * Vuelve a activar una alerta desactivada (SR-RF-32). Aplica las mismas reglas que al crearla: la cuenta
+     * no puede estar inactiva, no puede haber otra alerta activa igual (409) y la prenda debe seguir agotada
+     * o la busqueda guardada seguir activa. Si ya esta activa, no hace nada.
+     */
+    @Override
+    public Alerta activarAlerta(Long alertaId, Long usuarioId) {
+        Alerta alerta = buscarAlerta(alertaId);
+        alertaValidator.validarPropiedadAlerta(alerta, usuarioId);
+        if (alerta.estaActiva()) {
+            return alerta;
+        }
+
+        EstadoCuentaCopia estadoCuenta = estadoCuentaCopiaRepositoryPort.buscarPorUsuarioId(usuarioId).orElse(null);
+        alertaValidator.validarCreacionAlerta(alerta, estadoCuenta);
+
+        if (TipoAlerta.ITEM_AGOTADO.equals(alerta.getTipoAlerta())) {
+            alertaValidator.validarNoDuplicada(alertaRepositoryPort.existeActivaParaItem(
+                    alerta.getUsuarioId(), alerta.getItemId(), alerta.getTallaObjetivo()));
+            alertaValidator.validarItemAgotadoEnCatalogo(
+                    catalogoClientPort.verificarItemAgotado(alerta.getItemId(), alerta.getTallaObjetivo()),
+                    alerta.getItemId());
+        } else if (TipoAlerta.BUSQUEDA_GUARDADA.equals(alerta.getTipoAlerta())) {
+            BusquedaGuardadaCopia busqueda = busquedaGuardadaCopiaRepositoryPort
+                    .buscarPorId(alerta.getBusquedaGuardadaId())
+                    .orElse(null);
+            alertaValidator.validarBusquedaGuardadaActiva(busqueda, alerta.getUsuarioId());
+            alertaValidator.validarNoDuplicada(alertaRepositoryPort.existeActivaParaBusqueda(
+                    alerta.getUsuarioId(), alerta.getBusquedaGuardadaId()));
+        }
+
+        alerta.activar();
+        return alertaRepositoryPort.guardar(alerta);
+    }
+
+    private Alerta buscarAlerta(Long alertaId) {
+        return alertaRepositoryPort.buscarPorId(alertaId).orElseThrow(() -> {
+            log.debug("No existe la alerta {}", alertaId);
+            return new RecursoNoEncontradoException("No se encontro la alerta");
+        });
     }
 }
 

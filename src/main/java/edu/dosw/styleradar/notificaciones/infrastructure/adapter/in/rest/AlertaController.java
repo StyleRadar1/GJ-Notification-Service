@@ -10,6 +10,7 @@ import edu.dosw.styleradar.notificaciones.application.mapper.in.AlertaDtoMapper;
 import edu.dosw.styleradar.notificaciones.application.mapper.in.NotificacionDtoMapper;
 import edu.dosw.styleradar.notificaciones.domain.model.Alerta;
 import edu.dosw.styleradar.notificaciones.domain.model.Notificacion;
+import edu.dosw.styleradar.notificaciones.domain.port.in.ActivarAlertaUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.CrearAlertaUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.DesactivarAlertaUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ListarAlertasUseCase;
@@ -47,6 +48,7 @@ public class AlertaController implements AlertaApi {
     private final CrearAlertaUseCase crearAlertaUseCase;
     private final ListarAlertasUseCase listarAlertasUseCase;
     private final DesactivarAlertaUseCase desactivarAlertaUseCase;
+    private final ActivarAlertaUseCase activarAlertaUseCase;
     private final ListarNotificacionesUseCase listarNotificacionesUseCase;
     private final MarcarNotificacionLeidaUseCase marcarNotificacionLeidaUseCase;
     private final AlertaDtoMapper alertaDtoMapper;
@@ -105,6 +107,18 @@ public class AlertaController implements AlertaApi {
             @PathVariable("alertId") Long alertId
     ) {
         return desactivarAlerta(id, alertId);
+    }
+
+    @Override
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping({"/alerts/{alertId}/activate", "/alertas/{alertId}/activar"})
+    public ResponseEntity<AlertaResponse> activarAlerta(
+            @PathVariable("id") String id,
+            @PathVariable("alertId") Long alertId
+    ) {
+        Long targetId = userExtractor.validarAccesoUsuario(id);
+        Alerta activada = activarAlertaUseCase.activarAlerta(alertId, targetId);
+        return ResponseEntity.ok(alertaDtoMapper.toResponse(activada));
     }
 
     @Override

@@ -110,7 +110,7 @@ class AlertaValidatorAndModelTest {
     void debeRechazarItemConStockEnCatalogo() {
         assertThatThrownBy(() -> validator.validarItemAgotadoEnCatalogo(false, "99"))
                 .isInstanceOf(ReglaDeNegocioException.class)
-                .hasMessageContaining("99");
+                .hasMessageContaining("tiene stock disponible");
     }
 
     @Test

@@ -202,6 +202,40 @@ public interface AlertaApi {
     );
 
     @Operation(
+            summary = "Reactivate an alert",
+            description = "Sets a deactivated alert back to ACTIVE. Applies the same rules as creating it: the account must "
+                    + "not be inactive, there must be no other active identical alert (409), and the garment must still be "
+                    + "out of stock or the saved search still active (422). An already active alert is returned unchanged."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Alert is active"),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Alert belongs to another user",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Alert not found",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "There is already an active alert for the same garment or saved search",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "Business rule violation (account inactive, garment has stock, saved search inactive)",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            )
+    })
+    ResponseEntity<AlertaResponse> activarAlerta(
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "alertId", description = "ID of the alert to reactivate", example = "501") Long alertId
+    );
+
+    @Operation(
             summary = "List user notifications",
             description = "Retrieves user notifications. Without pagination parameters returns direct array. With 'page', 'size', 'read' or 'unreadOnly' returns paginated result."
     )
