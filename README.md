@@ -332,7 +332,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 | Entorno | Estado | Propósito | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
 | :--- | :---: | :--- | :--- | :--- | :--- |
 | **Desarrollo Local / Docker (DEV)** | Local | Entorno de desarrollo local en máquina | `http://localhost:8300` | [Swagger UI Local](http://localhost:8300/swagger-ui/index.html) | [`/actuator/health`](http://localhost:8300/actuator/health) |
-| **Producción (PROD)** | Desplegado | Despliegue productivo de StyleRadar (Azure App Service `styleradar-notificaciones-prod`) | `https://styleradar-notificaciones-prod.azurewebsites.net` | [Swagger UI PROD](https://styleradar-notificaciones-prod.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-notificaciones-prod.azurewebsites.net/actuator/health) |
+| **Producción (PROD)** | Desplegado | Despliegue productivo de StyleRadar (Azure App Service `styleradar-notificaciones-prod`) | `https://styleradar-notificaciones-prod.azurewebsites.net` | Apagado en PROD (`SWAGGER_ENABLED=true` lo enciende) | [`/actuator/health`](https://styleradar-notificaciones-prod.azurewebsites.net/actuator/health) |
 | **Calidad / Pruebas (QA)** | Desplegado | Pruebas integradas de Sprint y QA (Azure App Service `styleradar-notificaciones-qa`) | `https://styleradar-notificaciones-qa.azurewebsites.net` | [Swagger UI QA](https://styleradar-notificaciones-qa.azurewebsites.net/swagger-ui/index.html) | [`/actuator/health`](https://styleradar-notificaciones-qa.azurewebsites.net/actuator/health) |
 
 * **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8300/v3/api-docs` (o `/v3/api-docs` en el dominio de QA).
@@ -380,7 +380,8 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 | `PATCH` | `/api/v1/users/{id}/notifications/{notificationId}/read` | Marca una notificación específica como leída (NOT-13) | Propietario (`JWT`) | `200`, `401`, `403`, `404` |
 | `PATCH` | `/api/v1/users/{id}/notifications/read-all` | Marca todas las notificaciones del usuario como leídas (NOT-13) | Autenticado (`JWT`) | `200`, `401`, `403` |
 |  `GET`  | `/api/v1/users/{id}/notifications/unread/count` | Obtiene el contador de notificaciones sin leer para la campana (NOT-13) | Autenticado (`JWT`) | `200`, `401`, `403` |
-|  `GET`  | `/api/v1/users/{id}/notifications/stream` | Suscripción Server-Sent Events (`text/event-stream`) para campana en tiempo real con soporte `Last-Event-ID` (NOT-15, GJ-62) | Autenticado (`JWT`) | `200`, `401`, `403` |
+|  `GET`  | `/api/v1/users/{id}/notifications/stream` | Suscripción Server-Sent Events (`text/event-stream`) para campana en tiempo real con soporte `Last-Event-ID` (NOT-15, GJ-62). El navegador no puede enviar la cabecera con `EventSource`: se abre con `?ticket=<ticket>` (ver la fila siguiente) | Autenticado (`JWT` en la cabecera o ticket en `?ticket=`) | `200`, `401`, `403`, `429` |
+|  `POST`  | `/api/v1/users/{id}/notifications/stream-ticket` | Entrega un ticket de vida corta (60 s) que solo sirve para abrir el stream. El JWT de sesión nunca viaja en la URL: un JWT en `?ticket=` o `?access_token=` se rechaza y el ticket no abre ningún otro endpoint | Autenticado (`JWT`) | `200`, `401`, `403`, `429` |
 |  `GET`  | `/api/v1/users/{id}/notification-preferences` | Lista los canales configurados por tipo de notificación (GJ-64) | Autenticado (`JWT`) | `200`, `401`, `403` |
 |  `PUT`  | `/api/v1/users/{id}/notification-preferences/{type}` | Configura `SOLO_PLATAFORMA` o `CORREO_Y_PLATAFORMA` por tipo de aviso (GJ-64) | Autenticado (`JWT`) | `200`, `400`, `401`, `403` |
 
@@ -599,12 +600,16 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 | `RABBITMQ_USER` | Usuario de conexión a RabbitMQ | `guest` | Sí |
 | `RABBITMQ_PASSWORD` | Contraseña de conexión a RabbitMQ | `guest` | Sí |
 | `RABBITMQ_VHOST` | Virtual host del broker (solo perfil `prod`) | `/` | No |
-| `RABBITMQ_SSL_ENABLED` | Activa TLS hacia el broker; con TLS se usa el puerto `5671` (solo perfil `prod`) | `false` | No |
+| `RABBITMQ_SSL_ENABLED` | Activa TLS hacia el broker; con TLS se usa el puerto `5671` (solo perfil `prod`, donde viene encendido) | `true` en PROD | No |
 | `RABBITMQ_SSL_VERIFY_HOSTNAME` | Verifica que el certificado del broker coincida con el host (solo perfil `prod`) | `true` | No |
 | `REDIS_HOST` | Hostname del servidor de caché Redis | `localhost` | No |
 | `CATALOG_SERVICE_URL` | URL base de `ms-item-catalogo` para OpenFeign | `http://localhost:8220` | Sí |
 | `JWT_SECRET` | Clave secreta HMAC-SHA256 (mínimo 256 bits) para validar JWT | `clave_secreta_minimo_256_bits...` | Sí |
 | `CORS_ALLOWED_ORIGINS` | Orígenes del frontend permitidos por CORS, separados por comas | `http://localhost:5173` | No |
+| `RATE_LIMIT_ENABLED` | Enciende o apaga el límite de solicitudes por usuario (OWASP A06); al pasarse responde `429` con `Retry-After` | `true` | No |
+| `RATE_LIMIT_PER_MINUTE` | Solicitudes por minuto y por usuario (por IP si no está autenticado) | `120` | No |
+| `SSE_TICKET_TTL_SECONDS` | Vida del ticket con el que se abre el stream de la campana | `60` | No |
+| `SWAGGER_ENABLED` | Enciende Swagger UI y `/v3/api-docs` en PROD, donde vienen apagados (OWASP A02) | `false` en PROD | No |
 | `SPRING_MAIL_HOST` | Servidor SMTP para los avisos por correo. Sin esta variable no se envían correos (los avisos en plataforma siguen funcionando) | `smtp.ejemplo.co` | No |
 | `SPRING_MAIL_PORT` | Puerto del servidor SMTP | `587` | No |
 | `SPRING_MAIL_USERNAME` / `SPRING_MAIL_PASSWORD` | Credenciales del SMTP. Se inyectan como variables de entorno o secretos; no se guardan en el repositorio | — | No |
@@ -826,7 +831,7 @@ El seguimiento de requerimientos, evidencias y artefactos de entrega se centrali
 
 * **Épica Oficial del Microservicio (Jira):** [GJ-2 · ms-notificaciones](https://mail-team-nyjtgqcj.atlassian.net/browse/GJ-2)
 * **Proyecto en Jira (GJ):** [https://mail-team-nyjtgqcj.atlassian.net/browse/GJ](https://mail-team-nyjtgqcj.atlassian.net/browse/GJ)
-* **API Swagger en Producción (PROD):** [https://styleradar-notificaciones-prod.azurewebsites.net/swagger-ui/index.html](https://styleradar-notificaciones-prod.azurewebsites.net/swagger-ui/index.html)
+* **API Swagger en Producción (PROD):** apagado por seguridad (`SWAGGER_ENABLED=false`); la especificación se consulta en QA o en local. Se enciende con `SWAGGER_ENABLED=true` en el App Service.
 * **API Swagger en Calidad (QA):** [https://styleradar-notificaciones-qa.azurewebsites.net/swagger-ui/index.html](https://styleradar-notificaciones-qa.azurewebsites.net/swagger-ui/index.html)
 * **Swagger UI Microservicio Notificaciones (:8300):** [http://localhost:8300/swagger-ui/index.html](http://localhost:8300/swagger-ui/index.html)
 * **Especificación OpenAPI 3.0 JSON Schema:** [http://localhost:8300/v3/api-docs](http://localhost:8300/v3/api-docs)
