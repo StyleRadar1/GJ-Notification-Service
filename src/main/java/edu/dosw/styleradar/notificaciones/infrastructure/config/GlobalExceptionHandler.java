@@ -194,7 +194,6 @@ public class GlobalExceptionHandler {
     ) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
         problem.setTitle(title);
-        problem.setType(URI.create("https://styleradar.co/errors/" + status.value()));
         problem.setInstance(URI.create(request.getRequestURI()));
         problem.setProperty("timestamp", Instant.now().toString());
         problem.setProperty("mensaje", detail);

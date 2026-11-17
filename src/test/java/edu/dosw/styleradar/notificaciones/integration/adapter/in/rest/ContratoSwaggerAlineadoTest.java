@@ -137,7 +137,7 @@ class ContratoSwaggerAlineadoTest {
         for (String codigo : new String[] {"400", "401", "403", "409", "422", "503"}) {
             JsonNode ejemplo = ejemplos.get(codigo).at("/content/application~1problem+json/examples")
                     .elements().next().get("value");
-            assertThat(ejemplo.get("type").asText()).as(codigo).isEqualTo("https://styleradar.co/errors/" + codigo);
+            assertThat(ejemplo.get("type").asText()).as(codigo).isEqualTo("about:blank");
             assertThat(ejemplo.get("status").asInt()).as(codigo).isEqualTo(Integer.parseInt(codigo));
             assertThat(ejemplo.has("mensaje")).as(codigo).isTrue();
             assertThat(ejemplo.has("timestamp")).as(codigo).isTrue();
@@ -153,12 +153,18 @@ class ContratoSwaggerAlineadoTest {
                         .post("/api/v1/users/me/alerts").header("Authorization", token)
                         .contentType("application/json").content("{\"canal\":\"IN_APP\"}"))
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type").value("about:blank"))
                 .andExpect(jsonPath("$.errors.tipoAlerta").value("El tipo de alerta es obligatorio"))
                 .andExpect(jsonPath("$.mensaje").value("El tipo de alerta es obligatorio"));
 
         mockMvc.perform(get("/api/v1/users/me/notifications").param("size", "500").header("Authorization", token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.size").value("size no puede superar 100"));
+
+        mockMvc.perform(get("/api/v1/users/me/alerts"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.type").value("about:blank"))
+                .andExpect(jsonPath("$.title").value("No autenticado"));
     }
 
     private static Set<String> nombres(JsonNode objeto) {

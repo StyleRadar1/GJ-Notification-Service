@@ -56,7 +56,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "ValidacionFallida",
-                                    value = "{\"type\":\"https://styleradar.co/errors/400\",\"title\":\"Error de validacion en la solicitud\",\"status\":400,\"detail\":\"El tipo de alerta es obligatorio\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"El tipo de alerta es obligatorio\",\"errors\":{\"tipoAlerta\":\"El tipo de alerta es obligatorio\"}}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Error de validacion en la solicitud\",\"status\":400,\"detail\":\"El tipo de alerta es obligatorio\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"El tipo de alerta es obligatorio\",\"errors\":{\"tipoAlerta\":\"El tipo de alerta es obligatorio\"}}"
                             )
                     )
             ),
@@ -68,7 +68,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "NoAutenticado",
-                                    value = "{\"type\":\"https://styleradar.co/errors/401\",\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente, invalido o expirado\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"Token JWT ausente, invalido o expirado\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente, invalido o expirado\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"Token JWT ausente, invalido o expirado\"}"
                             )
                     )
             ),
@@ -80,7 +80,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "AccesoDenegado",
-                                    value = "{\"type\":\"https://styleradar.co/errors/403\",\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion para acceder o modificar los recursos de otro usuario\",\"instance\":\"/api/v1/users/202/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"No tienes autorizacion para acceder o modificar los recursos de otro usuario\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion para acceder o modificar los recursos de otro usuario\",\"instance\":\"/api/v1/users/202/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"No tienes autorizacion para acceder o modificar los recursos de otro usuario\"}"
                             )
                     )
             ),
@@ -92,7 +92,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "AlertaDuplicada",
-                                    value = "{\"type\":\"https://styleradar.co/errors/409\",\"title\":\"Conflicto de estado del recurso\",\"status\":409,\"detail\":\"Ya existe una alerta activa configurada para este recurso\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"Ya existe una alerta activa configurada para este recurso\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Conflicto de estado del recurso\",\"status\":409,\"detail\":\"Ya existe una alerta activa configurada para este recurso\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"Ya existe una alerta activa configurada para este recurso\"}"
                             )
                     )
             ),
@@ -104,7 +104,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "ItemConStock",
-                                    value = "{\"type\":\"https://styleradar.co/errors/422\",\"title\":\"Violacion de regla de negocio\",\"status\":422,\"detail\":\"No se puede crear una alerta de reposicion porque la prenda actualmente tiene stock disponible\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"No se puede crear una alerta de reposicion porque la prenda actualmente tiene stock disponible\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Violacion de regla de negocio\",\"status\":422,\"detail\":\"No se puede crear una alerta de reposicion porque la prenda actualmente tiene stock disponible\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"No se puede crear una alerta de reposicion porque la prenda actualmente tiene stock disponible\"}"
                             )
                     )
             ),
@@ -116,7 +116,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "CatalogoCaido",
-                                    value = "{\"type\":\"https://styleradar.co/errors/503\",\"title\":\"Servicio externo no disponible\",\"status\":503,\"detail\":\"El catalogo no esta disponible en este momento, intente nuevamente mas tarde\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"El catalogo no esta disponible en este momento, intente nuevamente mas tarde\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Servicio externo no disponible\",\"status\":503,\"detail\":\"El catalogo no esta disponible en este momento, intente nuevamente mas tarde\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"El catalogo no esta disponible en este momento, intente nuevamente mas tarde\"}"
                             )
                     )
             )
