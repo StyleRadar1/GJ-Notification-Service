@@ -23,7 +23,7 @@
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <org.projectlombok.version>1.18.48</org.projectlombok.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
-        <springdoc.version>2.5.0</springdoc.version>
+        <springdoc.version>3.2.0</springdoc.version>
         <jjwt.version>0.11.5</jjwt.version>
         <jacoco.version>0.8.11</jacoco.version>
         <!-- Docker 29 exige API 1.40 o superior; el Testcontainers de Spring Boot 3.2.5 usa la 1.32 y se omitian las pruebas con RabbitMQ -->
