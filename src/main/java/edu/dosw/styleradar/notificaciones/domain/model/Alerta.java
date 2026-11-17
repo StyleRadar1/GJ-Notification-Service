@@ -7,7 +7,7 @@ public class Alerta {
     private Long id;
     private Long usuarioId;
     private TipoAlerta tipoAlerta;
-    private Long itemId;
+    private String itemId;
     private String tallaObjetivo;
     private Long busquedaGuardadaId;
     private CanalNotificacion canal;
@@ -22,7 +22,7 @@ public class Alerta {
             Long id,
             Long usuarioId,
             TipoAlerta tipoAlerta,
-            Long itemId,
+            String itemId,
             String tallaObjetivo,
             Long busquedaGuardadaId,
             CanalNotificacion canal,
@@ -80,12 +80,16 @@ public class Alerta {
         this.tipoAlerta = tipoAlerta;
     }
 
-    public Long getItemId() {
+    public String getItemId() {
         return itemId;
     }
 
-    public void setItemId(Long itemId) {
+    public void setItemId(String itemId) {
         this.itemId = itemId;
+    }
+
+    public void setItemId(Long itemId) {
+        this.itemId = itemId != null ? itemId.toString() : null;
     }
 
     public String getTallaObjetivo() {

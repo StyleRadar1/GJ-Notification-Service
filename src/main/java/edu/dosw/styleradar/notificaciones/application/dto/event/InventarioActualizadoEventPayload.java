@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public record InventarioActualizadoEventPayload(
         String eventoId,
-        Long itemId,
+        String itemId,
         String nombrePrenda,
         String categoria,
         String color,
@@ -16,13 +16,23 @@ public record InventarioActualizadoEventPayload(
         Integer stockAnterior,
         Integer stockActual,
         Integer cicloReposicion,
-        Long tiendaId,
+        String tiendaId,
         String localidad,
         LocalDateTime fechaEvento
 ) {
 
-    /** Hay reposicion cuando la prenda estaba agotada y vuelve a tener unidades. */
+    /**
+     * Hay reposicion cuando la prenda vuelve a tener unidades disponibles.
+     * Si inventario no envia stockAnterior (backlog RES-133), cualquier stockActual positivo
+     * se evalua como disponibilidad de stock.
+     */
     public boolean esReposicion() {
-        return stockAnterior != null && stockAnterior == 0 && stockActual != null && stockActual > 0;
+        if (stockActual == null || stockActual <= 0) {
+            return false;
+        }
+        if (stockAnterior == null) {
+            return true;
+        }
+        return stockAnterior == 0;
     }
 }

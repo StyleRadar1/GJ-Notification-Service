@@ -56,7 +56,7 @@ class AlertaCreadaPublicacionIntegrationTest {
     private static final String ROUTING_KEY = "styleradar.notificaciones.alerta.creada";
     private static final String COLA_DE_PRUEBA = "test.estadisticas.alerta-creada.q";
     private static final long USUARIO_ID = 63_001L;
-    private static final long ITEM_ID = 63_002L;
+    private static final String ITEM_ID = "63002";
 
     @Container
     static final RabbitMQContainer RABBIT = new RabbitMQContainer("rabbitmq:3.13.7-management-alpine");
@@ -115,7 +115,7 @@ class AlertaCreadaPublicacionIntegrationTest {
         String respuesta = mockMvc.perform(post("/api/v1/usuarios/me/alertas")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":" + ITEM_ID + ",\"canal\":\"IN_APP\"}"))
+                        .content("{\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"" + ITEM_ID + "\",\"canal\":\"IN_APP\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         long alertaId = objectMapper.readTree(respuesta).get("id").asLong();
@@ -129,7 +129,7 @@ class AlertaCreadaPublicacionIntegrationTest {
         assertThat(evento.get("alertaId").asLong()).isEqualTo(alertaId);
         assertThat(evento.get("usuarioId").asLong()).isEqualTo(USUARIO_ID);
         assertThat(evento.get("tipoAlerta").asText()).isEqualTo("ITEM_AGOTADO");
-        assertThat(evento.get("itemId").asLong()).isEqualTo(ITEM_ID);
+        assertThat(evento.get("itemId").asText()).isEqualTo(ITEM_ID);
         assertThat(evento.get("canal").asText()).isEqualTo("IN_APP");
         assertThat(evento.hasNonNull("fechaCreacion")).isTrue();
     }
@@ -144,7 +144,7 @@ class AlertaCreadaPublicacionIntegrationTest {
         mockMvc.perform(post("/api/v1/usuarios/me/alertas")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":" + ITEM_ID + ",\"canal\":\"IN_APP\"}"))
+                        .content("{\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"" + ITEM_ID + "\",\"canal\":\"IN_APP\"}"))
                 .andExpect(status().isUnprocessableEntity());
 
         assertThat(rabbitTemplate.receive(COLA_DE_PRUEBA, 2_000)).isNull();

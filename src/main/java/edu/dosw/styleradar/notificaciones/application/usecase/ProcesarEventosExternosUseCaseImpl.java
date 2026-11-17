@@ -125,8 +125,8 @@ public class ProcesarEventosExternosUseCaseImpl implements ProcesarEventosExtern
     }
 
     @Override
-    public void desactivarAlertasPorItemEliminado(Long itemId) {
-        if (itemId != null) {
+    public void desactivarAlertasPorItemEliminado(String itemId) {
+        if (itemId != null && !itemId.isBlank()) {
             alertaRepositoryPort.desactivarPorItem(itemId);
         }
     }
@@ -174,7 +174,7 @@ public class ProcesarEventosExternosUseCaseImpl implements ProcesarEventosExtern
             String titulo,
             String mensaje,
             String enlace,
-            Long itemId,
+            String itemId,
             String eventoId
     ) {
         if (usuarioId == null || !usuarioActivo(usuarioId)) {

@@ -103,7 +103,7 @@ class ConsumidoresEventosExternosTest {
         long comprador = 6_506L;
 
         listener.onPrendaVendida(new PrendaVendidaEventPayload(
-                "evt-vta-65-1", 70L, "Chaqueta bomber", comprador,
+                "evt-vta-65-1", "70", "Chaqueta bomber", comprador,
                 List.of(interesadoA, interesadoB, comprador), LocalDateTime.now()));
 
         assertThat(deTipo(interesadoA, TipoNotificacion.PRENDA_VENDIDA)).hasSize(1);
@@ -116,7 +116,7 @@ class ConsumidoresEventosExternosTest {
     void prendaVendidaRepetidaNoDuplica() {
         long interesado = 6_507L;
         PrendaVendidaEventPayload evento = new PrendaVendidaEventPayload(
-                "evt-vta-65-2", 71L, "Jean", 1L, List.of(interesado), LocalDateTime.now());
+                "evt-vta-65-2", "71", "Jean", 1L, List.of(interesado), LocalDateTime.now());
 
         listener.onPrendaVendida(evento);
         listener.onPrendaVendida(evento);
@@ -127,10 +127,10 @@ class ConsumidoresEventosExternosTest {
     @Test
     @DisplayName("Una prenda vendida sin interesados no genera nada y sin publicacion es invalida")
     void prendaVendidaSinInteresadosOInvalida() {
-        listener.onPrendaVendida(new PrendaVendidaEventPayload("evt-vta-65-3", 72L, "Jean", 1L, null, null));
+        listener.onPrendaVendida(new PrendaVendidaEventPayload("evt-vta-65-3", "72", "Jean", 1L, null, null));
 
         assertThatThrownBy(() -> listener.onPrendaVendida(
-                new PrendaVendidaEventPayload("evt-vta-65-4", null, "Jean", 1L, List.of(1L), null)))
+                new PrendaVendidaEventPayload("evt-vta-65-4", (String) null, "Jean", 1L, List.of(1L), null)))
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
     }
 

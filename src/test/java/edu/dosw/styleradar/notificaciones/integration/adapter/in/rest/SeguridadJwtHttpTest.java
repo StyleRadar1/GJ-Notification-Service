@@ -100,13 +100,13 @@ class SeguridadJwtHttpTest {
     void otroUsuarioNoAccedeAMisRecursos() throws Exception {
         String propietario = jwtTokenService.generateToken(602L, "propietario@styleradar.co", "COMPRADOR");
         String intruso = jwtTokenService.generateToken(603L, "intruso@styleradar.co", "COMPRADOR");
-        when(catalogoFeignClient.consultarDisponibilidad(6001L))
-                .thenReturn(new CatalogoDisponibilidadItemResponse(6001L, 0, List.of()));
+        when(catalogoFeignClient.consultarDisponibilidad("6001"))
+                .thenReturn(new CatalogoDisponibilidadItemResponse("6001", 0, List.of()));
 
         String alertaJson = mockMvc.perform(post(ALERTAS)
                         .header("Authorization", "Bearer " + propietario)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":6001,\"canal\":\"IN_APP\"}"))
+                        .content("{\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"6001\",\"canal\":\"IN_APP\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         long alertaId = objectMapper.readTree(alertaJson).get("id").asLong();

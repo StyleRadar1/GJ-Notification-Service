@@ -16,16 +16,16 @@ public interface SpringDataAlertaRepository extends JpaRepository<AlertaJpaEntit
 
     List<AlertaJpaEntity> findByUsuarioIdOrderByFechaCreacionDesc(Long usuarioId);
 
-    List<AlertaJpaEntity> findByItemIdAndEstado(Long itemId, EstadoAlerta estado);
+    List<AlertaJpaEntity> findByItemIdAndEstado(String itemId, EstadoAlerta estado);
 
     List<AlertaJpaEntity> findByTipoAlertaAndEstado(TipoAlerta tipoAlerta, EstadoAlerta estado);
 
     List<AlertaJpaEntity> findByBusquedaGuardadaIdAndEstado(Long busquedaGuardadaId, EstadoAlerta estado);
 
-    boolean existsByUsuarioIdAndItemIdAndEstado(Long usuarioId, Long itemId, EstadoAlerta estado);
+    boolean existsByUsuarioIdAndItemIdAndEstado(Long usuarioId, String itemId, EstadoAlerta estado);
 
     boolean existsByUsuarioIdAndItemIdAndTallaObjetivoAndEstado(
-            Long usuarioId, Long itemId, String tallaObjetivo, EstadoAlerta estado);
+            Long usuarioId, String itemId, String tallaObjetivo, EstadoAlerta estado);
 
     boolean existsByUsuarioIdAndBusquedaGuardadaIdAndEstado(
             Long usuarioId, Long busquedaGuardadaId, EstadoAlerta estado);
@@ -36,7 +36,7 @@ public interface SpringDataAlertaRepository extends JpaRepository<AlertaJpaEntit
     @Query("UPDATE AlertaJpaEntity a SET a.estado = :nuevoEstado, a.fechaActualizacion = :fecha " +
            "WHERE a.itemId = :itemId AND a.estado = :estadoActual")
     int actualizarEstadoPorItem(
-            @Param("itemId") Long itemId,
+            @Param("itemId") String itemId,
             @Param("estadoActual") EstadoAlerta estadoActual,
             @Param("nuevoEstado") EstadoAlerta nuevoEstado,
             @Param("fecha") LocalDateTime fecha

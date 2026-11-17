@@ -17,8 +17,8 @@ public record AlertaResponse(
         @Schema(description = "Tipo de alerta configurada", example = "ITEM_AGOTADO")
         TipoAlerta tipoAlerta,
 
-        @Schema(description = "Identificador de la prenda (solo para ITEM_AGOTADO)", example = "1045")
-        Long itemId,
+        @Schema(description = "Identificador de la prenda (solo para ITEM_AGOTADO, UUID o numerico)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        String itemId,
 
         @Schema(description = "Talla objetivo monitoreada", example = "M")
         String tallaObjetivo,

@@ -14,17 +14,17 @@ public interface AlertaRepositoryPort {
 
     List<Alerta> listarPorUsuario(Long usuarioId);
 
-    List<Alerta> listarActivasPorItem(Long itemId);
+    List<Alerta> listarActivasPorItem(String itemId);
 
     List<Alerta> listarActivasPorTipo(TipoAlerta tipoAlerta);
 
     List<Alerta> listarActivasPorBusquedaGuardada(Long busquedaGuardadaId);
 
-    boolean existeActivaParaItem(Long usuarioId, Long itemId, String tallaObjetivo);
+    boolean existeActivaParaItem(Long usuarioId, String itemId, String tallaObjetivo);
 
     boolean existeActivaParaBusqueda(Long usuarioId, Long busquedaGuardadaId);
 
-    int desactivarPorItem(Long itemId);
+    int desactivarPorItem(String itemId);
 
     int desactivarPorBusquedaGuardada(Long busquedaGuardadaId);
 

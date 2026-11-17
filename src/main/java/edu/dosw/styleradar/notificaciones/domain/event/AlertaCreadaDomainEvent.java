@@ -9,7 +9,7 @@ public record AlertaCreadaDomainEvent(
         Long alertaId,
         Long usuarioId,
         TipoAlerta tipoAlerta,
-        Long itemId,
+        String itemId,
         Long busquedaGuardadaId,
         CanalNotificacion canal,
         LocalDateTime fechaCreacion

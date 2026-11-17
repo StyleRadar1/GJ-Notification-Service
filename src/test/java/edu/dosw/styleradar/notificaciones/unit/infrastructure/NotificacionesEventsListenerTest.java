@@ -46,7 +46,7 @@ class NotificacionesEventsListenerTest {
 
         ArgumentCaptor<DatosPrendaVO> captor = ArgumentCaptor.forClass(DatosPrendaVO.class);
         verify(useCase).procesarDisponibilidadPrenda(captor.capture());
-        assertThat(captor.getValue().itemId()).isEqualTo(1045L);
+        assertThat(captor.getValue().itemId()).isEqualTo("1045");
         assertThat(captor.getValue().stockDisponible()).isEqualTo(8);
         assertThat(captor.getValue().cicloReposicion()).isEqualTo(2);
     }
@@ -68,12 +68,38 @@ class NotificacionesEventsListenerTest {
     }
 
     @Test
-    @DisplayName("NOT-06 - Un evento sin stock anterior es invalido y va directo a la cola de errores")
-    void eventoSinStockAnteriorEsInvalido() {
-        assertThatThrownBy(() -> listener.onInventarioActualizado(inventario(null, 8, 2)))
+    @DisplayName("NOT-06 / RES-133 - Un evento sin stock anterior se procesa como reposicion si stockActual > 0")
+    void eventoSinStockAnteriorSeProcesaSiStockActualEsMayorACero() {
+        listener.onInventarioActualizado(inventario(null, 8, 2));
+
+        ArgumentCaptor<DatosPrendaVO> captor = ArgumentCaptor.forClass(DatosPrendaVO.class);
+        verify(useCase).procesarDisponibilidadPrenda(captor.capture());
+        assertThat(captor.getValue().itemId()).isEqualTo("1045");
+        assertThat(captor.getValue().stockDisponible()).isEqualTo(8);
+    }
+
+    @Test
+    @DisplayName("NOT-06 - Un evento sin stock actual es invalido y va directo a la cola de errores")
+    void eventoSinStockActualEsInvalido() {
+        assertThatThrownBy(() -> listener.onInventarioActualizado(inventario(0, null, 2)))
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
 
         verifyNoInteractions(useCase);
+    }
+
+    @Test
+    @DisplayName("NOT-06 - Un evento con itemId UUID se procesa correctamente")
+    void eventoConItemIdUuidSeProcesaCorrectamente() {
+        String uuid = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        InventarioActualizadoEventPayload payload = new InventarioActualizadoEventPayload(
+                "evt-inv-uuid", uuid, "Camisa Lino", "CAMISAS", "BLANCO", "L", "BogotaStreet", "SASTRE",
+                new BigDecimal("120000"), 0, 4, 1, "15", "USAQUEN", LocalDateTime.now());
+
+        listener.onInventarioActualizado(payload);
+
+        ArgumentCaptor<DatosPrendaVO> captor = ArgumentCaptor.forClass(DatosPrendaVO.class);
+        verify(useCase).procesarDisponibilidadPrenda(captor.capture());
+        assertThat(captor.getValue().itemId()).isEqualTo(uuid);
     }
 
     @Test
@@ -91,15 +117,15 @@ class NotificacionesEventsListenerTest {
     @Test
     @DisplayName("NOT-08 - Una prenda retirada desactiva las alertas del item")
     void prendaRetiradaDesactivaLasAlertasDelItem() {
-        listener.onPrendaRetirada(new PrendaRetiradaEventPayload("evt-cat-1", 55L, "Retirada por la tienda", LocalDateTime.now()));
+        listener.onPrendaRetirada(new PrendaRetiradaEventPayload("evt-cat-1", "55", "Retirada por la tienda", LocalDateTime.now()));
 
-        verify(useCase).desactivarAlertasPorItemEliminado(55L);
+        verify(useCase).desactivarAlertasPorItemEliminado("55");
     }
 
     @Test
     @DisplayName("NOT-08 - Un evento de prenda retirada sin item es invalido y va directo a la cola de errores")
     void prendaRetiradaSinItemEsInvalida() {
-        assertThatThrownBy(() -> listener.onPrendaRetirada(new PrendaRetiradaEventPayload("evt-cat-2", null, null, null)))
+        assertThatThrownBy(() -> listener.onPrendaRetirada(new PrendaRetiradaEventPayload("evt-cat-2", (String) null, null, null)))
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
         assertThatThrownBy(() -> listener.onPrendaRetirada(null))
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
@@ -171,7 +197,7 @@ class NotificacionesEventsListenerTest {
 
     private InventarioActualizadoEventPayload inventario(Integer anterior, Integer actual, Integer ciclo) {
         return new InventarioActualizadoEventPayload(
-                "evt-inv-1", 1045L, "Chaqueta Bomber", "CHAQUETAS", "NEGRO", "M", "BogotaStreet", "STREETWEAR",
-                new BigDecimal("185000"), anterior, actual, ciclo, 12L, "CHAPINERO", LocalDateTime.now());
+                "evt-inv-1", "1045", "Chaqueta Bomber", "CHAQUETAS", "NEGRO", "M", "BogotaStreet", "STREETWEAR",
+                new BigDecimal("185000"), anterior, actual, ciclo, "12", "CHAPINERO", LocalDateTime.now());
     }
 }

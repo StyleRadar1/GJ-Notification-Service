@@ -43,11 +43,11 @@ public class NotificacionesEventsListener {
 
     @RabbitListener(queues = "${application.messaging.queues.inventory-updated:styleradar.notificaciones.inventario-actualizado.q}")
     public void onInventarioActualizado(InventarioActualizadoEventPayload payload) {
-        if (payload == null || payload.itemId() == null) {
+        if (payload == null || payload.itemId() == null || payload.itemId().isBlank()) {
             throw payloadInvalido("InventarioActualizado", "sin itemId");
         }
-        if (payload.stockAnterior() == null || payload.stockActual() == null) {
-            throw payloadInvalido("InventarioActualizado", "sin stockAnterior o stockActual");
+        if (payload.stockActual() == null) {
+            throw payloadInvalido("InventarioActualizado", "sin stockActual");
         }
         if (!payload.esReposicion()) {
             log.debug("InventarioActualizado del item {} no es una reposicion (stock {} a {}), se ignora",
@@ -73,7 +73,7 @@ public class NotificacionesEventsListener {
 
     @RabbitListener(queues = "${application.messaging.queues.garment-published:styleradar.notificaciones.prenda-publicada.q}")
     public void onPrendaPublicada(PrendaPublicadaEventPayload payload) {
-        if (payload == null || payload.itemId() == null) {
+        if (payload == null || payload.itemId() == null || payload.itemId().isBlank()) {
             throw payloadInvalido("PrendaPublicada", "sin itemId");
         }
         DatosPrendaVO datosPrenda = new DatosPrendaVO(
@@ -172,7 +172,7 @@ public class NotificacionesEventsListener {
 
     @RabbitListener(queues = "${application.messaging.queues.moderation-changed:styleradar.notificaciones.moderacion-cambiada.q}")
     public void onModeracionPrendaCambiada(ModeracionPrendaCambiadaEventPayload payload) {
-        if (payload == null || payload.propietarioUsuarioId() == null || payload.itemId() == null) {
+        if (payload == null || payload.propietarioUsuarioId() == null || payload.itemId() == null || payload.itemId().isBlank()) {
             throw payloadInvalido("ModeracionPrendaCambiada", "incompleto");
         }
         if ("RETIRADA".equalsIgnoreCase(payload.estadoModeracion())
@@ -196,7 +196,7 @@ public class NotificacionesEventsListener {
 
     @RabbitListener(queues = "${application.messaging.queues.garment-deleted:styleradar.notificaciones.prenda-retirada.q}")
     public void onPrendaRetirada(PrendaRetiradaEventPayload payload) {
-        if (payload == null || payload.itemId() == null) {
+        if (payload == null || payload.itemId() == null || payload.itemId().isBlank()) {
             throw payloadInvalido("PrendaRetirada", "sin itemId");
         }
         procesarEventosExternosUseCase.desactivarAlertasPorItemEliminado(payload.itemId());
@@ -225,7 +225,7 @@ public class NotificacionesEventsListener {
 
     @RabbitListener(queues = "${application.messaging.queues.garment-sold:styleradar.notificaciones.prenda-vendida.q}")
     public void onPrendaVendida(PrendaVendidaEventPayload payload) {
-        if (payload == null || payload.publicacionId() == null) {
+        if (payload == null || payload.publicacionId() == null || payload.publicacionId().isBlank()) {
             throw payloadInvalido("PrendaVendida", "sin publicacionId");
         }
         String prenda = payload.nombrePrenda() != null ? payload.nombrePrenda() : "La prenda";

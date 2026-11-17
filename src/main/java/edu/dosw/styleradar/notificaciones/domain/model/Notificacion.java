@@ -7,7 +7,7 @@ public class Notificacion {
     private Long id;
     private Long usuarioId;
     private Long alertaId;
-    private Long itemId;
+    private String itemId;
     private Integer cicloReposicion;
     private TipoNotificacion tipo;
     private CanalNotificacion canal;
@@ -27,7 +27,7 @@ public class Notificacion {
             Long id,
             Long usuarioId,
             Long alertaId,
-            Long itemId,
+            String itemId,
             Integer cicloReposicion,
             TipoNotificacion tipo,
             CanalNotificacion canal,
@@ -84,12 +84,16 @@ public class Notificacion {
         this.alertaId = alertaId;
     }
 
-    public Long getItemId() {
+    public String getItemId() {
         return itemId;
     }
 
-    public void setItemId(Long itemId) {
+    public void setItemId(String itemId) {
         this.itemId = itemId;
+    }
+
+    public void setItemId(Long itemId) {
+        this.itemId = itemId != null ? itemId.toString() : null;
     }
 
     public Integer getCicloReposicion() {
