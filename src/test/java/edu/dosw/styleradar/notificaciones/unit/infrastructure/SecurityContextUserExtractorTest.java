@@ -66,7 +66,7 @@ class SecurityContextUserExtractorTest {
 
         assertThatThrownBy(() -> extractor.validarAccesoUsuario("202"))
                 .isInstanceOf(AccesoDenegadoException.class)
-                .hasMessageContaining("No tienes autorizacion para acceder o modificar los recursos del usuario 202");
+                .hasMessageContaining("No tienes autorizacion para acceder o modificar los recursos de otro usuario");
 
         assertThatThrownBy(() -> extractor.validarAccesoUsuario("abc"))
                 .isInstanceOf(AccesoDenegadoException.class)

@@ -52,10 +52,10 @@ public class SecurityContextUserExtractor {
         try {
             idSolicitado = Long.parseLong(usuarioId.trim());
         } catch (NumberFormatException ex) {
-            throw new AccesoDenegadoException("Identificador de usuario invalido en la ruta: " + usuarioId);
+            throw new AccesoDenegadoException("Identificador de usuario invalido en la ruta");
         }
         if (!usuarioAutenticadoId.equals(idSolicitado) && !esAdmin()) {
-            throw new AccesoDenegadoException("No tienes autorizacion para acceder o modificar los recursos del usuario " + idSolicitado);
+            throw new AccesoDenegadoException("No tienes autorizacion para acceder o modificar los recursos de otro usuario");
         }
         return idSolicitado;
     }

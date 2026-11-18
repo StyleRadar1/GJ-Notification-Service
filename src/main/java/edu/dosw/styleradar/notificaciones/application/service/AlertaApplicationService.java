@@ -10,5 +10,7 @@ public interface AlertaApplicationService {
     List<Alerta> listarAlertasPorUsuario(Long usuarioId);
 
     Alerta desactivarAlerta(Long alertaId, Long usuarioId);
+
+    Alerta activarAlerta(Long alertaId, Long usuarioId);
 }
 

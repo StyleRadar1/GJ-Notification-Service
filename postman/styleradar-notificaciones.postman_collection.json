@@ -2,7 +2,7 @@
   "info": {
     "name": "StyleRadar - ms-notificaciones API (NOT-19)",
     "_postman_id": "e7f5a301-8891-4b21-9c12-styleradar8300",
-    "description": "Coleccion oficial de pruebas de endpoints para ms-notificaciones bajo /api/v1/usuarios/me (Puerto 8300)",
+    "description": "Coleccion oficial de pruebas de endpoints para ms-notificaciones bajo /api/v1/users/{id} (Puerto 8300)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -24,6 +24,11 @@
     {
       "key": "notificacionId",
       "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "tallaRun",
+      "value": "Q0",
       "type": "string"
     }
   ],
@@ -62,20 +67,20 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones?soloNoLeidas=false",
+              "raw": "{{baseUrl}}/api/v1/users/me/notifications?unreadOnly=false",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "notificaciones"
+                "notifications"
               ],
               "query": [
                 {
-                  "key": "soloNoLeidas",
+                  "key": "unreadOnly",
                   "value": "false"
                 }
               ]
@@ -111,18 +116,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/no-leidas/contador",
+              "raw": "{{baseUrl}}/api/v1/users/me/notifications/unread/count",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "notificaciones",
-                "no-leidas",
-                "contador"
+                "notifications",
+                "unread",
+                "count"
               ]
             }
           }
@@ -155,18 +160,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/{{notificacionId}}/leer",
+              "raw": "{{baseUrl}}/api/v1/users/me/notifications/{{notificacionId}}/read",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "notificaciones",
+                "notifications",
                 "{{notificacionId}}",
-                "leer"
+                "read"
               ]
             }
           }
@@ -199,17 +204,17 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/leer-todas",
+              "raw": "{{baseUrl}}/api/v1/users/me/notifications/read-all",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "notificaciones",
-                "leer-todas"
+                "notifications",
+                "read-all"
               ]
             }
           }
@@ -244,16 +249,16 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones/stream",
+              "raw": "{{baseUrl}}/api/v1/users/me/notifications/stream",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "notificaciones",
+                "notifications",
                 "stream"
               ]
             }
@@ -290,16 +295,16 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/preferencias-avisos",
+              "raw": "{{baseUrl}}/api/v1/users/me/notification-preferences",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "preferencias-avisos"
+                "notification-preferences"
               ]
             }
           }
@@ -341,16 +346,16 @@
               "raw": "{\n  \"canal\": \"CORREO_Y_PLATAFORMA\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/preferencias-avisos/MENSAJE_NUEVO",
+              "raw": "{{baseUrl}}/api/v1/users/me/notification-preferences/MENSAJE_NUEVO",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "preferencias-avisos",
+                "notification-preferences",
                 "MENSAJE_NUEVO"
               ]
             }
@@ -393,16 +398,16 @@
               "raw": "{\n  \"canal\": \"CORREO_Y_PLATAFORMA\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/preferencias-avisos/TIPO_INVALIDO",
+              "raw": "{{baseUrl}}/api/v1/users/me/notification-preferences/TIPO_INVALIDO",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "preferencias-avisos",
+                "notification-preferences",
                 "TIPO_INVALIDO"
               ]
             }
@@ -433,16 +438,16 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones",
+              "raw": "{{baseUrl}}/api/v1/users/me/notifications",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "notificaciones"
+                "notifications"
               ]
             }
           }
@@ -482,16 +487,16 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones?page=0&size=5",
+              "raw": "{{baseUrl}}/api/v1/users/me/notifications?page=0&size=5",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "notificaciones"
+                "notifications"
               ],
               "query": [
                 {
@@ -535,16 +540,16 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/notificaciones?size=101",
+              "raw": "{{baseUrl}}/api/v1/users/me/notifications?size=101",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "notificaciones"
+                "notifications"
               ],
               "query": [
                 {
@@ -568,16 +573,18 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "// Talla unica por ejecucion: dos ejecuciones al mismo tiempo (push y pull request) no chocan en QA.",
+                  "pm.collectionVariables.set('tallaRun', 'Q' + Date.now().toString(36));",
                   "// Deja el escenario limpio: desactiva alertas ACTIVAS previas de la misma prenda y talla,",
                   "// para que la coleccion se pueda ejecutar varias veces contra una base persistente (QA) sin 409.",
                   "const base = pm.variables.get('baseUrl');",
                   "const cab = { Authorization: 'Bearer ' + pm.variables.get('jwtToken') };",
-                  "pm.sendRequest({ url: base + '/api/v1/usuarios/me/alertas', method: 'GET', header: cab }, function (err, res) {",
+                  "pm.sendRequest({ url: base + '/api/v1/users/me/alerts', method: 'GET', header: cab }, function (err, res) {",
                   "  if (err || res.code !== 200) { return; }",
                   "  res.json()",
-                  "    .filter(function (a) { return a.estado === 'ACTIVA' && a.itemId === 1045 && a.tallaObjetivo === 'M'; })",
+                  "    .filter(function (a) { return a.estado === 'ACTIVA' && String(a.itemId) === '1045' && a.tallaObjetivo === 'M'; })",
                   "    .forEach(function (a) {",
-                  "      pm.sendRequest({ url: base + '/api/v1/usuarios/me/alertas/' + a.id, method: 'DELETE', header: cab }, function () {});",
+                  "      pm.sendRequest({ url: base + '/api/v1/users/me/alerts/' + a.id, method: 'DELETE', header: cab }, function () {});",
                   "    });",
                   "});"
                 ]
@@ -616,19 +623,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tipoAlerta\": \"ITEM_AGOTADO\",\n  \"itemId\": 1045,\n  \"tallaObjetivo\": \"M\",\n  \"canal\": \"IN_APP\"\n}"
+              "raw": "{\n  \"tipoAlerta\": \"ITEM_AGOTADO\",\n  \"itemId\": 1045,\n  \"tallaObjetivo\": \"{{tallaRun}}\",\n  \"canal\": \"IN_APP\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/alertas",
+              "raw": "{{baseUrl}}/api/v1/users/me/alerts",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "alertas"
+                "alerts"
               ]
             }
           }
@@ -668,16 +675,16 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/alertas",
+              "raw": "{{baseUrl}}/api/v1/users/me/alerts",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "alertas"
+                "alerts"
               ]
             }
           }
@@ -710,16 +717,16 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/usuarios/me/alertas/{{alertaId}}",
+              "raw": "{{baseUrl}}/api/v1/users/me/alerts/{{alertaId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
-                "usuarios",
+                "users",
                 "me",
-                "alertas",
+                "alerts",
                 "{{alertaId}}"
               ]
             }

@@ -8,6 +8,10 @@
 
 > **Regla de oro de StyleRadar:** cada diagrama va acompañado de su explicación técnica (qué representa) y de su justificación arquitectónica (por qué se diseñó así). Un diagrama sin texto no se recibe.
 
+> **Idioma:** los diagramas (`.drawio` e imágenes) están en inglés; los nombres de clases, métodos, tablas, columnas y colas se dejan como en el código. Esta explicación sigue en español.
+>
+> **Actualización del 17/11/2026:** reflejan el código de `develop` (`itemId` de texto, migración V6, `Alerta.activar()`, `ActivarAlertaUseCaseImpl`, `RateLimitFilter`, `MetricasConfig`).
+
 ## Plantilla de estilo
 
 Todos los diagramas siguen la plantilla de diagramas de StyleRadar: fondo blanco, tipografía Poppins y la paleta del curso.
@@ -45,7 +49,7 @@ Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archi
 
 El diagrama muestra la frontera de `ms-notificaciones` (puerto `8300`) y los sistemas con los que se comunica.
 
-1. **Frontend y API Gateway (`api-gateway`, `:8080`):** el usuario llega por HTTPS a través del gateway. Las rutas REST de `/api/v1/usuarios/{usuarioId}` y la suscripción SSE de la campana exigen un JWT Bearer.
+1. **Frontend y API Gateway (`api-gateway`, `:8080`):** el usuario llega por HTTPS a través del gateway. Las rutas REST de `/api/v1/users/{id}` y la suscripción SSE de la campana exigen un JWT Bearer (el stream también acepta un ticket de 60 s en `?ticket=`).
 2. **Broker de eventos (RabbitMQ, `:5672`):** el servicio consume 12 colas durables sobre el exchange `styleradar.exchange`:
    - `ms-inventario` (`:8200`) publica `InventarioActualizado`.
    - `ms-usuarios` (`:8120`) publica el estado de cuenta y las búsquedas guardadas.
@@ -111,7 +115,7 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 
 ### 3.1. Explicación técnica
 
-1. **Entidades:** `Notificacion`, `Alerta`, `PreferenciaAviso`, `BusquedaGuardadaCopia` y `EstadoCuentaCopia`. Los identificadores de usuario, ítem y búsqueda son `Long` y apuntan a otros servicios, por lo que no hay referencias a sus clases.
+1. **Entidades:** `Notificacion`, `Alerta`, `PreferenciaAviso`, `BusquedaGuardadaCopia` y `EstadoCuentaCopia`. Los identificadores de usuario y búsqueda son `Long` y el del ítem es `String` (UUID); todos apuntan a otros servicios, por lo que no hay referencias a sus clases. `Alerta` tiene `activar()` y `desactivar()`.
 2. **Relaciones por id:** `Notificacion` referencia a `Alerta` por `alertaId`, y `Alerta` referencia a `BusquedaGuardadaCopia` por `busquedaGuardadaId`. Son relaciones lógicas, no objetos enlazados.
 3. **Objetos de valor:** `CriterioBusquedaVO` (composición de la búsqueda guardada) y `DatosPrendaVO` (datos del evento de prenda).
 4. **Enumeraciones:** `TipoNotificacion` (9 tipos), `CanalNotificacion`, `CanalAviso` (`SOLO_PLATAFORMA` o `CORREO_Y_PLATAFORMA`), `TipoAlerta`, `EstadoAlerta` y `EstadoCuenta`.
@@ -136,7 +140,7 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 
 ### 4.1. Explicación técnica
 
-El esquema relacional de `notificaciones_db` (PostgreSQL 16) lo gestionan las migraciones Flyway `V1__init_schema.sql`, `V2__add_indexes.sql`, `V3__add_evento_id_notificaciones.sql`, `V4__create_preferencias_avisos.sql` y `V5__create_correos_pendientes.sql`. Hibernate solo lo valida (`ddl-auto: validate`).
+El esquema relacional de `notificaciones_db` (PostgreSQL 16) lo gestionan las migraciones Flyway `V1__init_schema.sql`, `V2__add_indexes.sql`, `V3__add_evento_id_notificaciones.sql`, `V4__create_preferencias_avisos.sql`, `V5__create_correos_pendientes.sql` y `V6__alter_item_id_to_varchar.sql` (`item_id` pasa a `VARCHAR(100)` en `alertas` y `notificaciones` para aceptar UUID). Hibernate solo lo valida (`ddl-auto: validate`).
 
 | Tabla | Propósito |
 | :--- | :--- |
@@ -204,7 +208,7 @@ El diagrama muestra el equipo de desarrollo, GitHub y los dos entornos de Azure.
 El diagrama muestra los dos recorridos principales del servicio.
 
 **Fase 1: crear una alerta (síncrono)**
-1. El frontend envía `POST /api/v1/usuarios/{usuarioId}/alertas` con el JWT al `AlertaController`.
+1. El frontend envía `POST /api/v1/users/{id}/alerts` con el JWT al `AlertaController`.
 2. El caso de uso consulta a `ms-item-catalogo` por OpenFeign que el ítem esté agotado. Si Catálogo no responde, la respuesta es `503` y no se crea la alerta.
 3. Se guarda la alerta en PostgreSQL, se publica `AlertaCreada` en el broker (la consume `ms-estadisticas`) y el cliente recibe `201 Created`.
 
@@ -221,3 +225,55 @@ El mismo mecanismo atiende los demás eventos: prenda publicada, estado de cuent
 - **Una llamada síncrona y el resto por eventos:** solo crear la alerta necesita una respuesta inmediata; la reposición se procesa sin acoplar a Inventario con Notificaciones.
 - **Reintentos y cola de errores:** un fallo transitorio no pierde el evento y un mensaje inválido no bloquea la cola.
 - **Idempotencia:** como el broker puede entregar un evento más de una vez, la restricción única de la base de datos evita notificaciones repetidas.
+
+---
+
+## 7. Diagrama de componentes general (ecosistema StyleRadar)
+
+<p align="center">
+  <img src="./images/diagrama-componentes-general.png" alt="Diagrama de componentes general del ecosistema StyleRadar" width="95%" />
+</p>
+
+> Este diagrama lo elaboró el equipo de arquitectura y es el mismo para todos los microservicios. Se conserva aquí como referencia; el detalle de `ms-notificaciones` está en las secciones 1 a 6. Fuente editable: [`uml/diagrama-componentes-general.drawio`](./uml/diagrama-componentes-general.drawio).
+
+### 7.1. Explicación técnica
+
+El diagrama muestra el backend completo de StyleRadar dentro de un recuadro punteado («Back Ecosystem»).
+
+1. **Cliente y entrada:** la aplicación web (*StyleRadar Client*) habla solo con el **API Gateway**, que reparte las llamadas a cada microservicio.
+2. **Microservicios:** `ms-auth`, `ms-usuarios`, `ms-tiendas`, `ms-notificaciones`, `ms-inventario`, `ms-itemcatalogo`, `ms-segunda-vida`, `ms-chat`, `ms-playlist`, `ms-pagos`, `ms-geolocalizacion`, `ms-probador-virtual` y `ms-estadisticas`. Cada uno tiene su propia base de datos (`usuarios_db`, `notificaciones_db`, `catalogo_db`, etc.).
+3. **Mensajería y caché:** hay colas de RabbitMQ para Notificaciones, Pagos y Estadísticas, y una instancia de Redis compartida.
+4. **Sistemas externos:** Google OAuth, la API de MercadoPago, Azure Blob Storage y la API de FASHN AI.
+5. **Interfaces:** las interfaces proporcionadas y requeridas (círculo y semicírculo) marcan quién ofrece y quién consume cada servicio.
+
+**Lo que corresponde a `ms-notificaciones`:** su base `notificaciones_db`, su cola de RabbitMQ y su entrada por el API Gateway. Los eventos que consume y publica están en [CONTRATOS_EVENTOS_NOT21.md](./CONTRATOS_EVENTOS_NOT21.md).
+
+### 7.2. Justificación arquitectónica
+
+- **Una base por servicio:** ningún servicio lee la base de otro; se comunican por HTTP a través de las interfaces o por eventos de RabbitMQ.
+- **Una sola puerta de entrada:** el API Gateway concentra la autenticación y el enrutamiento, así que el cliente no conoce los puertos de los servicios.
+
+---
+
+## 8. Diagrama de despliegue general (ecosistema StyleRadar)
+
+<p align="center">
+  <img src="./images/diagrama-despliegue-general.png" alt="Diagrama de despliegue general del ecosistema StyleRadar" width="95%" />
+</p>
+
+> Elaborado por el equipo de arquitectura. Se conserva como referencia; el despliegue propio de `ms-notificaciones` (QA y PROD en Azure) está en la sección 5. Fuente editable: [`uml/diagrama-despliegue-general.drawio`](./uml/diagrama-despliegue-general.drawio). La imagen se generó a partir del archivo `.drawio`.
+
+### 8.1. Explicación técnica
+
+1. **Aplicación web:** el artefacto *Web Application* se despliega contra el **API Gateway** (`8080`).
+2. **Contenedores:** cada microservicio es una *Container App* con su puerto: Auth `8100`, User `8120`, Store `8140`, Item Catalog `8220`, Inventory `8200`, Payments `8400`, Donations `8520`, Chat `8320`, Playlist `8260`, Geolocation `8240`, Virtual Try-on `8520`, **Notification `8300`** y Analytics `8420`.
+3. **PostgreSQL:** un servidor con una base por servicio (Auth, User, Item Catalog, Store, Inventory, Payments, Donations, Chat, Geolocation, Playlist, Virtual Try-on, Notification y Analytics).
+4. **Redis:** espacios para Auth, Payments, Notification, Chat y Analytics.
+5. **RabbitMQ:** un dispositivo `RabbitMQAdapter` al que se conectan los servicios que publican o consumen eventos.
+
+> **Por confirmar con el equipo de arquitectura:** en el diagrama, Donations y Virtual Try-on figuran con el mismo puerto `8520`. Dos contenedores no pueden compartir puerto en la misma máquina; conviene confirmar el valor correcto.
+
+### 8.2. Justificación arquitectónica
+
+- **Contenedor por servicio:** cada microservicio se despliega y escala por separado.
+- **Bases y caché separadas por servicio:** un fallo o una migración en una base no afecta a los demás servicios.

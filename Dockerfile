@@ -1,12 +1,12 @@
 # Stage 1: Build and package
-FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
+FROM maven:3.9-eclipse-temurin-26-alpine AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Lightweight OCI runtime image
-FROM eclipse-temurin:21.0.13_9-jre-alpine
+FROM eclipse-temurin:24.0.2_12-jre-alpine
 WORKDIR /app
 
 # Importar certificado raíz de StyleRadar para conexión TLS a RabbitMQ (GJ-92)

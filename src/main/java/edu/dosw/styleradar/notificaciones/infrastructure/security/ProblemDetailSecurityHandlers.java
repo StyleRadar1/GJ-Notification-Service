@@ -55,7 +55,6 @@ public class ProblemDetailSecurityHandlers {
     ) throws IOException {
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(estado, detalle);
         problema.setTitle(titulo);
-        problema.setType(URI.create("https://styleradar.co/errors/" + estado.value()));
         problema.setInstance(URI.create(request.getRequestURI()));
         problema.setProperty("timestamp", Instant.now().toString());
         problema.setProperty("mensaje", detalle);

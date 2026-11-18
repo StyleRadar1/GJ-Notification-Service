@@ -52,7 +52,7 @@ public class NotificacionApplicationServiceImpl implements NotificacionApplicati
     @Override
     public Notificacion marcarComoLeida(Long notificacionId, Long usuarioId) {
         Notificacion notificacion = notificacionRepositoryPort.buscarPorId(notificacionId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro la notificacion con ID: " + notificacionId));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro la notificacion"));
 
         if (!notificacion.getUsuarioId().equals(usuarioId)) {
             throw new AccesoDenegadoException("No tiene permisos para modificar una notificacion de otro usuario");

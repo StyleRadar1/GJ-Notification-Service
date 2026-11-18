@@ -17,6 +17,11 @@ updates:
     ignore:
       - dependency-name: "org.springframework.boot:*"
         update-types: ["version-update:semver-major"]
+      # Spring Cloud 2025.1 y springdoc 3 exigen Spring Boot 4; con Boot 3.5 se queda en 2025.0.x y 2.8.x
+      - dependency-name: "org.springframework.cloud:spring-cloud-dependencies"
+        versions: [">= 2025.1"]
+      - dependency-name: "org.springdoc:*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"

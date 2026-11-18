@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 21
         uses: actions/setup-java@v5
@@ -29,7 +29,7 @@ jobs:
 
       - name: Upload JaCoCo Coverage Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jacoco-report
           path: target/site/jacoco/
@@ -61,10 +61,10 @@ jobs:
       JWT_SECRET_QA: ${{ secrets.JWT_SECRET_QA }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build OCI Docker image for QA
         run: docker build -t styleradar/ms-notificaciones:qa .
@@ -171,7 +171,7 @@ jobs:
 
       - name: Upload Newman Postman Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: newman-postman-report
           path: target/newman/
@@ -203,13 +203,13 @@ jobs:
 
       - name: Log in to Azure
         if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME_QA != ''
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy and configure Azure App Service QA (GJ-92)
         if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME_QA != ''
-        uses: azure/cli@v2
+        uses: azure/cli@v3
         with:
           inlineScript: |
             SHORT_SHA="${GITHUB_SHA::7}"
