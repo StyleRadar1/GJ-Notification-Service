@@ -3,6 +3,7 @@ package edu.dosw.styleradar.notificaciones.infrastructure.adapter.in.rest.doc;
 import edu.dosw.styleradar.notificaciones.application.dto.request.PreferenciaAvisoRequest;
 import edu.dosw.styleradar.notificaciones.application.dto.response.PreferenciaAvisoResponse;
 import edu.dosw.styleradar.notificaciones.domain.model.TipoNotificacion;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -17,6 +18,7 @@ import java.util.List;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 
+@Hidden
 @Tag(
         name = "Notification Preferences",
         description = "Administración de canales de recepción por tipo de notificación bajo /api/v1/users/{id}/notification-preferences"

@@ -3,6 +3,7 @@ package edu.dosw.styleradar.notificaciones.infrastructure.adapter.in.rest;
 import edu.dosw.styleradar.notificaciones.application.dto.request.CrearAlertaRequest;
 import edu.dosw.styleradar.notificaciones.application.dto.response.AlertaResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.ContadorNoLeidasResponse;
+import edu.dosw.styleradar.notificaciones.application.dto.response.EstadoSuscripcionAlertaResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.NotificacionResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.PaginaResponse;
 import edu.dosw.styleradar.notificaciones.application.mapper.in.AlertaDtoMapper;
@@ -17,6 +18,7 @@ import edu.dosw.styleradar.notificaciones.domain.port.in.MarcarNotificacionLeida
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.in.rest.doc.AlertaApi;
 import edu.dosw.styleradar.notificaciones.infrastructure.security.SecurityContextUserExtractor;
 import edu.dosw.styleradar.notificaciones.infrastructure.sse.SseEmitterRegistry;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -83,6 +85,42 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
+    @GetMapping({"/alerts/check", "/alertas/verificar"})
+    public ResponseEntity<EstadoSuscripcionAlertaResponse> verificarSuscripcionAlerta(
+            @PathVariable("id") String id,
+            @RequestParam("itemId") String itemId,
+            @RequestParam(value = "size", required = false) String size,
+            @RequestParam(value = "talla", required = false) String talla
+    ) {
+        Long targetId = userExtractor.validarAccesoUsuario(id);
+        String tallaEfectiva = (size != null && !size.isBlank()) ? size.trim()
+                : ((talla != null && !talla.isBlank()) ? talla.trim() : null);
+
+        return listarAlertasUseCase.listarAlertasPorUsuario(targetId).stream()
+                .filter(Alerta::estaActiva)
+                .filter(a -> itemId != null && itemId.trim().equalsIgnoreCase(a.getItemId()))
+                .filter(a -> tallaEfectiva == null
+                        || a.getTallaObjetivo() == null
+                        || tallaEfectiva.equalsIgnoreCase(a.getTallaObjetivo()))
+                .findFirst()
+                .map(alerta -> ResponseEntity.ok(new EstadoSuscripcionAlertaResponse(
+                        true,
+                        alerta.getId(),
+                        alerta.getItemId(),
+                        alerta.getTallaObjetivo(),
+                        alerta.getCanal()
+                )))
+                .orElseGet(() -> ResponseEntity.ok(new EstadoSuscripcionAlertaResponse(
+                        false,
+                        null,
+                        itemId != null ? itemId.trim() : null,
+                        tallaEfectiva,
+                        null
+                )));
+    }
+
+    @Override
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping({"/alerts/{alertId}", "/alertas/{alertId}"})
     public ResponseEntity<AlertaResponse> desactivarAlerta(
             @PathVariable("id") String id,
@@ -93,6 +131,7 @@ public class AlertaController implements AlertaApi {
         return ResponseEntity.ok(alertaDtoMapper.toResponse(desactivada));
     }
 
+    @Hidden
     @Override
     @PatchMapping({"/alerts/{alertId}/deactivate", "/alertas/{alertId}/desactivar"})
     @PreAuthorize("isAuthenticated()")

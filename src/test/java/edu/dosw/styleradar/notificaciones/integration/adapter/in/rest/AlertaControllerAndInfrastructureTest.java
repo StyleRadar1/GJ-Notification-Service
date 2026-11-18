@@ -140,11 +140,29 @@ class AlertaControllerAndInfrastructureTest {
                         .content(objectMapper.writeValueAsString(crearRequest)))
                 .andExpect(status().isConflict());
 
-        // Act & Assert 4: Listar mis alertas
+        // Act & Assert 4: Listar mis alertas y verificar suscripcion (GET /alerts/check)
         mockMvc.perform(get("/api/v1/usuarios/me/alertas")
                         .header("Authorization", "Bearer " + tokenUsuario))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(alertaId));
+
+        mockMvc.perform(get("/api/v1/users/501/alerts/check")
+                        .param("itemId", "1045")
+                        .param("size", "M")
+                        .header("Authorization", "Bearer " + tokenUsuario))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.subscribed").value(true))
+                .andExpect(jsonPath("$.alertId").value(alertaId))
+                .andExpect(jsonPath("$.itemId").value("1045"))
+                .andExpect(jsonPath("$.tallaObjetivo").value("M"));
+
+        mockMvc.perform(get("/api/v1/users/501/alerts/check")
+                        .param("itemId", "9999")
+                        .param("talla", "XL")
+                        .header("Authorization", "Bearer " + tokenUsuario))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.subscribed").value(false))
+                .andExpect(jsonPath("$.alertId").isEmpty());
 
         // Act & Assert 5: Otro usuario intentando desactivar recibe 403 Forbidden
         mockMvc.perform(delete("/api/v1/usuarios/me/alertas/{id}", alertaId)

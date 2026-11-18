@@ -49,8 +49,10 @@ public class OpenApiConfig {
                             && !path.contains("alertas")
                             && !path.contains("notificaciones")
                             && !path.contains("preferencias-avisos")
+                            && !path.contains("notification-preferences")
                             && !path.contains("leer")
                             && !path.contains("desactivar")
+                            && !path.contains("deactivate")
                             && !path.contains("conteo")
                             && !path.contains("contador")
                             && !path.contains("unread-count")
@@ -59,6 +61,11 @@ public class OpenApiConfig {
                     }
                 });
                 openApi.setPaths(filtered);
+            }
+            if (openApi.getTags() != null) {
+                openApi.setTags(openApi.getTags().stream()
+                        .filter(tag -> !"Notification Preferences".equals(tag.getName()))
+                        .toList());
             }
         };
     }

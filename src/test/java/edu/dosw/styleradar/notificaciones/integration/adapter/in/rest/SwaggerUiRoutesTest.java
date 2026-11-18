@@ -59,6 +59,11 @@ class SwaggerUiRoutesTest {
             org.assertj.core.api.Assertions.assertThat(path)
                     .as("El path no debe contener /me: " + path)
                     .doesNotContain("/me");
+            org.assertj.core.api.Assertions.assertThat(path)
+                    .as("El path no debe exponer notification-preferences ni deactivate duplicado: " + path)
+                    .doesNotContain("notification-preferences")
+                    .doesNotContain("deactivate");
         }
+        org.assertj.core.api.Assertions.assertThat(paths.has("/api/v1/users/{id}/alerts/check")).isTrue();
     }
 }

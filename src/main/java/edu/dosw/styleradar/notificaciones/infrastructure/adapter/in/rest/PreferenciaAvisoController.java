@@ -7,6 +7,7 @@ import edu.dosw.styleradar.notificaciones.domain.model.TipoNotificacion;
 import edu.dosw.styleradar.notificaciones.domain.port.in.PreferenciasAvisosUseCase;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.in.rest.doc.PreferenciaAvisoApi;
 import edu.dosw.styleradar.notificaciones.infrastructure.security.SecurityContextUserExtractor;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Hidden
 @RestController
 @RequestMapping({
         "/users/{id}/notification-preferences",
