@@ -2,7 +2,8 @@ name: CI / QA Pipeline - ms-notificaciones
 
 on:
   push:
-    branches: [ "develop", "Scaffolding", "feature/**" ]
+    # Scaffolding quedo fuera: era una rama larga y atrasada que pisaba QA y PROD con builds viejos
+    branches: [ "develop", "feature/**" ]
   pull_request:
     branches: [ "develop", "main", "Scaffolding" ]
   workflow_dispatch:

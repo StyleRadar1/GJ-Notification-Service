@@ -10,6 +10,8 @@ env:
 
 jobs:
   verify-and-release:
+    # PROD solo se despliega desde main: un despliegue manual desde otra rama (workflow_dispatch) se omite
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
