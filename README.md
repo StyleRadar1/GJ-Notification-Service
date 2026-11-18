@@ -366,17 +366,15 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 |  Método  | Endpoint Canónico (Inglés) | Descripción | Rol Requerido | Códigos HTTP |
 | :--------: | :---------------------------- | :----------------------------------------- | :-------------------- | :-----------------------: |
 |  `GET`  | `/actuator/health` | Health Check y estado del microservicio | Público | `200` |
-|  `POST`  | `/api/v1/users/{id}/alerts` | Crea una alerta sobre prenda agotada o búsqueda guardada (NOT-05 / NOT-10) | Autenticado (`JWT`) | `201`, `400`, `403`, `409`, `422` |
-|  `GET`  | `/api/v1/users/{id}/alerts` | Lista todas las alertas configuradas por el usuario autenticado (NOT-05) | Autenticado (`JWT`) | `200`, `401`, `403` |
-| `DELETE` | `/api/v1/users/{id}/alerts/{alertId}` | Desactiva una alerta perteneciente al usuario autenticado (NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404` |
-| `PATCH` | `/api/v1/users/{id}/alerts/{alertId}/deactivate` | Ruta alternativa PATCH para desactivar alerta (NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404` |
-|  `GET`  | `/api/v1/users/{id}/notifications` | Lista las notificaciones del usuario. Admite paginación (`?page=0&size=20`) y filtros (`?read=true/false` o `?unreadOnly=true`) (NOT-05 / NOT-12 / GJ-118) | Autenticado (`JWT`) | `200`, `400`, `401`, `403` |
-| `PATCH` | `/api/v1/users/{id}/notifications/{notificationId}/read` | Marca una notificación específica como leída (NOT-13) | Propietario (`JWT`) | `200`, `401`, `403`, `404` |
-| `PATCH` | `/api/v1/users/{id}/notifications/read-all` | Marca todas las notificaciones del usuario como leídas (NOT-13) | Autenticado (`JWT`) | `200`, `401`, `403` |
-|  `GET`  | `/api/v1/users/{id}/notifications/unread/count` | Obtiene el contador de notificaciones sin leer para la campana (NOT-13) | Autenticado (`JWT`) | `200`, `401`, `403` |
-|  `GET`  | `/api/v1/users/{id}/notifications/stream` | Suscripción Server-Sent Events (`text/event-stream`) para campana en tiempo real con soporte `Last-Event-ID` (NOT-15, GJ-62) | Autenticado (`JWT`) | `200`, `401`, `403` |
-|  `GET`  | `/api/v1/users/{id}/notification-preferences` | Lista los canales configurados por tipo de notificación (GJ-64) | Autenticado (`JWT`) | `200`, `401`, `403` |
-|  `PUT`  | `/api/v1/users/{id}/notification-preferences/{type}` | Configura `SOLO_PLATAFORMA` o `CORREO_Y_PLATAFORMA` por tipo de aviso (GJ-64) | Autenticado (`JWT`) | `200`, `400`, `401`, `403` |
+|  `POST`  | `/api/v1/users/{id}/alerts` | Botón «AVISARME CUANDO LLEGUE»: crea una alerta sobre prenda agotada o búsqueda guardada con canal `IN_APP` o `AMBOS` (NOT-05 / NOT-10) | Autenticado (`JWT`) | `201`, `400`, `403`, `409`, `422`, `503` |
+|  `GET`  | `/api/v1/users/{id}/alerts/check` | Verifica si el usuario ya tiene una alerta activa para una prenda (`?itemId={uuid}&size={talla}`) en el detalle de prenda (NOT-05) | Autenticado (`JWT`) | `200`, `401`, `403` |
+|  `GET`  | `/api/v1/users/{id}/alerts` | Sección «Mis búsquedas y alertas» (en perfil y campana): lista las prendas agotadas en espera y búsquedas guardadas (NOT-05) | Autenticado (`JWT`) | `200`, `401`, `403` |
+| `DELETE` | `/api/v1/users/{id}/alerts/{alertId}` | Elimina o desactiva una alerta o búsqueda guardada desde «Mis búsquedas y alertas» (NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404` |
+|  `GET`  | `/api/v1/users/{id}/notifications` | Desplegable de la campana: lista las notificaciones del usuario con paginación (`?page=0&size=20`) y filtros (`?read=true/false` o `?unreadOnly=true`) (NOT-05 / NOT-12 / GJ-118) | Autenticado (`JWT`) | `200`, `400`, `401`, `403` |
+| `PATCH` | `/api/v1/users/{id}/notifications/{notificationId}/read` | Marca una notificación específica como leída al seleccionarla en la campana (NOT-13) | Propietario (`JWT`) | `200`, `401`, `403`, `404` |
+| `PATCH` | `/api/v1/users/{id}/notifications/read-all` | Marca todas las notificaciones del usuario como leídas y deja la burbuja morada en `0` (NOT-13) | Autenticado (`JWT`) | `200`, `401`, `403` |
+|  `GET`  | `/api/v1/users/{id}/notifications/unread/count` | Obtiene el contador de notificaciones sin leer para la burbuja morada con número blanco sobre la campana (NOT-13) | Autenticado (`JWT`) | `200`, `401`, `403` |
+|  `GET`  | `/api/v1/users/{id}/notifications/stream` | Suscripción Server-Sent Events (`text/event-stream`) para actualizar la campana en tiempo real con soporte `Last-Event-ID` (NOT-15, GJ-62) | Autenticado (`JWT`) | `200`, `401`, `403` |
 
 <details>
 <summary><b>Click para ver Ejemplos Interactivos de Request y Response JSON (Payloads)</b></summary>
@@ -856,12 +854,14 @@ El seguimiento de requerimientos, evidencias y artefactos de entrega se centrali
 
 ### Requerimientos Funcionales y No Funcionales Asignados
 
+> **Documento Detallado de Endpoints y Requerimientos:** Consulta el desglose exhaustivo en **[docs/RESUMEN_ENDPOINTS_Y_REQUERIMIENTOS_FUNCIONALES.md](docs/RESUMEN_ENDPOINTS_Y_REQUERIMIENTOS_FUNCIONALES.md)**.
+
 | Código RF / RNF | Nombre del Requerimiento | Actor Principal | Criterio de Aceptación Clave |
 | :---: | :--- | :--- | :--- |
-| `SR-RF-28` | Configuración de alertas sobre prendas agotadas | Comprador | Valida mediante OpenFeign que la prenda esté sin stock en `ms-item-catalogo` antes de activar la alerta (NOT-10). |
-| `SR-RF-28` | Preferencias de canal de aviso (GJ-64) | Comprador | Elige por tipo de aviso «solo plataforma» o «correo y plataforma»; sin preferencia se aplica solo plataforma; si el correo falla, el aviso en plataforma se crea igual y el correo se reintenta. |
-| `SR-RF-29` | Alertas sobre búsquedas guardadas | Comprador | Permite activar y desactivar alertas vinculadas a copias locales de búsquedas guardadas (NOT-03, NOT-08). |
-| `SR-RF-30` | Detección reactiva de reposición y nuevas prendas | Sistema / Eventos | Evalúa criterios en memoria al recibir `InventarioActualizado` y `PrendaPublicada` respetando idempotencia por ciclo (NOT-06, NOT-07, NOT-11). |
-| `SR-RF-31` | Notificaciones de mensajes, donaciones y moderación | Comprador / Donante / Tienda | Genera notificaciones con enlaces específicos al recibir eventos de `ms-chat`, `ms-segunda-vida-donaciones`, `ms-item-catalogo` y `ms-pagos` (NOT-12, NOT-14, GJ-61, GJ-65). |
-| `SR-RF-32` | Bandeja de notificaciones, contador y campana SSE | Usuario Autenticado | Permite listar, contar no leídas, marcar como leída (individual/todas) y recibir eventos en tiempo real por SSE (NOT-13, NOT-15). |
-| `SR-RNF-15` | Resiliencia e idempotencia en consumidores de eventos | Sistema / Broker | Descarta eventos duplicados con las restricciones únicas `(alerta_id, item_id, ciclo_reposicion)` y `(evento_id, usuario_id)`, y envía fallos a la Dead Letter Queue `styleradar.notificaciones.dlq` (NOT-11). |
+| `SR-RF-28` | Configuración y comprobación de alertas sobre prendas agotadas («AVISARME CUANDO LLEGUE») | Comprador | Valida mediante OpenFeign que la prenda esté sin stock en `ms-item-catalogo` antes de activar la alerta (`422` si tiene stock para mostrar «RESERVAR EN TIENDA», `503` si falla para mostrar «Reintentar»), permite elegir copia por correo (`canal: "AMBOS"`) y comprobar suscripción rápida con `GET /alerts/check` (NOT-05, NOT-10). |
+| `SR-RF-29` | Gestión de «Mis búsquedas y alertas» y sincronización de búsquedas guardadas | Comprador | Permite consultar y eliminar/desactivar alertas de prendas agotadas y búsquedas guardadas desde la sección «Mis búsquedas y alertas» (en perfil y campana), y las desactiva automáticamente si la prenda o búsqueda se retira (NOT-03, NOT-08). |
+| `SR-RF-30` | Detección reactiva de reposición y nuevas prendas | Sistema / Eventos | Evalúa criterios en memoria al recibir `InventarioActualizado` (tolerante a `stockAnterior == null` por `RES-133`) y `PrendaPublicada` respetando idempotencia por ciclo (NOT-06, NOT-07, NOT-11). |
+| `SR-RF-31` | Notificaciones de mensajes, donaciones, moderación, segunda vida y pagos | Comprador / Donante / Tienda | Genera notificaciones con enlaces específicos al recibir eventos de `ms-chat`, `ms-segunda-vida-donaciones`, `ms-tiendas`, `ms-item-catalogo` y `ms-pagos` (NOT-12, NOT-14, GJ-61, GJ-65). |
+| `SR-RF-32` | Bandeja de notificaciones, burbuja morada de no leídas y campana SSE | Usuario Autenticado | Permite listar con paginación, consultar el contador de la burbuja morada con número blanco, marcar como leída (individual/todas) y actualizar en tiempo real por SSE sin recargar la página (NOT-13, NOT-15, GJ-62, GJ-118). |
+| `SR-RF-33` | Publicación de eventos de analítica hacia Estadísticas | Sistema / Broker | Publica `styleradar.notificaciones.alerta.creada` en `styleradar.exchange` cada vez que un usuario activa una alerta para alimentar métricas de demanda en `ms-estadisticas` (NOT-16). |
+| `SR-RNF-15` | Resiliencia e idempotencia en consumidores de eventos y SMTP | Sistema / Broker | Descarta eventos duplicados con las restricciones únicas `(alerta_id, item_id, ciclo_reposicion)` y `(evento_id, usuario_id)`, reintenta correos pendientes (`GJ-119`) y envía fallos a la Dead Letter Queue `styleradar.notificaciones.dlq` (NOT-11). |
