@@ -5,6 +5,7 @@ import edu.dosw.styleradar.notificaciones.application.service.NotificacionApplic
 import edu.dosw.styleradar.notificaciones.application.service.impl.AlertaApplicationServiceImpl;
 import edu.dosw.styleradar.notificaciones.application.service.impl.NotificacionApplicationServiceImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.ActivarAlertaUseCaseImpl;
+import edu.dosw.styleradar.notificaciones.application.usecase.ConsultarSuscripcionAlertaUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.CrearAlertaUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.DesactivarAlertaUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.ListarAlertasUseCaseImpl;
@@ -15,6 +16,7 @@ import edu.dosw.styleradar.notificaciones.application.usecase.MarcarNotificacion
 import edu.dosw.styleradar.notificaciones.application.usecase.PreferenciasAvisosUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.application.usecase.ProcesarEventosExternosUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ActivarAlertaUseCase;
+import edu.dosw.styleradar.notificaciones.domain.port.in.ConsultarSuscripcionAlertaUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.CrearAlertaUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.DesactivarAlertaUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.EnviarAvisoPorCorreoUseCase;
@@ -87,6 +89,11 @@ public class BeanConfig {
     @Bean
     public ListarAlertasUseCase listarAlertasUseCase(AlertaApplicationService alertaApplicationService) {
         return new ListarAlertasUseCaseImpl(alertaApplicationService);
+    }
+
+    @Bean
+    public ConsultarSuscripcionAlertaUseCase consultarSuscripcionAlertaUseCase(AlertaApplicationService alertaApplicationService) {
+        return new ConsultarSuscripcionAlertaUseCaseImpl(alertaApplicationService);
     }
 
     @Bean

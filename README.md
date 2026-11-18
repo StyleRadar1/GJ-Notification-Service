@@ -403,6 +403,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 | :--------: | :---------------------------- | :----------------------------------------- | :-------------------- | :-----------------------: |
 |  `GET`  | `/actuator/health` | Health Check y estado del microservicio | Público | `200` |
 |  `POST`  | `/api/v1/users/{id}/alerts` | Crea una alerta sobre prenda agotada o búsqueda guardada (NOT-05 / NOT-10) | Autenticado (`JWT`) | `201`, `400`, `401`, `403`, `409`, `422`, `429`, `503` |
+|  `GET`  | `/api/v1/users/{id}/alerts/check` | Estado inicial del botón «Avisarme cuando llegue»: con `?itemId=` y `?tallaObjetivo=` responde `suscrita` y el `alertaId` si ya hay una alerta activa para esa prenda y talla | Autenticado (`JWT`) | `200`, `400`, `401`, `403`, `429` |
 |  `GET`  | `/api/v1/users/{id}/alerts` | Lista todas las alertas configuradas por el usuario autenticado (NOT-05) | Autenticado (`JWT`) | `200`, `401`, `403`, `429` |
 | `DELETE` | `/api/v1/users/{id}/alerts/{alertId}` | Desactiva una alerta perteneciente al usuario autenticado (NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404`, `429` |
 | `PATCH` | `/api/v1/users/{id}/alerts/{alertId}/deactivate` | Ruta alternativa PATCH para desactivar alerta (NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404`, `429` |

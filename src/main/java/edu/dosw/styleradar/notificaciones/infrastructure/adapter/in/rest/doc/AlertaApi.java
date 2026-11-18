@@ -4,6 +4,7 @@ import edu.dosw.styleradar.notificaciones.application.dto.request.CrearAlertaReq
 import edu.dosw.styleradar.notificaciones.application.dto.response.AlertaResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.ContadorNoLeidasResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.NotificacionResponse;
+import edu.dosw.styleradar.notificaciones.application.dto.response.SuscripcionAlertaResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.TicketStreamResponse;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -199,6 +200,30 @@ public interface AlertaApi {
     ResponseEntity<AlertaResponse> desactivarAlertaPatch(
             @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
             @Parameter(name = "alertId", description = "ID of the alert to deactivate", example = "501") Long alertId
+    );
+
+    @Operation(
+            summary = "Check whether the user already has an alert for a garment",
+            description = "Lightweight lookup for the out-of-stock garment page: returns suscrita=true and the alertId when the user "
+                    + "has an ACTIVE out-of-stock alert for the given itemId and size (tallaObjetivo, optional), so the front can "
+                    + "paint the alert button without downloading the whole list."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Subscription state",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = SuscripcionAlertaResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "itemId missing",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            )
+    })
+    ResponseEntity<SuscripcionAlertaResponse> comprobarSuscripcion(
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "itemId", description = "Garment id (UUID or text)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") String itemId,
+            @Parameter(name = "tallaObjetivo", description = "Size (optional)", example = "M") String tallaObjetivo
     );
 
     @Operation(

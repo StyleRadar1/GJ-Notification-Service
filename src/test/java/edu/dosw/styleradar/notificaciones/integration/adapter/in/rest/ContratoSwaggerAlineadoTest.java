@@ -92,7 +92,7 @@ class ContratoSwaggerAlineadoTest {
             assertThat(enReadme).as(m.group(1) + " " + m.group(2)).isEqualTo(enSwagger);
             comprobadas++;
         }
-        assertThat(comprobadas).isEqualTo(13);
+        assertThat(comprobadas).isEqualTo(14);
     }
 
     @Test

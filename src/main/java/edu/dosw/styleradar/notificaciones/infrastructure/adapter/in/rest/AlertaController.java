@@ -5,12 +5,14 @@ import edu.dosw.styleradar.notificaciones.application.dto.response.AlertaRespons
 import edu.dosw.styleradar.notificaciones.application.dto.response.ContadorNoLeidasResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.NotificacionResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.PaginaResponse;
+import edu.dosw.styleradar.notificaciones.application.dto.response.SuscripcionAlertaResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.TicketStreamResponse;
 import edu.dosw.styleradar.notificaciones.application.mapper.in.AlertaDtoMapper;
 import edu.dosw.styleradar.notificaciones.application.mapper.in.NotificacionDtoMapper;
 import edu.dosw.styleradar.notificaciones.domain.model.Alerta;
 import edu.dosw.styleradar.notificaciones.domain.model.Notificacion;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ActivarAlertaUseCase;
+import edu.dosw.styleradar.notificaciones.domain.port.in.ConsultarSuscripcionAlertaUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.CrearAlertaUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.DesactivarAlertaUseCase;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ListarAlertasUseCase;
@@ -49,6 +51,7 @@ public class AlertaController implements AlertaApi {
     private final ListarAlertasUseCase listarAlertasUseCase;
     private final DesactivarAlertaUseCase desactivarAlertaUseCase;
     private final ActivarAlertaUseCase activarAlertaUseCase;
+    private final ConsultarSuscripcionAlertaUseCase consultarSuscripcionAlertaUseCase;
     private final ListarNotificacionesUseCase listarNotificacionesUseCase;
     private final MarcarNotificacionLeidaUseCase marcarNotificacionLeidaUseCase;
     private final AlertaDtoMapper alertaDtoMapper;
@@ -85,6 +88,21 @@ public class AlertaController implements AlertaApi {
                 .map(alertaDtoMapper::toResponse)
                 .toList();
         return ResponseEntity.ok(respuestas);
+    }
+
+    @Override
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping({"/alerts/check", "/alertas/check"})
+    public ResponseEntity<SuscripcionAlertaResponse> comprobarSuscripcion(
+            @PathVariable("id") String id,
+            @RequestParam("itemId") String itemId,
+            @RequestParam(value = "tallaObjetivo", required = false) String tallaObjetivo
+    ) {
+        Long targetId = userExtractor.validarAccesoUsuario(id);
+        String talla = tallaObjetivo == null || tallaObjetivo.isBlank() ? null : tallaObjetivo.trim();
+        return ResponseEntity.ok(consultarSuscripcionAlertaUseCase.buscarAlertaActivaDePrenda(targetId, itemId, talla)
+                .map(a -> new SuscripcionAlertaResponse(true, a.getId(), a.getItemId(), a.getTallaObjetivo(), a.getCanal()))
+                .orElseGet(() -> new SuscripcionAlertaResponse(false, null, itemId.trim(), talla, null)));
     }
 
     @Override
