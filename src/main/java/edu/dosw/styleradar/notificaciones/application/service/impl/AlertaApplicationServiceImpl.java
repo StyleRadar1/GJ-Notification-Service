@@ -17,6 +17,7 @@ import edu.dosw.styleradar.notificaciones.domain.port.out.EventPublisherPort;
 import edu.dosw.styleradar.notificaciones.domain.validator.AlertaValidator;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -129,6 +130,22 @@ public class AlertaApplicationServiceImpl implements AlertaApplicationService {
 
         alerta.activar();
         return alertaRepositoryPort.guardar(alerta);
+    }
+
+    /** Una talla en blanco equivale a «sin talla»; la comparacion ignora mayusculas y espacios. */
+    @Override
+    public Optional<Alerta> buscarAlertaActivaDePrenda(Long usuarioId, String itemId, String tallaObjetivo) {
+        String talla = normalizar(tallaObjetivo);
+        return alertaRepositoryPort.listarPorUsuario(usuarioId).stream()
+                .filter(Alerta::estaActiva)
+                .filter(a -> TipoAlerta.ITEM_AGOTADO.equals(a.getTipoAlerta()))
+                .filter(a -> itemId != null && itemId.trim().equals(a.getItemId()))
+                .filter(a -> java.util.Objects.equals(talla, normalizar(a.getTallaObjetivo())))
+                .findFirst();
+    }
+
+    private static String normalizar(String talla) {
+        return talla == null || talla.isBlank() ? null : talla.trim().toUpperCase(java.util.Locale.ROOT);
     }
 
     private Alerta buscarAlerta(Long alertaId) {

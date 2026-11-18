@@ -21,6 +21,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
@@ -75,6 +76,17 @@ public class GlobalExceptionHandler {
                 "El valor del parametro '" + ex.getName() + "' no es valido",
                 request
         );
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ProblemDetail> handleMissingParameter(
+            MissingServletRequestParameterException ex,
+            HttpServletRequest request
+    ) {
+        String mensaje = "El parametro '" + ex.getParameterName() + "' es obligatorio";
+        Map<String, String> errores = new LinkedHashMap<>();
+        errores.put(ex.getParameterName(), mensaje);
+        return buildProblemDetail(HttpStatus.BAD_REQUEST, "Error de validacion en la solicitud", mensaje, request, errores);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

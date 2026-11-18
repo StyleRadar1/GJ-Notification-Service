@@ -23,7 +23,10 @@ public class EnviarAvisoPorCorreoUseCaseImpl implements EnviarAvisoPorCorreoUseC
             return;
         }
         try {
-            boolean quiereCorreo = preferenciaRepositoryPort
+            // el correo sale si el usuario lo eligio para este tipo de aviso (SR-RF-105) o si la alerta que
+            // origino el aviso lo pidio al crearse (canal EMAIL o AMBOS)
+            boolean alertaPidioCorreo = notificacion.getCanal() != null && notificacion.getCanal().incluyeCorreo();
+            boolean quiereCorreo = alertaPidioCorreo || preferenciaRepositoryPort
                     .buscar(notificacion.getUsuarioId(), notificacion.getTipo())
                     .map(p -> p.quiereCorreo())
                     .orElse(false);
