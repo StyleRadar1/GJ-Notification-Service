@@ -148,21 +148,21 @@ class AlertaControllerAndInfrastructureTest {
 
         mockMvc.perform(get("/api/v1/users/501/alerts/check")
                         .param("itemId", "1045")
-                        .param("size", "M")
+                        .param("tallaObjetivo", "M")
                         .header("Authorization", "Bearer " + tokenUsuario))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.subscribed").value(true))
-                .andExpect(jsonPath("$.alertId").value(alertaId))
+                .andExpect(jsonPath("$.suscrita").value(true))
+                .andExpect(jsonPath("$.alertaId").value(alertaId))
                 .andExpect(jsonPath("$.itemId").value("1045"))
                 .andExpect(jsonPath("$.tallaObjetivo").value("M"));
 
         mockMvc.perform(get("/api/v1/users/501/alerts/check")
                         .param("itemId", "9999")
-                        .param("talla", "XL")
+                        .param("tallaObjetivo", "XL")
                         .header("Authorization", "Bearer " + tokenUsuario))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.subscribed").value(false))
-                .andExpect(jsonPath("$.alertId").isEmpty());
+                .andExpect(jsonPath("$.suscrita").value(false))
+                .andExpect(jsonPath("$.alertaId").isEmpty());
 
         // Act & Assert 5: Otro usuario intentando desactivar recibe 403 Forbidden
         mockMvc.perform(delete("/api/v1/usuarios/me/alertas/{id}", alertaId)

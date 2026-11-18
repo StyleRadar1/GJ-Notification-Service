@@ -161,7 +161,7 @@ public interface AlertaApi {
 
     @Operation(
             summary = "Comprobar si el usuario ya tiene una alerta activa para una prenda",
-            description = "Endpoint ligero para la vista de detalle de prenda agotada. Permite al frontend saber de inmediato si debe mostrar el botón 'AVISARME CUANDO LLEGUE' (subscribed=false) o indicar que la alerta ya está activa con su alertId (subscribed=true), sin tener que descargar todas las alertas del usuario."
+            description = "Endpoint ligero para la vista de detalle de prenda agotada. Permite al frontend saber de inmediato si debe mostrar el botón 'AVISARME CUANDO LLEGUE' (suscrita=false) o indicar que la alerta ya está activa con su alertaId (suscrita=true), usando el mismo campo tallaObjetivo en todo el contrato."
     )
     @ApiResponses({
             @ApiResponse(
@@ -172,14 +172,14 @@ public interface AlertaApi {
                             schema = @Schema(implementation = EstadoSuscripcionAlertaResponse.class),
                             examples = {
                                     @ExampleObject(
-                                            name = "Suscrito",
+                                            name = "Suscrita",
                                             summary = "Usuario ya tiene alerta activa",
-                                            value = "{\"subscribed\":true,\"alertId\":501,\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"tallaObjetivo\":\"M\",\"canal\":\"IN_APP\"}"
+                                            value = "{\"suscrita\":true,\"alertaId\":501,\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"tallaObjetivo\":\"M\",\"canal\":\"IN_APP\"}"
                                     ),
                                     @ExampleObject(
-                                            name = "NoSuscrito",
+                                            name = "NoSuscrita",
                                             summary = "Usuario no tiene alerta activa (mostrar botón 'AVISARME CUANDO LLEGUE')",
-                                            value = "{\"subscribed\":false,\"alertId\":null,\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"tallaObjetivo\":\"M\",\"canal\":null}"
+                                            value = "{\"suscrita\":false,\"alertaId\":null,\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"tallaObjetivo\":\"M\",\"canal\":null}"
                                     )
                             }
                     )
@@ -198,18 +198,19 @@ public interface AlertaApi {
     ResponseEntity<EstadoSuscripcionAlertaResponse> verificarSuscripcionAlerta(
             @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
             @Parameter(name = "itemId", description = "ID de la prenda a verificar (UUID o alfanumérico)", required = true, example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") String itemId,
-            @Parameter(name = "size", description = "Talla específica a verificar (opcional)", required = false, example = "M") String size,
+            @Parameter(name = "tallaObjetivo", description = "Talla objetivo específica a verificar (opcional)", required = false, example = "M") String tallaObjetivo,
+            @Parameter(hidden = true) String size,
             @Parameter(hidden = true) String talla
     );
 
     @Operation(
-            summary = "Eliminar o desactivar alerta o búsqueda en seguimiento",
-            description = "Permite al usuario cancelar o eliminar una alerta de prenda agotada que espera o una búsqueda guardada desde la sección 'Mis búsquedas y alertas' (cambiando su estado a DESACTIVADA)."
+            summary = "Desactivar alerta o búsqueda en seguimiento (borrado lógico / soft-delete)",
+            description = "Realiza un borrado lógico (soft-delete) de una alerta de prenda agotada o de una búsqueda guardada desde la sección 'Mis búsquedas y alertas': no elimina físicamente el registro de la base de datos para conservar trazabilidad e historial, sino que cambia su estado a DESACTIVADA para que deje de emitir notificaciones."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Alerta desactivada exitosamente",
+                    description = "Alerta desactivada exitosamente (estado = DESACTIVADA)",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = AlertaResponse.class))
             ),
             @ApiResponse(
@@ -241,7 +242,7 @@ public interface AlertaApi {
 
     @Operation(
             summary = "Listar notificaciones de la campana",
-            description = "Recupera el listado de notificaciones para el desplegable de la campana (con el enlace inferior hacia 'Mis búsquedas y alertas'). Sin parámetros de paginación devuelve el arreglo directo; con 'page', 'size', 'read' o 'unreadOnly' devuelve resultado paginado."
+            description = "Recupera el listado de notificaciones para el desplegable de la campana (con el enlace inferior hacia 'Mis búsquedas y alertas'). Sin parámetros de paginación devuelve el arreglo directo; con 'page', 'size' o 'read' devuelve resultado paginado."
     )
     @ApiResponses({
             @ApiResponse(
@@ -257,7 +258,7 @@ public interface AlertaApi {
                                     ),
                                     @ExampleObject(
                                             name = "EstructuraPaginada",
-                                            summary = "Con page, size, read o unreadOnly (paginado)",
+                                            summary = "Con page, size o read (paginado)",
                                             value = "{\"content\":[{\"id\":901,\"usuarioId\":101,\"tipo\":\"REPOSICION_STOCK\",\"titulo\":\"Talla disponible\",\"mensaje\":\"El item 1045 volvio a tener stock en talla M\",\"leida\":false,\"fechaCreacion\":\"2026-11-06T08:00:00\",\"referenciaId\":\"1045\"}],\"page\":0,\"size\":20,\"totalElements\":1,\"totalPages\":1,\"first\":true,\"last\":true}"
                                     )
                             }
@@ -281,9 +282,9 @@ public interface AlertaApi {
     })
     ResponseEntity<?> listarMisNotificaciones(
             @Parameter(name = "id", description = "ID del usuario propietario del recurso (o alias 'me')", example = "101") String id,
-            @Parameter(description = "Filtrar solo notificaciones no leídas", example = "false") Boolean unreadOnly,
+            @Parameter(hidden = true) Boolean unreadOnly,
             @Parameter(hidden = true) Boolean soloNoLeidas,
-            @Parameter(description = "Filtrar por estado de lectura (true=leídas, false=no leídas)", example = "false") Boolean read,
+            @Parameter(description = "Filtrar por estado de lectura (false = no leídas, true = leídas)", example = "false") Boolean read,
             @Parameter(hidden = true) Boolean leida,
             @Parameter(description = "Número de página (iniciando en 0, >= 0)", example = "0") @Min(value = 0, message = "page debe ser 0 o mayor") Integer page,
             @Parameter(description = "Tamaño de página (1 a 100)", example = "20") @Min(value = 1, message = "size debe ser al menos 1") @Max(value = 100, message = "size no puede superar 100") Integer size

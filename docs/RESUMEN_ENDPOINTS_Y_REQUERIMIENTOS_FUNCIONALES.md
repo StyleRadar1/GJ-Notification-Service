@@ -22,11 +22,11 @@ Todos los endpoints públicos de la API REST siguen el estándar canónico en in
 | # | Método | Endpoint Canónico | Componente / Acción en el Frontend | Códigos HTTP | Req. Asociado |
 | :-: | :---: | :--- | :--- | :---: | :---: |
 | **1** | `POST` | `/api/v1/users/{id}/alerts` | Botón **«AVISARME CUANDO LLEGUE»** (crea alerta de prenda agotada o búsqueda guardada, con opción de copia por correo `canal: "AMBOS"`). | `201`, `400`, `401`, `403`, `409`, `422`, `503` | `SR-RF-28`, `SR-RF-29`, `NOT-05`, `NOT-10` |
-| **2** | `GET` | `/api/v1/users/{id}/alerts/check` | Estado inicial del botón en detalle de prenda (`?itemId={uuid}&size={talla}`): indica si el usuario ya está suscrito (`subscribed: true/false`). | `200`, `401`, `403` | `SR-RF-28`, `NOT-05` |
+| **2** | `GET` | `/api/v1/users/{id}/alerts/check` | Estado inicial del botón en detalle de prenda (`?itemId={uuid}&tallaObjetivo={talla}`): indica si el usuario ya está suscrito (`suscrita: true/false`). | `200`, `401`, `403` | `SR-RF-28`, `NOT-05` |
 | **3** | `GET` | `/api/v1/users/{id}/alerts` | Vista **«Mis búsquedas y alertas»** (en **Mi Perfil** y al final de la **Campana**): lista búsquedas guardadas y prendas agotadas que espera. | `200`, `401`, `403` | `SR-RF-28`, `SR-RF-29`, `NOT-05` |
-| **4** | `DELETE` | `/api/v1/users/{id}/alerts/{alertId}` | Botón de eliminar/desactivar dentro de **«Mis búsquedas y alertas»** para cancelar el seguimiento de una prenda o búsqueda. | `200`, `401`, `403`, `404` | `SR-RF-28`, `SR-RF-29`, `NOT-05` |
-| **5** | `GET` | `/api/v1/users/{id}/notifications` | Desplegable de la **Campana**: lista el historial de notificaciones recibidas (soporta `?unreadOnly=true` o paginación `?page=0&size=20&read=false`). | `200`, `400`, `401`, `403` | `SR-RF-32`, `NOT-12`, `GJ-118` |
-| **6** | `GET` | `/api/v1/users/{id}/notifications/unread/count` | **Burbuja morada con número blanco** sobre la campana: devuelve el total exacto de notificaciones sin leer. | `200`, `401`, `403` | `SR-RF-32`, `NOT-13` |
+| **4** | `DELETE` | `/api/v1/users/{id}/alerts/{alertId}` | Desactivar alerta (**borrado lógico / soft-delete**) desde **«Mis búsquedas y alertas»**, pasando su estado a `DESACTIVADA`. | `200`, `401`, `403`, `404` | `SR-RF-28`, `SR-RF-29`, `NOT-05` |
+| **5** | `GET` | `/api/v1/users/{id}/notifications` | Desplegable de la **Campana**: lista el historial de notificaciones recibidas (soporta paginación `?page=0&size=20` y filtro único `?read=false` o `true`). | `200`, `400`, `401`, `403` | `SR-RF-32`, `NOT-12`, `GJ-118` |
+| **6** | `GET` | `/api/v1/users/{id}/notifications/unread/count` | **Burbuja morada con número blanco** sobre la campana: devuelve el total exacto de notificaciones sin leer (`cantidadNoLeidas`). | `200`, `401`, `403` | `SR-RF-32`, `NOT-13` |
 | **7** | `PATCH` | `/api/v1/users/{id}/notifications/{notificationId}/read` | Clic sobre una notificación en la campana: la marca como leída (`leida: true`) y descuenta 1 de la burbuja morada. | `200`, `401`, `403`, `404` | `SR-RF-32`, `NOT-13` |
 | **8** | `PATCH` | `/api/v1/users/{id}/notifications/read-all` | Botón **«Marcar todas como leídas»** en la campana: limpia todas las pendientes y deja la burbuja morada en `0`. | `200`, `401`, `403` | `SR-RF-32`, `NOT-13` |
 | **9** | `GET` | `/api/v1/users/{id}/notifications/stream` | Conexión **SSE (`text/event-stream`)**: actualiza en tiempo real la campana y su burbuja morada sin recargar la página (`F5`). | `200`, `401`, `403` | `SR-RF-32`, `NOT-15`, `GJ-62` |
@@ -55,13 +55,13 @@ Todos los endpoints públicos de la API REST siguen el estándar canónico en in
   * **`409 Conflict`:** El usuario ya tenía una alerta activa para esa misma prenda y talla.
   * **`503 Service Unavailable`:** Si `ms-item-catalogo` no responde o hay un fallo de red, el frontend muestra: *«No pudimos crear la alerta, intenta más tarde»* junto con el botón **«Reintentar»**.
 
-#### 2. `GET /api/v1/users/{id}/alerts/check?itemId={uuid}&size={talla}` — Comprobar Suscripción de Alerta
-* **¿Para qué sirve?:** Cuando el comprador abre la página de una prenda agotada, el frontend consulta este endpoint ligero para saber de inmediato si debe pintar el botón **«AVISARME CUANDO LLEGUE»** (`subscribed: false`) o mostrar que la alerta ya está activa (`subscribed: true`, devolviendo además el `alertId` por si desea cancelarla con un clic), evitando descargar toda la lista de alertas del usuario.
+#### 2. `GET /api/v1/users/{id}/alerts/check?itemId={uuid}&tallaObjetivo={talla}` — Comprobar Suscripción de Alerta
+* **¿Para qué sirve?:** Cuando el comprador abre la página de una prenda agotada, el frontend consulta este endpoint ligero (usando el parámetro unificado `tallaObjetivo`, sin colisionar con `size` de paginación) para saber de inmediato si debe pintar el botón **«AVISARME CUANDO LLEGUE»** (`suscrita: false`) o mostrar que la alerta ya está activa (`suscrita: true`, devolviendo además el `alertaId` por si desea desactivarla con un clic), evitando descargar toda la lista de alertas del usuario.
 * **Ejemplo de respuesta (`200 OK`):**
   ```json
   {
-    "subscribed": true,
-    "alertId": 501,
+    "suscrita": true,
+    "alertaId": 501,
     "itemId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "tallaObjetivo": "M",
     "canal": "IN_APP"
@@ -71,13 +71,13 @@ Todos los endpoints públicos de la API REST siguen el estándar canónico en in
 #### 3. `GET /api/v1/users/{id}/alerts` — Listar «Mis búsquedas y alertas»
 * **¿Para qué sirve?:** Alimenta la sección **«Mis búsquedas y alertas»**, a la cual el usuario accede desde **Mi Perfil** o desde el botón ubicado al final del desplegable de la **Campana**. Retorna todas las alertas de prendas agotadas que espera y las alertas de búsquedas guardadas.
 
-#### 4. `DELETE /api/v1/users/{id}/alerts/{alertId}` — Eliminar / Desactivar Alerta
-* **¿Para qué sirve?:** Permite que el usuario elimine o desactive una búsqueda guardada o una prenda agotada en espera desde la sección **«Mis búsquedas y alertas»** (o desde el detalle de la prenda). Cambia el estado de la alerta a `DESACTIVADA` para no volver a enviarle avisos sobre ese recurso.
+#### 4. `DELETE /api/v1/users/{id}/alerts/{alertId}` — Desactivar Alerta (Borrado Lógico / Soft-Delete)
+* **¿Para qué sirve?:** Realiza un **borrado lógico (soft-delete)** cuando el usuario quita una búsqueda guardada o una prenda agotada en espera desde la sección **«Mis búsquedas y alertas»** (o desde el detalle de la prenda). No elimina físicamente el registro en la base de datos para conservar la trazabilidad e historial, sino que cambia su estado a `DESACTIVADA` para no volver a emitir avisos sobre ese recurso.
 
 #### 5. `GET /api/v1/users/{id}/notifications` — Bandeja Desplegable de la Campana
 * **¿Para qué sirve?:** Devuelve los avisos recibidos por el usuario cuando abre el menú de la campana (reposiciones de stock, prendas nuevas de búsquedas guardadas, mensajes nuevos de chat, cambios de estado de donaciones, moderación de prendas, prendas vendidas y pagos confirmados).
-* **Parámetros soportados:**
-  * `?unreadOnly=true` o `?read=false`: Filtra únicamente las notificaciones no leídas.
+* **Parámetros expuestos en Swagger (sin duplicidad):**
+  * `?read=false` (o `true`): Único filtro de estado de lectura (`false` = no leídas, `true` = leídas).
   * `?page=0&size=20`: Devuelve la respuesta paginada con metadatos (`content`, `page`, `size`, `totalElements`, `totalPages`, `hasNext`, `hasPrevious`).
 
 #### 6. `GET /api/v1/users/{id}/notifications/unread/count` — Contador de la Burbuja Morada

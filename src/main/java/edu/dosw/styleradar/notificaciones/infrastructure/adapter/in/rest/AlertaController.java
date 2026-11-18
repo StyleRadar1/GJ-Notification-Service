@@ -89,12 +89,14 @@ public class AlertaController implements AlertaApi {
     public ResponseEntity<EstadoSuscripcionAlertaResponse> verificarSuscripcionAlerta(
             @PathVariable("id") String id,
             @RequestParam("itemId") String itemId,
+            @RequestParam(value = "tallaObjetivo", required = false) String tallaObjetivo,
             @RequestParam(value = "size", required = false) String size,
             @RequestParam(value = "talla", required = false) String talla
     ) {
         Long targetId = userExtractor.validarAccesoUsuario(id);
-        String tallaEfectiva = (size != null && !size.isBlank()) ? size.trim()
-                : ((talla != null && !talla.isBlank()) ? talla.trim() : null);
+        String tallaEfectiva = (tallaObjetivo != null && !tallaObjetivo.isBlank()) ? tallaObjetivo.trim()
+                : ((size != null && !size.isBlank()) ? size.trim()
+                : ((talla != null && !talla.isBlank()) ? talla.trim() : null));
 
         return listarAlertasUseCase.listarAlertasPorUsuario(targetId).stream()
                 .filter(Alerta::estaActiva)
