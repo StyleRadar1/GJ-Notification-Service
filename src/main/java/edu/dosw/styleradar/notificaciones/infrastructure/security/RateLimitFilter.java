@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.security;
 
+import edu.dosw.styleradar.notificaciones.domain.exception.CodigoError;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.FilterChain;
@@ -91,7 +92,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             rechazadas.increment();
             long segundos = Math.max(1, (VENTANA_MS - (ahora - ventana.inicio) + 999) / 1000);
             response.setHeader(HttpHeaders.RETRY_AFTER, String.valueOf(segundos));
-            manejadores.responder(request, response, HttpStatus.TOO_MANY_REQUESTS, "Demasiadas solicitudes",
+            manejadores.responder(request, response, HttpStatus.TOO_MANY_REQUESTS, CodigoError.RATE_LIMITED, "Demasiadas solicitudes",
                     "Superaste el limite de " + maximoPorMinuto + " solicitudes por minuto. Intenta de nuevo en "
                             + segundos + " segundos");
             return;

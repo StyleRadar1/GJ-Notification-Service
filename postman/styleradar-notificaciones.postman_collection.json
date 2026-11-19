@@ -67,7 +67,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/notifications?unreadOnly=false",
+              "raw": "{{baseUrl}}/api/v1/users/me/notifications",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -77,12 +77,6 @@
                 "users",
                 "me",
                 "notifications"
-              ],
-              "query": [
-                {
-                  "key": "unreadOnly",
-                  "value": "false"
-                }
               ]
             }
           }

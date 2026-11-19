@@ -131,6 +131,19 @@ class ReactivarAlertaHttpTest {
     }
 
     @Test
+    @DisplayName("La lista y las respuestas de la alerta traen el nombre de la busqueda guardada")
+    void traeElNombreDeLaBusqueda() throws Exception {
+        long id = crearAlerta();
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(BASE).header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(id))
+                .andExpect(jsonPath("$[0].nombreBusqueda").value("Bomber"));
+        mockMvc.perform(patch(BASE + "/" + id + "/deactivate").header("Authorization", token))
+                .andExpect(jsonPath("$.nombreBusqueda").value("Bomber"));
+    }
+
+    @Test
     @DisplayName("Sin token responde 401")
     void sinToken() throws Exception {
         mockMvc.perform(patch(BASE + "/1/activate")).andExpect(status().isUnauthorized());

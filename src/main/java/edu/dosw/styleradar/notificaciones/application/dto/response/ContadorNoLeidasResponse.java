@@ -2,12 +2,12 @@ package edu.dosw.styleradar.notificaciones.application.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Respuesta con el conteo de notificaciones no leidas del usuario")
+@Schema(description = "Count of the user's unread notifications")
 public record ContadorNoLeidasResponse(
-        @Schema(description = "Identificador del usuario", example = "101")
+        @Schema(description = "User id", example = "101")
         long usuarioId,
 
-        @Schema(description = "Total de notificaciones no leidas en la campana", example = "3")
+        @Schema(description = "Total unread notifications in the bell", example = "3")
         long cantidadNoLeidas
 ) {
 }

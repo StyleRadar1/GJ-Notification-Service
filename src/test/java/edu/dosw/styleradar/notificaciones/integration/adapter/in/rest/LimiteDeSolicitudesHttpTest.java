@@ -44,7 +44,8 @@ class LimiteDeSolicitudesHttpTest {
         mockMvc.perform(get("/api/v1/users/me/notifications/unread/count").header("Authorization", "Bearer " + token))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(header().exists("Retry-After"))
-                .andExpect(jsonPath("$.title").value("Demasiadas solicitudes"));
+                .andExpect(jsonPath("$.title").value("Demasiadas solicitudes"))
+                .andExpect(jsonPath("$.code").value("RATE_LIMITED"));
 
         for (int i = 0; i < 6; i++) {
             mockMvc.perform(get("/actuator/health")).andExpect(status().isOk());

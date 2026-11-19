@@ -53,13 +53,17 @@ public class OpenApiConfig {
             if (openApi.getComponents() != null && openApi.getComponents().getSchemas() != null) {
                 Schema<?> problema = openApi.getComponents().getSchemas().get("ProblemDetail");
                 if (problema != null) {
+                    problema.addProperty("code", new Schema<String>().type("string")
+                            ._enum(java.util.Arrays.stream(edu.dosw.styleradar.notificaciones.domain.exception.CodigoError.values())
+                                    .map(Enum::name).toList())
+                            .description("Stable machine-readable error code; the front chooses its message from it, not from detail"));
                     problema.addProperty("mensaje", new Schema<String>().type("string")
-                            .description("Copia de detail, para mostrarla directamente en pantalla"));
+                            .description("Copy of detail, ready to show on screen"));
                     problema.addProperty("timestamp", new Schema<String>().type("string").format("date-time")
-                            .description("Momento del error (UTC)"));
+                            .description("Time of the error (UTC)"));
                     problema.addProperty("errors", new Schema<Object>().type("object")
                             .additionalProperties(new Schema<String>().type("string"))
-                            .description("Solo en los 400 de validacion: un mensaje por campo"));
+                            .description("Only on validation 400s: one message per field"));
                 }
             }
             if (openApi.getPaths() == null) {
