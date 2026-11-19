@@ -28,7 +28,7 @@
         <jacoco.version>0.8.11</jacoco.version>
         <!-- Docker 29 exige API 1.40 o superior; el Testcontainers de Spring Boot 3.2.5 usa la 1.32 y se omitian las pruebas con RabbitMQ -->
         <testcontainers.version>1.21.4</testcontainers.version>
-        <wiremock.version>3.5.4</wiremock.version>
+        <wiremock.version>3.13.2</wiremock.version>
     </properties>
 
     <dependencyManagement>
