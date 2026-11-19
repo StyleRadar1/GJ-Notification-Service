@@ -1,6 +1,7 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.dosw.styleradar.notificaciones.domain.exception.CodigoError;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -28,28 +29,30 @@ public class ProblemDetailSecurityHandlers {
 
     public AuthenticationEntryPoint authenticationEntryPoint() {
         return (request, response, ex) -> escribir(
-                request, response, HttpStatus.UNAUTHORIZED, "No autenticado", "Token JWT ausente, invalido o expirado");
+                request, response, HttpStatus.UNAUTHORIZED, CodigoError.UNAUTHENTICATED, "No autenticado", "Token JWT ausente, invalido o expirado");
     }
 
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, ex) -> escribir(
-                request, response, HttpStatus.FORBIDDEN, "Acceso denegado", "No tiene permisos para realizar esta accion");
+                request, response, HttpStatus.FORBIDDEN, CodigoError.ACCESS_DENIED, "Acceso denegado", "No tiene permisos para realizar esta accion");
     }
 
     public void responder(
             HttpServletRequest request,
             HttpServletResponse response,
             HttpStatus estado,
+            CodigoError codigo,
             String titulo,
             String detalle
     ) throws IOException {
-        escribir(request, response, estado, titulo, detalle);
+        escribir(request, response, estado, codigo, titulo, detalle);
     }
 
     private void escribir(
             HttpServletRequest request,
             HttpServletResponse response,
             HttpStatus estado,
+            CodigoError codigo,
             String titulo,
             String detalle
     ) throws IOException {
@@ -57,6 +60,7 @@ public class ProblemDetailSecurityHandlers {
         problema.setTitle(titulo);
         problema.setInstance(URI.create(request.getRequestURI()));
         problema.setProperty("timestamp", Instant.now().toString());
+        problema.setProperty("code", codigo.name());
         problema.setProperty("mensaje", detalle);
         response.setStatus(estado.value());
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);

@@ -5,27 +5,27 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.function.Function;
 
-@Schema(description = "Una pagina de resultados con sus metadatos")
+@Schema(description = "A page of results with its metadata")
 public record PaginaResponse<T>(
-        @Schema(description = "Elementos de la pagina")
+        @Schema(description = "Items of the page")
         List<T> content,
 
-        @Schema(description = "Numero de pagina, empieza en 0", example = "0")
+        @Schema(description = "Page number, starting at 0", example = "0")
         int page,
 
-        @Schema(description = "Tamano de pagina pedido", example = "20")
+        @Schema(description = "Requested page size", example = "20")
         int size,
 
-        @Schema(description = "Total de elementos que cumplen el filtro", example = "42")
+        @Schema(description = "Total elements matching the filter", example = "42")
         long totalElements,
 
-        @Schema(description = "Total de paginas", example = "3")
+        @Schema(description = "Total pages", example = "3")
         int totalPages,
 
-        @Schema(description = "Hay una pagina siguiente", example = "true")
+        @Schema(description = "There is a next page", example = "true")
         boolean hasNext,
 
-        @Schema(description = "Hay una pagina anterior", example = "false")
+        @Schema(description = "There is a previous page", example = "false")
         boolean hasPrevious
 ) {
 

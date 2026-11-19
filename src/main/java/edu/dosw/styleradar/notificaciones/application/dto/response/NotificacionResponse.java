@@ -5,45 +5,45 @@ import edu.dosw.styleradar.notificaciones.domain.model.TipoNotificacion;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
-@Schema(description = "Respuesta con la informacion de una notificacion del usuario")
+@Schema(description = "A notification of the user")
 public record NotificacionResponse(
-        @Schema(description = "Identificador unico de la notificacion", example = "901")
+        @Schema(description = "Unique notification id", example = "901")
         Long id,
 
-        @Schema(description = "Identificador del usuario destinatario", example = "101")
+        @Schema(description = "Id of the recipient user", example = "101")
         Long usuarioId,
 
-        @Schema(description = "Identificador de la alerta origen (opcional)", example = "501")
+        @Schema(description = "Id of the alert that originated it (optional)", example = "501")
         Long alertaId,
 
-        @Schema(description = "Identificador de la prenda asociada (UUID o numerico, opcional)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        @Schema(description = "Id of the related garment (UUID or text, optional)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
         String itemId,
 
-        @Schema(description = "Ciclo de reposicion de stock (idempotencia)", example = "1")
+        @Schema(description = "Stock replenishment cycle (idempotency)", example = "1")
         Integer cicloReposicion,
 
-        @Schema(description = "Tipo de notificacion", example = "REPOSICION_STOCK")
+        @Schema(description = "Notification type", example = "REPOSICION_STOCK")
         TipoNotificacion tipo,
 
-        @Schema(description = "Canal de emision", example = "IN_APP")
+        @Schema(description = "Delivery channel", example = "IN_APP")
         CanalNotificacion canal,
 
-        @Schema(description = "Titulo de la notificacion", example = "Stock Disponible")
+        @Schema(description = "Notification title", example = "Stock Disponible")
         String titulo,
 
-        @Schema(description = "Cuerpo descriptivo del mensaje", example = "La prenda Chaqueta Denim Vintage vuelve a tener stock.")
+        @Schema(description = "Descriptive message body", example = "La prenda Chaqueta Denim Vintage vuelve a tener stock.")
         String mensaje,
 
-        @Schema(description = "Enlace deep-link a la vista frontend", example = "/catalogo/prendas/1045")
+        @Schema(description = "Deep link to the frontend view", example = "/catalogo/prendas/1045")
         String enlace,
 
-        @Schema(description = "Indica si la notificacion ya fue leida", example = "false")
+        @Schema(description = "Whether the notification has been read", example = "false")
         boolean leida,
 
-        @Schema(description = "Fecha y hora de generacion", example = "2026-11-02T12:00:00")
+        @Schema(description = "Generation date and time", example = "2026-11-02T12:00:00")
         LocalDateTime fechaCreacion,
 
-        @Schema(description = "Fecha y hora de lectura por el usuario", example = "null")
+        @Schema(description = "Date and time the user read it", example = "null")
         LocalDateTime fechaLectura
 ) {
 }
