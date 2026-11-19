@@ -45,7 +45,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = AlertaResponse.class),
                             examples = @ExampleObject(
                                     name = "AlertaCreadaEjemplo",
-                                    value = "{\"id\":501,\"usuarioId\":101,\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"tallaObjetivo\":\"M\",\"busquedaGuardadaId\":null,\"canal\":\"IN_APP\",\"estado\":\"ACTIVA\",\"fechaCreacion\":\"2026-11-02T10:15:30\",\"fechaActualizacion\":\"2026-11-02T10:15:30\"}"
+                                    value = "{\"id\":501,\"usuarioId\":101,\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"tallaObjetivo\":\"M\",\"busquedaGuardadaId\":null,\"nombreBusqueda\":null,\"canal\":\"IN_APP\",\"estado\":\"ACTIVA\",\"fechaCreacion\":\"2026-11-02T10:15:30\",\"fechaActualizacion\":\"2026-11-02T10:15:30\"}"
                             )
                     )
             ),
@@ -137,7 +137,7 @@ public interface AlertaApi {
                             array = @ArraySchema(schema = @Schema(implementation = AlertaResponse.class)),
                             examples = @ExampleObject(
                                     name = "ListaAlertas",
-                                    value = "[{\"id\":501,\"usuarioId\":101,\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"tallaObjetivo\":\"M\",\"busquedaGuardadaId\":null,\"canal\":\"IN_APP\",\"estado\":\"ACTIVA\",\"fechaCreacion\":\"2026-11-02T10:15:30\",\"fechaActualizacion\":\"2026-11-02T10:15:30\"}]"
+                                    value = "[{\"id\":501,\"usuarioId\":101,\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"tallaObjetivo\":\"M\",\"busquedaGuardadaId\":null,\"nombreBusqueda\":null,\"canal\":\"IN_APP\",\"estado\":\"ACTIVA\",\"fechaCreacion\":\"2026-11-02T10:15:30\",\"fechaActualizacion\":\"2026-11-02T10:15:30\"}]"
                             )
                     )
             ),
@@ -233,7 +233,11 @@ public interface AlertaApi {
                     + "out of stock or the saved search still active (422). An already active alert is returned unchanged."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Alert is active"),
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Alert is active",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AlertaResponse.class))
+            ),
             @ApiResponse(
                     responseCode = "403",
                     description = "Alert belongs to another user",
@@ -252,6 +256,11 @@ public interface AlertaApi {
             @ApiResponse(
                     responseCode = "422",
                     description = "Business rule violation (account inactive, garment has stock, saved search inactive)",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "Catalog microservice unavailable",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
@@ -418,7 +427,11 @@ public interface AlertaApi {
                     + "only opens the stream; a session JWT in the URL is rejected."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Ticket issued"),
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Ticket issued",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TicketStreamResponse.class))
+            ),
             @ApiResponse(
                     responseCode = "401",
                     description = "Unauthorized",

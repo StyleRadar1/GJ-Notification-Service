@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "Channel through which the user wants to receive a notification type")
 public record PreferenciaAvisoRequest(
-        @Schema(description = "SOLO_PLATAFORMA o CORREO_Y_PLATAFORMA", example = "CORREO_Y_PLATAFORMA")
+        @Schema(description = "SOLO_PLATAFORMA or CORREO_Y_PLATAFORMA", example = "CORREO_Y_PLATAFORMA")
         @NotNull(message = "El canal es obligatorio")
         CanalAviso canal
 ) {
