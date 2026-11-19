@@ -24,6 +24,23 @@ Todos los diagramas siguen la plantilla de diagramas de StyleRadar: fondo blanco
 | Apoyo | Broker y notas informativas | `#BAB9C9` |
 | Base | Fondo | `#FFFFFF` |
 
+Cada diagrama empieza con la cabecera común: logo de StyleRadar y el título `STYLERADAR — <TIPO> DIAGRAM : <microservicio> (<equipo>)`.
+
+**Notación de componentes.** Cada componente se dibuja con el símbolo UML de componente (rectángulo con las dos pestañas a la izquierda) y su color indica el tipo:
+
+| Tipo | Color | Valor |
+| :--- | :--- | :---: |
+| Controller (controladores, filtros, listeners y configuración) | Beige | `#E8DDCA` |
+| UseCase (casos de uso, servicios y reglas de dominio) | Rosa | `#FFCCCC` |
+| Adapter | Amarillo | `#FFFF99` |
+| Mapper | Cian | `#99FFFF` |
+| Repository y puertos | Blanco | `#FFFFFF` |
+| Exception | Verde | `#99FFCC` |
+| Sistemas externos | Azul | `#99CCFF` |
+| Base de datos | Rojo | `#FF9999` |
+
+En el diagrama de clases, la cabecera de cada clase indica su tipo: interfaz (naranja `#FFE6CC`), clase abstracta (azul `#CCE5FF`), objeto de valor (amarillo `#FFFF99`), enumeración (rosa `#FFCCCC`) y clase (lila `#E4DBF0`). En el de base de datos, cada tabla lleva la cabecera lila y una columna de claves (`PK`, `FK`, `UK`).
+
 Los valores se tomaron de la imagen de la propuesta de estilo. Si el curso publica los códigos oficiales, se reemplazan en los cinco archivos `.drawio`.
 
 Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archivo `.drawio`. Después de editarlos se exporta el PNG con el mismo nombre.
@@ -89,7 +106,7 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
    - `JwtAuthenticationFilter` y `SecurityConfig` validan el JWT sin estado (y el ticket de 60 s en `?ticket=` únicamente para el stream SSE). Solo `/actuator/health` y la documentación Swagger (en local y QA; apagada en PROD) son públicos.
    - `GlobalExceptionHandler` responde con `ProblemDetail` (RFC 7807) con `type: "about:blank"`, un campo `code` estable (`CodigoError`), `mensaje`, `timestamp` y `errors` por campo en los `400` de validación.
    - `CorreoPendienteRecuperador` (`adapter/in/scheduler`) reintenta los correos pendientes al arrancar el servicio y cada 60 s (GJ-119).
-2. **Aplicación (`application`):** los diez puertos de entrada (`domain/port/in`) son interfaces de casos de uso (`CrearAlertaUseCase`, `ConsultarSuscripcionAlertaUseCase`, `ListarAlertasUseCase`, `DesactivarAlertaUseCase`, `ActivarAlertaUseCase`, `ListarNotificacionesUseCase`, `MarcarNotificacionLeidaUseCase`, `PreferenciasAvisosUseCase`, `ProcesarEventosExternosUseCase`, `EnviarAvisoPorCorreoUseCase` y `ReenviarCorreosPendientesUseCase`). Cada una tiene su implementación `*UseCaseImpl`, que delega en `AlertaApplicationService` y `NotificacionApplicationService` (también interfaz más implementación). Los DTO son `records` (incluyendo `SuscripcionAlertaResponse`, `TicketStreamResponse` y `AlertaResponse` con `nombreBusqueda`) y el mapeo usa MapStruct.
+2. **Aplicación (`application`):** los once puertos de entrada (`domain/port/in`) son interfaces de casos de uso (`CrearAlertaUseCase`, `ConsultarSuscripcionAlertaUseCase`, `ListarAlertasUseCase`, `DesactivarAlertaUseCase`, `ActivarAlertaUseCase`, `ListarNotificacionesUseCase`, `MarcarNotificacionLeidaUseCase`, `PreferenciasAvisosUseCase`, `ProcesarEventosExternosUseCase`, `EnviarAvisoPorCorreoUseCase` y `ReenviarCorreosPendientesUseCase`). Cada una tiene su implementación `*UseCaseImpl`, que delega en `AlertaApplicationService` y `NotificacionApplicationService` (también interfaz más implementación). Los DTO son `records` (incluyendo `SuscripcionAlertaResponse`, `TicketStreamResponse` y `AlertaResponse` con `nombreBusqueda`) y el mapeo usa MapStruct.
 3. **Dominio (`domain`):** modelos, objetos de valor, reglas (`AlertaValidator`, `EvaluadorCriteriosMatcher`), evento y excepciones, sin Spring, JPA ni Lombok. Los puertos de salida son interfaces del dominio.
 4. **Adaptadores de salida (`infrastructure/adapter/out`):** implementan los puertos de salida: JPA sobre PostgreSQL, cliente OpenFeign de Catálogo, publicador de `AlertaCreada`, `SseEmitter` por usuario y `CorreoSmtpAdapter`, que envía los avisos por correo con `JavaMailSender` en un hilo aparte, con 3 intentos y espera creciente; si se agotan, guarda el correo como pendiente (`CorreoPendienteRepositoryAdapter`). El mismo adaptador implementa `EnvioCorreoPort`, el envío inmediato que usa el reintento.
 
@@ -122,7 +139,8 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 5. **Reglas:** `AlertaValidator` valida la creación, la propiedad y los duplicados de una alerta (asignando el `CodigoError` correspondiente a cada excepción). `EvaluadorCriteriosMatcher` compara una búsqueda guardada o una alerta contra los datos de un evento, en memoria.
 6. **Evento de dominio:** `AlertaCreadaDomainEvent`, que el servicio publica al registrar una alerta.
 7. **Excepciones de dominio:** cinco clases hijas de `RuntimeException` que portan su `CodigoError` estable y que `AlertaValidator`, los casos de uso y los adaptadores lanzan: `AccesoDenegadoException` (403, `ACCESS_DENIED`), `RecursoNoEncontradoException` (404, `ALERT_NOT_FOUND` / `NOTIFICATION_NOT_FOUND`), `ConflictoException` (409, `ALERT_ALREADY_ACTIVE`), `ReglaDeNegocioException` (422, `ITEM_HAS_STOCK` / `ITEM_NOT_FOUND` / `ACCOUNT_NOT_ALLOWED` / `SAVED_SEARCH_NOT_AVAILABLE` / `INVALID_ALERT`) y `ServicioExternoNoDisponibleException` (503, `CATALOG_UNAVAILABLE`). `GlobalExceptionHandler` las traduce a respuestas `ProblemDetail` con su `code`.
-8. **Reintento de correos y paginación:** `CorreoPendiente` es el correo que no se pudo enviar (con sus intentos y su `EstadoCorreo`: `PENDIENTE`, `ENVIADO` o `FALLIDO`) y `Pagina<T>` es la página de resultados de la bandeja, sin depender de Spring Data.
+8. **Puertos (interfaces):** el diagrama muestra los 11 puertos de salida (`domain.port.out`, que implementan los adaptadores) y los 11 de entrada (`domain.port.in`, que implementan los casos de uso), con las firmas de sus métodos.
+9. **Reintento de correos y paginación:** `CorreoPendiente` es el correo que no se pudo enviar (con sus intentos y su `EstadoCorreo`: `PENDIENTE`, `ENVIADO` o `FALLIDO`) y `Pagina<T>` es la página de resultados de la bandeja, sin depender de Spring Data.
 
 ### 3.2. Justificación arquitectónica
 
