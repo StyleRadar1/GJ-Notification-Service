@@ -21,7 +21,10 @@ updates:
       - dependency-name: "org.springframework.cloud:spring-cloud-dependencies"
         versions: [">= 2025.1"]
       - dependency-name: "org.springdoc:*"
-        update-types: ["version-update:semver-major"]
+        versions: [">= 2.9.0"]
+      # jjwt 0.12+ cambia la API de parseo y firma; se mantiene 0.11.5 compatible con ms-auth
+      - dependency-name: "io.jsonwebtoken:*"
+        versions: [">= 0.12.0"]
 
   - package-ecosystem: "github-actions"
     directory: "/"

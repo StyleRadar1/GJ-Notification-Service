@@ -86,21 +86,9 @@ Este microservicio encapsula exclusivamente la lógica de negocio correspondient
 | :----------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
 | • Gestiona alertas de prendas agotadas (`ITEM_AGOTADO`) y búsquedas guardadas (`BUSQUEDA_GUARDADA`) validando stock contra `ms-item-catalogo`. | • NO autentica credenciales ni emite tokens iniciales (delegado a `ms-auth` en `:8100`). |
 | • Evalúa en memoria coincidencias entre eventos (`InventarioActualizado`, `PrendaPublicada`) y copias locales de búsquedas guardadas sin hacer SQL cruzado. | • NO gestiona transacciones monetarias ni pasarelas (delegado a `ms-pagos-suscripciones` en `:8400`). |
-| • Sincroniza copias locales de búsquedas guardadas y estados de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`) mediante eventos asíncronos. | • NO persiste conversaciones ni historial de mensajes STOMP (delegado a `ms-chat` en `:8320`). |
-| • Entrega notificaciones generalizadas (stock, mensajes, donaciones, moderación, solicitudes de donación, prendas vendidas y pagos confirmados), las empuja en tiempo real por Server-Sent Events (SSE) con reconexión (`Last-Event-ID`) y las envía además por correo si el usuario lo eligió por tipo de aviso. | • NO accede directamente a tablas ni bases de datos de otros microservicios (cero llaves foráneas externas). |
+| • Sincroniza copias locales de búsquedas guardadas y estados de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`, `SUSPENDIDO`) mediante eventos asíncronos. | • NO persiste conversaciones ni historial de mensajes STOMP (delegado a `ms-chat` en `:8320`). |
+| • Entrega notificaciones generalizadas (stock, mensajes, donaciones, moderación, solicitudes de donación, prendas vendidas, pagos confirmados y fundaciones desactivadas), las empuja en tiempo real por Server-Sent Events (SSE) con ticket de 60 s y reconexión (`Last-Event-ID`), y las envía además por correo si el usuario lo eligió por tipo de aviso o si la alerta se configuró con canal `EMAIL` o `AMBOS`. | • NO accede directamente a tablas ni bases de datos de otros microservicios (cero llaves foráneas externas). |
 | • Garantiza persistencia ACID e idempotencia mediante las restricciones únicas `(alerta_id, item_id, ciclo_reposicion)` y `(evento_id, usuario_id)`, y desvío de fallos a Dead Letter Queue (`SR-RNF-15`). | • NO modifica el inventario ni el catálogo maestro de prendas. |
-
-### Arquetipos de Moda y Personajes de StyleRadar (Pendiente actualizaciones de front)
-
-> *(Pendiente actualizaciones de front — El equipo de frontend se encuentra modificando los arquetipos y componentes visuales)*
-
-<div align="center">
-
-| Antonia (Sastre) | Mateo (Calle) | Aura (Futuro) | Nora (Rebelde) | Tomás (Esencial) |
-| :---: | :---: | :---: | :---: | :---: |
-| <img src="https://raw.githubusercontent.com/JUANNICOLASA/Frontend-Style-Radar/main/styleradar-frontend-v3/assets/mascota/antonia.jpg" width="110" style="border-radius:8px;" alt="Antonia" /><br>**Sastre**<br><sub>Tiendas & Descubrimiento</sub> | <img src="https://raw.githubusercontent.com/JUANNICOLASA/Frontend-Style-Radar/main/styleradar-frontend-v3/assets/mascota/mateo.jpg" width="110" style="border-radius:8px;" alt="Mateo" /><br>**Calle**<br><sub>Playlists & Cultura Urbana</sub> | <img src="https://raw.githubusercontent.com/JUANNICOLASA/Frontend-Style-Radar/main/styleradar-frontend-v3/assets/mascota/aura.jpg" width="110" style="border-radius:8px;" alt="Aura" /><br>**Futuro**<br><sub>Probador Virtual AI</sub> | <img src="https://raw.githubusercontent.com/JUANNICOLASA/Frontend-Style-Radar/main/styleradar-frontend-v3/assets/mascota/nora.jpg" width="110" style="border-radius:8px;" alt="Nora" /><br>**Rebelde**<br><sub>Segunda Vida & Vintage</sub> | <img src="https://raw.githubusercontent.com/JUANNICOLASA/Frontend-Style-Radar/main/styleradar-frontend-v3/assets/mascota/tomas.jpg" width="110" style="border-radius:8px;" alt="Tomás" /><br>**Esencial**<br><sub>Fundaciones & Donaciones</sub> |
-
-</div>
 
 ---
 
@@ -380,9 +368,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
           <sub>Pega aquí la captura de pantalla de la interfaz interactiva corriendo en <code>http://localhost:8300/swagger-ui/index.html</code> mostrando los endpoints del controlador.</sub>
         </p>
         <p>
-<!-- Al generar tu captura, descomenta la siguiente línea y guarda la imagen en la ruta indicada: -->
-<!-- <img src="docs/evidencias/swagger-ui.png" width="90%" alt="Evidencia Swagger UI" /><br /> -->
-          <code>[ Pegar captura de Swagger UI aquí · docs/evidencias/swagger-ui.png ]</code>
+          <img src="docs/evidencias/swagger-ui.png" width="90%" alt="Evidencia Swagger UI" /><br />
         </p>
       </td>
     </tr>
@@ -404,11 +390,11 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 |  Método  | Endpoint Canónico (Inglés) | Descripción | Rol Requerido | Códigos HTTP |
 | :--------: | :---------------------------- | :----------------------------------------- | :-------------------- | :-----------------------: |
 |  `GET`  | `/actuator/health` | Health Check y estado del microservicio | Público | `200` |
-|  `POST`  | `/api/v1/users/{id}/alerts` | Crea una alerta sobre prenda agotada o búsqueda guardada (NOT-05 / NOT-10) | Autenticado (`JWT`) | `201`, `400`, `401`, `403`, `409`, `422`, `429`, `503` |
-|  `GET`  | `/api/v1/users/{id}/alerts/check` | Estado inicial del botón «Avisarme cuando llegue»: con `?itemId=` y `?tallaObjetivo=` responde `suscrita` y el `alertaId` si ya hay una alerta activa para esa prenda y talla | Autenticado (`JWT`) | `200`, `400`, `401`, `403`, `429` |
-|  `GET`  | `/api/v1/users/{id}/alerts` | Lista todas las alertas configuradas por el usuario autenticado (NOT-05) | Autenticado (`JWT`) | `200`, `401`, `403`, `429` |
-| `DELETE` | `/api/v1/users/{id}/alerts/{alertId}` | Desactiva una alerta perteneciente al usuario autenticado (NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404`, `429` |
-| `PATCH` | `/api/v1/users/{id}/alerts/{alertId}/deactivate` | Ruta alternativa PATCH para desactivar alerta (NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404`, `429` |
+|  `POST`  | `/api/v1/users/{id}/alerts` | Crea una alerta sobre prenda agotada o búsqueda guardada con canal `IN_APP`, `EMAIL`, `PUSH` o `AMBOS` (SR-RF-29 / NOT-05 / NOT-10) | Autenticado (`JWT`) | `201`, `400`, `401`, `403`, `409`, `422`, `429`, `503` |
+|  `GET`  | `/api/v1/users/{id}/alerts/check` | Estado inicial del botón «Avisarme cuando llegue»: con `?itemId=` y `?tallaObjetivo=` responde `suscrita` y el `alertaId` si ya hay una alerta activa para esa prenda y talla (SR-RF-29) | Autenticado (`JWT`) | `200`, `400`, `401`, `403`, `429` |
+|  `GET`  | `/api/v1/users/{id}/alerts` | Lista todas las alertas del usuario autenticado, incluyendo `nombreBusqueda` en las de búsqueda guardada (SR-RF-32 / NOT-05) | Autenticado (`JWT`) | `200`, `401`, `403`, `429` |
+| `DELETE` | `/api/v1/users/{id}/alerts/{alertId}` | Desactiva una alerta perteneciente al usuario autenticado (SR-RF-32 / NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404`, `429` |
+| `PATCH` | `/api/v1/users/{id}/alerts/{alertId}/deactivate` | Ruta alternativa PATCH para desactivar alerta (SR-RF-32 / NOT-05) | Propietario (`JWT`) | `200`, `401`, `403`, `404`, `429` |
 | `PATCH` | `/api/v1/users/{id}/alerts/{alertId}/activate` | Reactiva una alerta desactivada con las mismas reglas que al crearla: sin otra alerta activa igual (409), prenda aún agotada o búsqueda activa (422). Si ya está activa la devuelve sin cambios (SR-RF-32) | Propietario (`JWT`) | `200`, `401`, `403`, `404`, `409`, `422`, `429` |
 |  `GET`  | `/api/v1/users/{id}/notifications` | Lista las notificaciones del usuario. Sin parámetros devuelve un arreglo; con `?page=0&size=20` o `?read=true/false` (único filtro de lectura: `true` leídas, `false` no leídas) devuelve una página (NOT-05 / NOT-12 / GJ-118) | Autenticado (`JWT`) | `200`, `400`, `401`, `403`, `429` |
 | `PATCH` | `/api/v1/users/{id}/notifications/{notificationId}/read` | Marca una notificación específica como leída (NOT-13) | Propietario (`JWT`) | `200`, `401`, `403`, `404`, `429` |
@@ -432,7 +418,7 @@ curl -X POST "http://localhost:8300/api/v1/users/101/alerts" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -d '{
     "tipoAlerta": "ITEM_AGOTADO",
-    "itemId": 1045,
+    "itemId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "tallaObjetivo": "M",
     "canal": "IN_APP"
   }'
@@ -445,9 +431,10 @@ curl -X POST "http://localhost:8300/api/v1/users/101/alerts" \
   "id": 1,
   "usuarioId": 501,
   "tipoAlerta": "ITEM_AGOTADO",
-  "itemId": 1045,
+  "itemId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "tallaObjetivo": "M",
   "busquedaGuardadaId": null,
+  "nombreBusqueda": null,
   "canal": "IN_APP",
   "estado": "ACTIVA",
   "fechaCreacion": "2026-11-02T12:00:00",
@@ -602,9 +589,7 @@ curl -s http://localhost:8300/actuator/health
           <sub>Pega aquí la captura de terminal ejecutando <code>docker compose ps</code> mostrando el contenedor del microservicio y sus servicios de persistencia y broker en estado healthy.</sub>
         </p>
         <p>
-<!-- Al generar tu captura, descomenta la siguiente línea y guarda la imagen en la ruta indicada: -->
-<!-- <img src="docs/evidencias/docker-compose-ps.png" width="90%" alt="Docker Compose PS" /><br /> -->
-          <code>[ Pegar captura de Docker compose ps aquí · docs/evidencias/docker-compose-ps.png ]</code>
+          <img src="docs/evidencias/docker-compose-ps.png" width="90%" alt="Docker Compose PS" /><br />
         </p>
       </td>
     </tr>
@@ -727,9 +712,7 @@ mvn jacoco:report
           <sub>Pega aquí la captura del reporte HTML (<code>target/site/jacoco/index.html</code>) evidenciando el cumplimiento de la cobertura mínima obligatoria (≥ 85%).</sub>
         </p>
         <p>
-<!-- Al generar tu captura, descomenta la siguiente línea y guarda la imagen en la ruta indicada: -->
-<!-- <img src="docs/evidencias/cobertura-jacoco.png" width="90%" alt="Reporte JaCoCo" /><br /> -->
-          <code>[ Pegar captura de JaCoCo ≥ 85% aquí · docs/evidencias/cobertura-jacoco.png ]</code>
+          <img src="docs/evidencias/cobertura-jacoco.png" width="90%" alt="Reporte JaCoCo" /><br />
         </p>
       </td>
     </tr>
@@ -804,9 +787,7 @@ flowchart LR
           <sub>Pega aquí la captura del pipeline de integración continua (Azure DevOps / GitHub Actions) finalizado con éxito en todas sus fases.</sub>
         </p>
         <p>
-<!-- Al generar tu captura, descomenta la siguiente línea y guarda la imagen en la ruta indicada: -->
-<!-- <img src="docs/evidencias/pipeline-ci-cd.png" width="90%" alt="Pipeline CI/CD" /><br /> -->
-          <code>[ Pegar captura del Pipeline CI/CD en verde aquí · docs/evidencias/pipeline-ci-cd.png ]</code>
+          <img src="docs/evidencias/pipeline-ci-cd.png" width="90%" alt="Pipeline CI/CD" /><br />
         </p>
       </td>
     </tr>
@@ -890,23 +871,22 @@ El seguimiento de requerimientos, evidencias y artefactos de entrega se centrali
           <sub>Pega aquí la captura del tablero de Jira mostrando la Épica, User Stories y tareas asignadas al microservicio para el sprint.</sub>
         </p>
         <p>
-<!-- Al generar tu captura, descomenta la siguiente línea y guarda la imagen en la ruta indicada: -->
-<!-- <img src="docs/evidencias/jira-tablero-epica.png" width="90%" alt="Tablero Jira" /><br /> -->
-          <code>[ Pegar captura del Tablero de Jira aquí · docs/evidencias/jira-tablero-epica.png ]</code>
+          <img src="docs/evidencias/jira-tablero-epica.png" width="90%" alt="Tablero Jira" /><br />
         </p>
       </td>
     </tr>
   </table>
 </div>
 
-### Requerimientos Funcionales y No Funcionales Asignados
+### Requerimientos Funcionales y No Funcionales Asignados (Numeración Unificada)
 
 | Código RF / RNF | Nombre del Requerimiento | Actor Principal | Criterio de Aceptación Clave |
 | :---: | :--- | :--- | :--- |
-| `SR-RF-28` | Configuración de alertas sobre prendas agotadas | Comprador | Valida mediante OpenFeign que la prenda esté sin stock en `ms-item-catalogo` antes de activar la alerta (NOT-10). |
-| `SR-RF-28` | Preferencias de canal de aviso (GJ-64) | Comprador | Elige por tipo de aviso «solo plataforma» o «correo y plataforma»; sin preferencia se aplica solo plataforma; si el correo falla, el aviso en plataforma se crea igual y el correo se reintenta. |
-| `SR-RF-29` | Alertas sobre búsquedas guardadas | Comprador | Permite activar y desactivar alertas vinculadas a copias locales de búsquedas guardadas (NOT-03, NOT-08). |
-| `SR-RF-30` | Detección reactiva de reposición y nuevas prendas | Sistema / Eventos | Evalúa criterios en memoria al recibir `InventarioActualizado` y `PrendaPublicada` respetando idempotencia por ciclo (NOT-06, NOT-07, NOT-11). |
-| `SR-RF-31` | Notificaciones de mensajes, donaciones y moderación | Comprador / Donante / Tienda | Genera notificaciones con enlaces específicos al recibir eventos de `ms-chat`, `ms-segunda-vida-donaciones`, `ms-item-catalogo` y `ms-pagos` (NOT-12, NOT-14, GJ-61, GJ-65). |
-| `SR-RF-32` | Bandeja de notificaciones, contador y campana SSE | Usuario Autenticado | Permite listar, contar no leídas, marcar como leída (individual/todas) y recibir eventos en tiempo real por SSE (NOT-13, NOT-15). |
-| `SR-RNF-15` | Resiliencia e idempotencia en consumidores de eventos | Sistema / Broker | Descarta eventos duplicados con las restricciones únicas `(alerta_id, item_id, ciclo_reposicion)` y `(evento_id, usuario_id)`, y envía fallos a la Dead Letter Queue `styleradar.notificaciones.dlq` (NOT-11). |
+| `SR-RF-29` | Configurar alerta de disponibilidad | Comprador | Crea alertas sobre prenda agotada (`ITEM_AGOTADO`, `itemId` UUID/texto) o búsqueda guardada (`BUSQUEDA_GUARDADA`) con canal `IN_APP`, `EMAIL`, `PUSH` o `AMBOS`; valida que la prenda esté sin stock en `ms-item-catalogo` (NOT-10), comprueba estado inicial con `GET /alerts/check`, devuelve `nombreBusqueda` y publica `AlertaCreada`. |
+| `SR-RF-30` | Detectar prendas que coinciden con una alerta | Sistema / Eventos | Evalúa criterios en memoria al recibir `InventarioActualizado` (tolerante a `stockAnterior` opcional) y `PrendaPublicada`, y desactiva alertas ante `PrendaRetirada` o búsqueda eliminada (NOT-06, NOT-07, NOT-08). |
+| `SR-RF-31` | Notificar coincidencia o reposición de una prenda | Comprador / Sistema | Genera una sola notificación por `(alerta_id, item_id, ciclo_reposicion)`, la empuja en tiempo real por SSE y envía correo si la preferencia del tipo es `CORREO_Y_PLATAFORMA` o si el canal de la alerta es `EMAIL` o `AMBOS`, con reintentos persistentes en `correos_pendientes` (NOT-11, GJ-119). |
+| `SR-RF-32` | Consultar, desactivar y reactivar alertas | Comprador | Permite listar sus alertas (con `nombreBusqueda`), desactivarlas (`DELETE` o `PATCH /deactivate`) sin borrar la búsqueda guardada y reactivarlas (`PATCH /activate`) validando disponibilidad y ausencia de duplicados (NOT-05). |
+| `SR-RF-104` | Consultar la bandeja de notificaciones | Usuario Autenticado | Permite listar con paginación (`page`, `size`) y filtro único `read` (`true` leídas, `false` no leídas), contar no leídas, marcar como leída (individual/todas) y abrir el stream SSE mediante ticket de 60 s (`POST /stream-ticket`) con reconexión `Last-Event-ID` (NOT-12, NOT-13, NOT-15, GJ-62, GJ-118). |
+| `SR-RF-105` | Elegir el canal de cada tipo de aviso | Usuario Autenticado | Permite consultar y elegir por cada uno de los 9 valores de `TipoNotificacion` entre `SOLO_PLATAFORMA` (por defecto) y `CORREO_Y_PLATAFORMA` (GJ-64). |
+| `SR-RF-106` | Avisar la actividad de otros módulos | Comprador / Donante / Tienda | Genera notificaciones idempotentes por `(evento_id, usuario_id)` al recibir eventos de `ms-chat`, `ms-segunda-vida-donaciones`, `ms-item-catalogo`, `ms-pagos` y `ms-tiendas` (fundación desactivada), excluyendo cuentas en estado `INACTIVO`, `BLOQUEADO` o `SUSPENDIDO` (NOT-09, NOT-14, GJ-61, GJ-65, GJ-117). |
+| `SR-RNF-15` | Resiliencia e idempotencia en consumidores de eventos | Sistema / Broker | 3 entregas totales con backoff ante fallos transitorios, rechazo inmediato sin reencolar hacia `styleradar.notificaciones.dlq` ante payloads inválidos, restricciones únicas en PostgreSQL 16 y errores HTTP con campo `code` estable (`CodigoError`). |
