@@ -190,8 +190,8 @@
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
 | `eventoId` | `String` | Sí | Identificador del evento (clave de idempotencia) |
-| `donacionId` | `Long` | Sí | ID de la donación |
-| `fundacionUsuarioId` | `Long` | Sí | ID del usuario de la fundación que recibe el aviso |
+| `donacionId` (alias `solicitudId`) | `Long` | Sí | ID de la donación o de la solicitud |
+| `fundacionUsuarioId` (alias `representanteId`) | `Long` | Sí | ID de usuario en ms-auth del representante de la fundación que recibe el aviso. No es el `fundacionId` de ms-tiendas |
 | `nombreDonante` | `String` | No | Nombre visible de quien dona |
 | `resumen` | `String` | No | Descripción corta de lo que se dona |
 | `fechaEvento` | `LocalDateTime` | No | Fecha y hora de la solicitud |
@@ -209,7 +209,7 @@
 
 ### 1.8 `PrendaVendida` (Emisor: `ms-segunda-vida-donaciones`) — GJ-65
 > **Contrato Oficial Verificado** con las Fichas Técnicas de Integración de `ms-segunda-vida-donaciones` y `ms-chat` (Pág. 4).
-- **Routing Key:** `styleradar.segundavida.prenda.vendida` (con alias `segunda-mano.prenda.vendida`)
+- **Routing Key:** `styleradar.segundavida.prenda.vendida` y `styleradar.segunda-mano.prenda.vendida` (la cola está vinculada a las dos; Donaciones publica la segunda). `interesadosIds` lo resuelve quien publica; vacío no avisa a nadie. No se avisa al comprador ni al vendedor (`vendedorId`).
 - **Cola Destino:** `styleradar.notificaciones.prenda-vendida.q`
 - **Propósito:** Avisar a los demás interesados en una prenda de segunda mano de que ya se vendió. Se genera una notificación `PRENDA_VENDIDA` por cada interesado, excepto el comprador, con enlace `/segunda-mano/{publicacionId}`.
 

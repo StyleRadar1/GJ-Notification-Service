@@ -90,6 +90,10 @@ public class RabbitMqConfig {
     @Value("${application.messaging.routing-keys.garment-sold:styleradar.segundavida.prenda.vendida}")
     private String garmentSoldKey;
 
+    /** Clave con la que Donaciones publica la venta; la misma cola recibe las dos. */
+    @Value("${application.messaging.routing-keys.garment-sold-alt:styleradar.segunda-mano.prenda.vendida}")
+    private String garmentSoldAltKey;
+
     @Value("${application.messaging.routing-keys.payment-confirmed:styleradar.pagos.pago.confirmado}")
     private String paymentConfirmedKey;
 
@@ -232,6 +236,11 @@ public class RabbitMqConfig {
     @Bean
     public Binding garmentSoldBinding(Queue garmentSoldQueue, TopicExchange styleradarExchange) {
         return BindingBuilder.bind(garmentSoldQueue).to(styleradarExchange).with(garmentSoldKey);
+    }
+
+    @Bean
+    public Binding garmentSoldAltBinding(Queue garmentSoldQueue, TopicExchange styleradarExchange) {
+        return BindingBuilder.bind(garmentSoldQueue).to(styleradarExchange).with(garmentSoldAltKey);
     }
 
     @Bean
