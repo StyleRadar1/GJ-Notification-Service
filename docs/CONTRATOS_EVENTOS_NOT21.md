@@ -99,14 +99,14 @@
 ### 1.3 `UsuarioEstadoCambiado` (Emisor: `ms-usuarios`)
 - **Routing Key:** `styleradar.usuarios.estado.cambiado`
 - **Cola Destino:** `styleradar.notificaciones.usuario-estado.q`
-- **Propósito:** Mantener actualizada la copia local del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`) para impedir que cuentas inactivas o bloqueadas reciban notificaciones (NOT-09).
+- **Propósito:** Mantener actualizada la copia local del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`, `SUSPENDIDO`) para impedir que cuentas inactivas, bloqueadas o suspendidas creen alertas o reciban notificaciones (SR-RF-29, SR-RF-31, SR-RF-106 / NOT-09).
 
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
 | `eventoId` | `String` | Sí | Identificador del evento |
 | `usuarioId` | `Long` | Sí | ID del usuario |
 | `email` | `String` | No | Correo electrónico del usuario |
-| `nuevoEstado` | `String` | Sí | `ACTIVO`, `INACTIVO` o `BLOQUEADO` |
+| `nuevoEstado` | `String` | Sí | `ACTIVO`, `INACTIVO`, `BLOQUEADO` o `SUSPENDIDO` |
 | `fechaCambio` | `LocalDateTime` | Sí | Fecha del cambio de estado |
 
 **Ejemplo JSON:**
@@ -219,6 +219,7 @@
 | `publicacionId` | `String (UUID / texto)` | Sí | ID de la publicación vendida (UUID o numérico) |
 | `nombrePrenda` | `String` | No | Nombre de la prenda |
 | `compradorId` | `Long` | No | Usuario que compró (no recibe el aviso) |
+| `vendedorId` | `Long` | No | Usuario que vendió (no recibe el aviso; si falta se ignora sin error) |
 | `interesadosIds` | `List<Long>` | No | Usuarios con conversación abierta sobre la prenda |
 | `fechaEvento` | `LocalDateTime` | No | Fecha y hora de la venta |
 
