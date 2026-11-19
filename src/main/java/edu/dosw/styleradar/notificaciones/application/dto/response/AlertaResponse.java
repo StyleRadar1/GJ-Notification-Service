@@ -6,36 +6,39 @@ import edu.dosw.styleradar.notificaciones.domain.model.TipoAlerta;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
-@Schema(description = "Respuesta con la informacion de una alerta configurada por el usuario")
+@Schema(description = "An alert configured by the user")
 public record AlertaResponse(
-        @Schema(description = "Identificador unico de la alerta", example = "501")
+        @Schema(description = "Unique alert id", example = "501")
         Long id,
 
-        @Schema(description = "Identificador del usuario propietario", example = "101")
+        @Schema(description = "Id of the owner user", example = "101")
         Long usuarioId,
 
-        @Schema(description = "Tipo de alerta configurada", example = "ITEM_AGOTADO")
+        @Schema(description = "Configured alert type", example = "ITEM_AGOTADO")
         TipoAlerta tipoAlerta,
 
-        @Schema(description = "Identificador de la prenda (solo para ITEM_AGOTADO, UUID o numerico)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        @Schema(description = "Garment id (only for ITEM_AGOTADO, UUID or text)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
         String itemId,
 
-        @Schema(description = "Talla objetivo monitoreada", example = "M")
+        @Schema(description = "Monitored target size", example = "M")
         String tallaObjetivo,
 
-        @Schema(description = "Identificador de la busqueda guardada (solo para BUSQUEDA_GUARDADA)", example = "null")
+        @Schema(description = "Saved search id (only for BUSQUEDA_GUARDADA)", example = "null")
         Long busquedaGuardadaId,
 
-        @Schema(description = "Canal de recepcion de la notificacion", example = "IN_APP")
+        @Schema(description = "Name of the saved search (only for BUSQUEDA_GUARDADA); lets the front show the list without querying ms-usuarios", example = "Black bomber jackets")
+        String nombreBusqueda,
+
+        @Schema(description = "Notification channel of the alert", example = "IN_APP")
         CanalNotificacion canal,
 
-        @Schema(description = "Estado actual de la alerta", example = "ACTIVA")
+        @Schema(description = "Current alert status", example = "ACTIVA")
         EstadoAlerta estado,
 
-        @Schema(description = "Fecha y hora de creacion", example = "2026-11-02T10:15:30")
+        @Schema(description = "Creation date and time", example = "2026-11-02T10:15:30")
         LocalDateTime fechaCreacion,
 
-        @Schema(description = "Fecha y hora de ultima actualizacion", example = "2026-11-02T10:15:30")
+        @Schema(description = "Last update date and time", example = "2026-11-02T10:15:30")
         LocalDateTime fechaActualizacion
 ) {
 }
