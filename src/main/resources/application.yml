@@ -74,6 +74,7 @@ application:
       garment-deleted: styleradar.catalogo.prenda.retirada
       donation-requested: styleradar.donaciones.solicitud.creada
       garment-sold: styleradar.segundavida.prenda.vendida
+      garment-sold-alt: styleradar.segunda-mano.prenda.vendida
       payment-confirmed: styleradar.pagos.pago.confirmado
       foundation-deactivated: styleradar.tiendas.fundacion.desactivada
       user-status-changed: styleradar.usuarios.estado.cambiado

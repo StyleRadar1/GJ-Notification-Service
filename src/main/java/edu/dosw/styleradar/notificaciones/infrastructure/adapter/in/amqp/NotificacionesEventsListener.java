@@ -231,7 +231,7 @@ public class NotificacionesEventsListener {
         String prenda = payload.nombrePrenda() != null ? payload.nombrePrenda() : "La prenda";
         List<Long> interesados = payload.interesadosIds() != null ? payload.interesadosIds() : List.of();
         for (Long interesadoId : interesados) {
-            if (interesadoId == null || interesadoId.equals(payload.compradorId())) {
+            if (interesadoId == null || interesadoId.equals(payload.compradorId()) || interesadoId.equals(payload.vendedorId())) {
                 continue;
             }
             procesarEventosExternosUseCase.generarNotificacionDirecta(
