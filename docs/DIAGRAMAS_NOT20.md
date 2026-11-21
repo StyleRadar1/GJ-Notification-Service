@@ -66,7 +66,7 @@ Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archi
 
 El diagrama muestra la frontera de `ms-notificaciones` (puerto `8300`) y los sistemas con los que se comunica.
 
-1. **Frontend y API Gateway (`api-gateway`, `:8080`):** el usuario llega por HTTPS a través del gateway. Las rutas REST de `/api/v1/users/{id}` y la suscripción SSE de la campana exigen un JWT Bearer (el stream también acepta un ticket de 60 s en `?ticket=`).
+1. **Frontend (SPA):** el usuario llega por HTTPS directamente al servicio; el API Gateway ya no se dibuja en los diagramas de ms-notificaciones. Las rutas REST de `/api/v1/users/{id}` y la suscripción SSE de la campana exigen un JWT Bearer (el stream también acepta un ticket de 60 s en `?ticket=`).
 2. **Broker de eventos (RabbitMQ, `:5672`):** el servicio consume 12 colas durables sobre el exchange `styleradar.exchange`:
    - `ms-inventario` (`:8200`) publica `InventarioActualizado`.
    - `ms-usuarios` (`:8120`) publica el estado de cuenta y las búsquedas guardadas.
