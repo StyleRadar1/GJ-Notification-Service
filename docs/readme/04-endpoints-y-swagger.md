@@ -19,24 +19,15 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 * **Especificación OpenAPI (Contrato JSON Schema):** `http://localhost:8300/v3/api-docs` (o `/v3/api-docs` en el dominio de QA).
 
 
-<div align="center">
-  <table width="100%" style="margin: 18px 0; border: 2px dashed #5600EF; border-radius: 8px; background-color: #FBFBFE;">
-    <tr>
-      <td align="center" style="padding: 22px;">
-        <p>
-          <img src="https://img.shields.io/badge/ESPACIO_DE_CAPTURA-EVIDENCIA_01-5600EF?style=for-the-badge" alt="Evidencia 01" /><br />
-          <strong><font color="#5600EF" size="3">DOCUMENTACIÓN SWAGGER OPENAPI UI ACTIVA</font></strong>
-        </p>
-        <p>
-          <sub>Pega aquí la captura de pantalla de la interfaz interactiva corriendo en <code>http://localhost:8300/swagger-ui/index.html</code> mostrando los endpoints del controlador.</sub>
-        </p>
-        <p>
-          <img src="../evidencias/swagger-ui.png" width="90%" alt="Evidencia Swagger UI" /><br />
-        </p>
-      </td>
-    </tr>
-  </table>
-</div>
+### Captura de Swagger UI
+
+<p align="center">
+  <img src="../evidencias/swagger-ui.png" width="95%" alt="Swagger UI de ms-notificaciones con los 14 endpoints" />
+</p>
+
+<p align="center">
+  <sub>Swagger UI de <code>ms-notificaciones</code>: grupos <b>Notification Preferences</b> (2 endpoints) y <b>Alerts &amp; Notifications</b> (12 endpoints), 14 en total bajo <code>/api/v1/users/{id}</code>.</sub>
+</p>
 
 ### Tabla de Endpoints Expuestos
 
