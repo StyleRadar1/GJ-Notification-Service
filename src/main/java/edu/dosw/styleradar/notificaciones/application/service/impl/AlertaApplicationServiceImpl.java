@@ -2,6 +2,7 @@ package edu.dosw.styleradar.notificaciones.application.service.impl;
 
 import edu.dosw.styleradar.notificaciones.application.service.AlertaApplicationService;
 import edu.dosw.styleradar.notificaciones.domain.event.AlertaCreadaDomainEvent;
+import edu.dosw.styleradar.notificaciones.domain.exception.CodigoError;
 import edu.dosw.styleradar.notificaciones.domain.exception.RecursoNoEncontradoException;
 import edu.dosw.styleradar.notificaciones.domain.model.Alerta;
 import edu.dosw.styleradar.notificaciones.domain.model.BusquedaGuardadaCopia;
@@ -17,6 +18,7 @@ import edu.dosw.styleradar.notificaciones.domain.port.out.EventPublisherPort;
 import edu.dosw.styleradar.notificaciones.domain.validator.AlertaValidator;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -79,12 +81,12 @@ public class AlertaApplicationServiceImpl implements AlertaApplicationService {
                 guardada.getFechaCreacion()
         ));
 
-        return guardada;
+        return enriquecer(guardada);
     }
 
     @Override
     public List<Alerta> listarAlertasPorUsuario(Long usuarioId) {
-        return alertaRepositoryPort.listarPorUsuario(usuarioId);
+        return alertaRepositoryPort.listarPorUsuario(usuarioId).stream().map(this::enriquecer).toList();
     }
 
     @Override
@@ -93,7 +95,7 @@ public class AlertaApplicationServiceImpl implements AlertaApplicationService {
 
         alertaValidator.validarPropiedadAlerta(alerta, usuarioId);
         alerta.desactivar();
-        return alertaRepositoryPort.guardar(alerta);
+        return enriquecer(alertaRepositoryPort.guardar(alerta));
     }
 
     /**
@@ -106,7 +108,7 @@ public class AlertaApplicationServiceImpl implements AlertaApplicationService {
         Alerta alerta = buscarAlerta(alertaId);
         alertaValidator.validarPropiedadAlerta(alerta, usuarioId);
         if (alerta.estaActiva()) {
-            return alerta;
+            return enriquecer(alerta);
         }
 
         EstadoCuentaCopia estadoCuenta = estadoCuentaCopiaRepositoryPort.buscarPorUsuarioId(usuarioId).orElse(null);
@@ -128,13 +130,38 @@ public class AlertaApplicationServiceImpl implements AlertaApplicationService {
         }
 
         alerta.activar();
-        return alertaRepositoryPort.guardar(alerta);
+        return enriquecer(alertaRepositoryPort.guardar(alerta));
+    }
+
+    /** Una talla en blanco equivale a «sin talla»; la comparacion ignora mayusculas y espacios. */
+    @Override
+    public Optional<Alerta> buscarAlertaActivaDePrenda(Long usuarioId, String itemId, String tallaObjetivo) {
+        String talla = normalizar(tallaObjetivo);
+        return alertaRepositoryPort.listarPorUsuario(usuarioId).stream()
+                .filter(Alerta::estaActiva)
+                .filter(a -> TipoAlerta.ITEM_AGOTADO.equals(a.getTipoAlerta()))
+                .filter(a -> itemId != null && itemId.trim().equals(a.getItemId()))
+                .filter(a -> java.util.Objects.equals(talla, normalizar(a.getTallaObjetivo())))
+                .findFirst();
+    }
+
+    private static String normalizar(String talla) {
+        return talla == null || talla.isBlank() ? null : talla.trim().toUpperCase(java.util.Locale.ROOT);
+    }
+
+    /** Completa el nombre de la busqueda guardada para que el front pinte la lista sin consultar a ms-usuarios. */
+    private Alerta enriquecer(Alerta alerta) {
+        if (alerta != null && alerta.getBusquedaGuardadaId() != null && busquedaGuardadaCopiaRepositoryPort != null) {
+            busquedaGuardadaCopiaRepositoryPort.buscarPorId(alerta.getBusquedaGuardadaId())
+                    .ifPresent(b -> alerta.setNombreBusqueda(b.getNombre()));
+        }
+        return alerta;
     }
 
     private Alerta buscarAlerta(Long alertaId) {
         return alertaRepositoryPort.buscarPorId(alertaId).orElseThrow(() -> {
             log.debug("No existe la alerta {}", alertaId);
-            return new RecursoNoEncontradoException("No se encontro la alerta");
+            return new RecursoNoEncontradoException("No se encontro la alerta", CodigoError.ALERT_NOT_FOUND);
         });
     }
 }

@@ -63,7 +63,7 @@ class ContratoSwaggerAlineadoTest {
         contrato.get("paths").fields().forEachRemaining(ruta -> ruta.getValue().fieldNames()
                 .forEachRemaining(metodo -> swagger.add(metodo.toUpperCase() + " " + ruta.getKey())));
 
-        String readme = Files.readString(Path.of("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(Path.of("docs/readme/04-endpoints-y-swagger.md"), StandardCharsets.UTF_8);
         Set<String> documentadas = new HashSet<>();
         Matcher fila = FILA_README.matcher(readme);
         while (fila.find()) {
@@ -76,7 +76,7 @@ class ContratoSwaggerAlineadoTest {
     @Test
     @DisplayName("Los codigos HTTP de cada ruta del README son los del Swagger")
     void codigosDelReadmeIgualesALosDelSwagger() throws Exception {
-        String readme = Files.readString(Path.of("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(Path.of("docs/readme/04-endpoints-y-swagger.md"), StandardCharsets.UTF_8);
         Pattern fila = Pattern.compile("\\|\\s*`(GET|POST|PUT|PATCH|DELETE)`\\s*\\|\\s*`(/api/v1/users/[^`]+)`[^\\r\\n]*\\|\\s*((?:`\\d{3}`(?:,\\s*)?)+)\\s*\\|");
         Matcher m = fila.matcher(readme);
         int comprobadas = 0;
@@ -92,7 +92,53 @@ class ContratoSwaggerAlineadoTest {
             assertThat(enReadme).as(m.group(1) + " " + m.group(2)).isEqualTo(enSwagger);
             comprobadas++;
         }
-        assertThat(comprobadas).isEqualTo(13);
+        assertThat(comprobadas).isEqualTo(14);
+    }
+
+    @Test
+    @DisplayName("La lista de notificaciones muestra un solo filtro de lectura: read (mas page y size)")
+    void unSoloFiltroDeLecturaEnElSwagger() {
+        JsonNode parametros = contrato.at("/paths/~1api~1v1~1users~1{id}~1notifications/get/parameters");
+        Set<String> visibles = new java.util.TreeSet<>();
+        parametros.forEach(p -> visibles.add(p.get("name").asText()));
+
+        assertThat(visibles).containsExactlyInAnyOrder("id", "read", "page", "size");
+    }
+
+    @Test
+    @DisplayName("El esquema del error lista los codigos estables y los ejemplos traen el codigo de su estado")
+    void codigosDeErrorEnElSwagger() {
+        JsonNode codigos = contrato.at("/components/schemas/ProblemDetail/properties/code/enum");
+        Set<String> lista = new java.util.TreeSet<>();
+        codigos.forEach(c -> lista.add(c.asText()));
+        assertThat(lista).contains("VALIDATION_ERROR", "UNAUTHENTICATED", "ACCESS_DENIED", "ALERT_NOT_FOUND",
+                "ALERT_ALREADY_ACTIVE", "ITEM_HAS_STOCK", "SAVED_SEARCH_NOT_AVAILABLE", "RATE_LIMITED", "CATALOG_UNAVAILABLE");
+
+        JsonNode ejemplos = contrato.at("/paths/~1api~1v1~1users~1{id}~1alerts/post/responses");
+        for (String estado : new String[] {"400", "401", "403", "409", "422", "503"}) {
+            JsonNode ejemplo = ejemplos.get(estado).at("/content/application~1problem+json/examples").elements().next().get("value");
+            assertThat(lista).as(estado).contains(ejemplo.get("code").asText());
+        }
+    }
+
+    @Test
+    @DisplayName("Todos los textos del Swagger estan en ingles: los esquemas no traen palabras en espanol")
+    void swaggerEnIngles() {
+        Pattern espanol = Pattern.compile("(?i)[áéíóúñ]|\\b(el|la|los|las|del|para|con|sin|una|usuario|prenda|alerta|campana|talla)\\b");
+        java.util.List<String> encontrados = new java.util.ArrayList<>();
+        contrato.at("/components/schemas").fields().forEachRemaining(esquema -> {
+            esquema.getValue().path("properties").fields().forEachRemaining(prop -> {
+                String descripcion = prop.getValue().path("description").asText("");
+                if (espanol.matcher(descripcion).find()) {
+                    encontrados.add(esquema.getKey() + "." + prop.getKey() + ": " + descripcion);
+                }
+            });
+            String descripcion = esquema.getValue().path("description").asText("");
+            if (espanol.matcher(descripcion).find()) {
+                encontrados.add(esquema.getKey() + ": " + descripcion);
+            }
+        });
+        assertThat(encontrados).isEmpty();
     }
 
     @Test
@@ -154,6 +200,7 @@ class ContratoSwaggerAlineadoTest {
                         .contentType("application/json").content("{\"canal\":\"IN_APP\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type").value("about:blank"))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.errors.tipoAlerta").value("El tipo de alerta es obligatorio"))
                 .andExpect(jsonPath("$.mensaje").value("El tipo de alerta es obligatorio"));
 
@@ -164,7 +211,8 @@ class ContratoSwaggerAlineadoTest {
         mockMvc.perform(get("/api/v1/users/me/alerts"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.type").value("about:blank"))
-                .andExpect(jsonPath("$.title").value("No autenticado"));
+                .andExpect(jsonPath("$.title").value("No autenticado"))
+                .andExpect(jsonPath("$.code").value("UNAUTHENTICATED"));
     }
 
     private static Set<String> nombres(JsonNode objeto) {

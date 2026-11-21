@@ -40,7 +40,8 @@ class MetricasActuatorHttpTest {
     void usuarioNormalResponde403() throws Exception {
         String token = jwtTokenService.generateToken(9_401L, "comprador@styleradar.co", "COMPRADOR");
         mockMvc.perform(get("/actuator/prometheus").header("Authorization", "Bearer " + token))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.code").value("ACCESS_DENIED"));
         mockMvc.perform(get("/actuator/metrics/jvm.memory.used").header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
     }

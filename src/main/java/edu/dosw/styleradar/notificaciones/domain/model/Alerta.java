@@ -14,6 +14,8 @@ public class Alerta {
     private EstadoAlerta estado;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
+    /** Nombre de la busqueda guardada; no se persiste, se completa al responder (tipo BUSQUEDA_GUARDADA). */
+    private String nombreBusqueda;
 
     public Alerta() {
     }
@@ -59,6 +61,14 @@ public class Alerta {
     public void marcarDisparada() {
         this.estado = EstadoAlerta.DISPARADA;
         this.fechaActualizacion = LocalDateTime.now();
+    }
+
+    public String getNombreBusqueda() {
+        return nombreBusqueda;
+    }
+
+    public void setNombreBusqueda(String nombreBusqueda) {
+        this.nombreBusqueda = nombreBusqueda;
     }
 
     public Long getId() {

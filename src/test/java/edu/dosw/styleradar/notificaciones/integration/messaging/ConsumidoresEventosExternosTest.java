@@ -104,10 +104,25 @@ class ConsumidoresEventosExternosTest {
 
         listener.onPrendaVendida(new PrendaVendidaEventPayload(
                 "evt-vta-65-1", "70", "Chaqueta bomber", comprador,
-                List.of(interesadoA, interesadoB, comprador), LocalDateTime.now()));
+                List.of(interesadoA, interesadoB, comprador), LocalDateTime.now(), null));
 
         assertThat(deTipo(interesadoA, TipoNotificacion.PRENDA_VENDIDA)).hasSize(1);
         assertThat(deTipo(interesadoB, TipoNotificacion.PRENDA_VENDIDA)).hasSize(1);
+        assertThat(deTipo(comprador, TipoNotificacion.PRENDA_VENDIDA)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Una prenda vendida no avisa al vendedor aunque venga entre los interesados")
+    void prendaVendidaNoAvisaAlVendedor() {
+        long interesado = 6_520L;
+        long vendedor = 6_521L;
+        long comprador = 6_522L;
+
+        listener.onPrendaVendida(new PrendaVendidaEventPayload(
+                "evt-vta-66-1", "73", "Chaqueta", comprador, List.of(interesado, vendedor, comprador), LocalDateTime.now(), vendedor));
+
+        assertThat(deTipo(interesado, TipoNotificacion.PRENDA_VENDIDA)).hasSize(1);
+        assertThat(deTipo(vendedor, TipoNotificacion.PRENDA_VENDIDA)).isEmpty();
         assertThat(deTipo(comprador, TipoNotificacion.PRENDA_VENDIDA)).isEmpty();
     }
 
@@ -116,7 +131,7 @@ class ConsumidoresEventosExternosTest {
     void prendaVendidaRepetidaNoDuplica() {
         long interesado = 6_507L;
         PrendaVendidaEventPayload evento = new PrendaVendidaEventPayload(
-                "evt-vta-65-2", "71", "Jean", 1L, List.of(interesado), LocalDateTime.now());
+                "evt-vta-65-2", "71", "Jean", 1L, List.of(interesado), LocalDateTime.now(), null);
 
         listener.onPrendaVendida(evento);
         listener.onPrendaVendida(evento);
@@ -127,10 +142,10 @@ class ConsumidoresEventosExternosTest {
     @Test
     @DisplayName("Una prenda vendida sin interesados no genera nada y sin publicacion es invalida")
     void prendaVendidaSinInteresadosOInvalida() {
-        listener.onPrendaVendida(new PrendaVendidaEventPayload("evt-vta-65-3", "72", "Jean", 1L, null, null));
+        listener.onPrendaVendida(new PrendaVendidaEventPayload("evt-vta-65-3", "72", "Jean", 1L, null, null, null));
 
         assertThatThrownBy(() -> listener.onPrendaVendida(
-                new PrendaVendidaEventPayload("evt-vta-65-4", (String) null, "Jean", 1L, List.of(1L), null)))
+                new PrendaVendidaEventPayload("evt-vta-65-4", (String) null, "Jean", 1L, List.of(1L), null, null)))
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
     }
 

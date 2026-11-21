@@ -26,7 +26,7 @@ Para seleccionar el stack tecnológico, el equipo **Guatoque Jiraguas (GJ)** eva
 | **Base de Datos** | **PostgreSQL 16 (Relacional)** | MongoDB, DynamoDB, Redis standalone | Integridad transaccional ACID, restricción de unicidad compuesta `(alerta_id, item_id, ciclo_reposicion)` e índices parciales para campana no leída. |
 | **Broker de Mensajería** | **RabbitMQ 3.13** | Apache Kafka, AWS SQS, Redis Pub/Sub | Enrutamiento flexible por topics (`TopicExchange`), reintentos y desvío nativo a Dead Letter Queues (DLQ), y bajo consumo de memoria. |
 | **Lenguaje Core** | **Java 21 LTS** | Java 17, Node.js, Python, Go | Soporte corporativo LTS, Records inmutables, Pattern Matching para eventos de dominio y Virtual Threads para I/O escalable. |
-| **Framework Base** | **Spring Boot 3.2.5** | Quarkus, Micronaut, Express, FastAPI | Estándar unificado de StyleRadar, ecosistema maduro de Spring Data, Spring AMQP, OpenFeign, Spring Security y Actuator. |
+| **Framework Base** | **Spring Boot 3.5.16** | Quarkus, Micronaut, Express, FastAPI | Estándar unificado de StyleRadar, ecosistema maduro de Spring Data, Spring AMQP, OpenFeign, Spring Security y Actuator. |
 | **Tiempo Real (Campana)** | **Server-Sent Events (SSE)** | WebSockets (STOMP), Short Polling, Long Polling | Flujo unidireccional servidor hacia cliente, reconexión automática nativa (`EventSource`), menor sobrecarga y soporte nativo HTTP. |
 | **Notificación por Email** | **JavaMailSender (SMTP)** | SendGrid SDK directo, Mailgun SDK, AWS SES SDK | Abstracción agnóstica de Spring que evita el *vendor lock-in*, soporte de plantillas HTML y desacoplamiento del proveedor en QA/PROD. |
 
@@ -55,7 +55,7 @@ Tablas principales gestionadas por el servicio:
    ```
    que el usuario reciba **exactamente una notificación por ciclo de reposición**, eliminando cualquier riesgo de spam o duplicidad por concurrencia.
 2. **Índice para la campana en tiempo real:**
-   La consulta más frecuente de la interfaz de usuario es `GET /api/v1/usuarios/me/notificaciones/no-leidas/contador`. La migración `V2__add_indexes.sql` crea un índice compuesto:
+   La consulta más frecuente de la interfaz de usuario es `GET /api/v1/users/me/notifications/unread/count`. La migración `V2__add_indexes.sql` crea un índice compuesto:
    ```sql
    CREATE INDEX idx_notificaciones_usuario_leida
    ON notificaciones (usuario_id, leida, fecha_creacion DESC);
@@ -103,16 +103,16 @@ Consumir eventos asíncronos emitidos por los microservicios de StyleRadar:
 
 ---
 
-### 3.3. Lenguaje y Framework: Java 21 LTS + Spring Boot 3.2.5
+### 3.3. Lenguaje y Framework: Java 21 LTS + Spring Boot 3.5.16
 
-#### Justificación Técnica ("Por qué Java 21 y Spring Boot 3.2"):
+#### Justificación Técnica ("Por qué Java 21 y Spring Boot 3.5"):
 1. **Alineación con el Estándar StyleRadar:**
-   Todos los microservicios backend de StyleRadar (squads Portal8080, CADCHE, RST, NQS y Guatoque Jiraguas) están homologados en Java 21 y Spring Boot 3.2, garantizando coherencia en dependencias, herramientas de CI/CD y despliegue.
+   Todos los microservicios backend de StyleRadar (squads Portal8080, CADCHE, RST, NQS y Guatoque Jiraguas) están homologados en Java 21 y Spring Boot 3.5, garantizando coherencia en dependencias, herramientas de CI/CD y despliegue.
 2. **Características Modernas de Java 21 LTS:**
    * **Java Records:** Utilizados para definir DTOs inmutables de entrada y salida (`CrearAlertaRequest`, `AlertaResponse`, `NotificacionResponse`) y payloads de eventos AMQP sin necesidad de boilerplate ni código mutador.
    * **Pattern Matching y Switch Expressions:** Utilizados en `EvaluadorCriteriosMatcher` y en los manejadores de eventos para clasificar tipos de notificación de manera exhaustiva y segura en tiempo de compilación.
    * **Virtual Threads (Project Loom):** Permite manejar miles de conexiones I/O concurrentes (consultas JDBC y suscripciones SSE abiertas) sin agotar el pool de hilos del sistema operativo.
-3. **Ecosistema Spring Boot 3.2 Integrado:**
+3. **Ecosistema Spring Boot 3.5 Integrado:**
    * **Spring Web MVC:** Controladores REST limpios desacoplados mediante interfaces de documentación (`AlertaApi`).
    * **Spring Data JPA & Hibernate 6:** Gestión de transacciones declarativas (`@Transactional`), mapeo entidad-relacional y prevención del problema N+1.
    * **Spring Cloud OpenFeign:** Cliente HTTP declarativo para consultar la disponibilidad de stock en `ms-item-catalogo` (`GET /api/v1/catalogo/items/{id}/disponibilidad`) con timeout configurable.
@@ -177,7 +177,7 @@ La arquitectura tecnológica adoptada para el **Microservicio de Notificaciones 
 1. **Persistencia robusta e idempotente** con PostgreSQL 16 para evitar fallos de negocio (duplicación de alertas).
 2. **Comunicación reactiva asíncrona** con RabbitMQ 3.13 para tolerar caídas de servicios externos sin pérdida de eventos mediante DLQ.
 3. **Entrega ágil en tiempo real** con Server-Sent Events (SSE), minimizando la carga en el servidor y optimizando la experiencia del usuario.
-4. **Mantenibilidad y desacoplamiento** gracias a Java 21, Spring Boot 3.2 y Arquitectura Hexagonal pura.
+4. **Mantenibilidad y desacoplamiento** gracias a Java 21, Spring Boot 3.5 y Arquitectura Hexagonal pura.
 
 ---
 

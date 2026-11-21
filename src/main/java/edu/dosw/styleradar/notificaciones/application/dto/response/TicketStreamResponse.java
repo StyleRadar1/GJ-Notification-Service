@@ -2,11 +2,11 @@ package edu.dosw.styleradar.notificaciones.application.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Ticket de vida corta para abrir el stream SSE con EventSource")
+@Schema(description = "Short-lived ticket to open the SSE stream with EventSource")
 public record TicketStreamResponse(
-        @Schema(description = "Se envia en ?ticket= al abrir el stream; sirve solo para eso", example = "eyJhbGciOiJIUzI1NiJ9...")
+        @Schema(description = "Sent in ?ticket= when opening the stream; it is valid only for that", example = "eyJhbGciOiJIUzI1NiJ9...")
         String ticket,
-        @Schema(description = "Segundos que dura el ticket; hay que abrir el stream antes", example = "60")
+        @Schema(description = "Seconds the ticket lasts; the stream must be opened before it expires", example = "60")
         long expiraEnSegundos
 ) {
 }

@@ -2,7 +2,8 @@ name: CI / QA Pipeline - ms-notificaciones
 
 on:
   push:
-    branches: [ "develop", "Scaffolding", "feature/**" ]
+    # Scaffolding quedo fuera: era una rama larga y atrasada que pisaba QA y PROD con builds viejos
+    branches: [ "develop", "feature/**" ]
   pull_request:
     branches: [ "develop", "main", "Scaffolding" ]
   workflow_dispatch:
@@ -18,7 +19,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -182,7 +183,7 @@ jobs:
 
       - name: Log in to Container Registry (Docker Hub or ACR)
         if: env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != ''
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ contains(env.DOCKERHUB_USERNAME, 'azurecr.io') || contains(env.DOCKERHUB_NAMESPACE, 'azurecr.io') && (env.DOCKERHUB_NAMESPACE || 'acrstyleradarqa.azurecr.io') || '' }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -303,14 +304,24 @@ jobs:
 
             # QA corre en un plan compartido y sin Always On: tras un rato sin trafico, o con el plan cargado,
             # una peticion puede tardar minutos o terminar en 504 sin que el codigo falle. Se calienta el
-            # servicio y cada carpeta se intenta dos veces antes de dar la prueba por fallida.
+            # servicio hasta que responde rapido y cada carpeta se intenta tres veces, con espera entre intentos,
+            # antes de dar la prueba por fallida.
             echo "Calentando el servicio en QA..."
-            curl -sS --max-time 120 -o /dev/null "${BASE_URL}/v3/api-docs" || true
+            for calentamiento in $(seq 1 8); do
+              TIEMPO_QA=$(curl -sS --max-time 60 -o /dev/null -w "%{http_code} %{time_total}" "${BASE_URL}/v3/api-docs" || echo "000 60")
+              echo "Calentamiento ${calentamiento}: ${TIEMPO_QA}"
+              CODIGO_QA="${TIEMPO_QA%% *}"
+              SEGUNDOS_QA="${TIEMPO_QA##* }"
+              if [ "$CODIGO_QA" = "200" ] && [ "${SEGUNDOS_QA%%.*}" -lt 5 ]; then
+                break
+              fi
+              sleep 15
+            done
 
             ejecutar_newman() {
               carpeta="$1"
               nombre="$2"
-              for intento in 1 2; do
+              for intento in 1 2 3; do
                 if npx --yes newman@6.2.1 run postman/styleradar-notificaciones.postman_collection.json \
                   --folder "$carpeta" \
                   --env-var "baseUrl=${BASE_URL}" \
@@ -321,9 +332,9 @@ jobs:
                   --reporter-junit-export "target/newman/newman-report-qa-${nombre}.xml"; then
                   return 0
                 fi
-                echo "Intento ${intento} de 2 fallido en la carpeta '${carpeta}'."
-                if [ "$intento" -lt 2 ]; then
-                  sleep 30
+                echo "Intento ${intento} de 3 fallido en la carpeta '${carpeta}'."
+                if [ "$intento" -lt 3 ]; then
+                  sleep 60
                 fi
               done
               return 1
