@@ -21,15 +21,17 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 | `RABBITMQ_VHOST` | Virtual host del broker (solo perfil `prod`) | `/` | No |
 | `RABBITMQ_SSL_ENABLED` | Activa TLS hacia el broker; con TLS se usa el puerto `5671` (solo perfil `prod`, donde viene encendido) | `true` en PROD | No |
 | `RABBITMQ_SSL_VERIFY_HOSTNAME` | Verifica que el certificado del broker coincida con el host (solo perfil `prod`) | `true` | No |
-| `REDIS_HOST` | Hostname del servidor de caché Redis | `localhost` | No |
+| `REDIS_HOST` / `REDIS_PORT` | Hostname y puerto de Redis. El servicio no lo usa; QA y PROD lo desactivan | `localhost` / `6379` | No |
 | `CATALOG_SERVICE_URL` | URL base de `ms-item-catalogo` para OpenFeign | `http://localhost:8220` | Sí |
-| `JWT_SECRET` | Clave secreta HMAC-SHA256 (mínimo 256 bits) para validar JWT | `clave_secreta_minimo_256_bits...` | Sí |
+| `JWT_SECRET` | Clave secreta HMAC-SHA256 (mínimo 256 bits) para validar JWT; se comparte con `ms-auth` y no se guarda en el repositorio | solo en `dev` (ver `application-dev.yml`) | Sí |
+| `JWT_EXPIRATION_MS` | Vida de los tokens que firma el servicio en pruebas | `86400000` | No |
+| `RABBITMQ_EXCHANGE` / `RABBITMQ_DLX` | Exchange de dominio y exchange de errores | `styleradar.exchange` / `styleradar.dlx` | No |
 | `CORS_ALLOWED_ORIGINS` | Orígenes del frontend permitidos por CORS, separados por comas | `http://localhost:5173` | No |
 | `RATE_LIMIT_ENABLED` | Enciende o apaga el límite de solicitudes por usuario (OWASP A06); al pasarse responde `429` con `Retry-After` | `true` | No |
 | `RATE_LIMIT_PER_MINUTE` | Solicitudes por minuto y por usuario (por IP si no está autenticado) | `120` | No |
 | `SSE_TICKET_TTL_SECONDS` | Vida del ticket con el que se abre el stream de la campana | `60` | No |
 | `SWAGGER_ENABLED` | Enciende Swagger UI y `/v3/api-docs` en PROD, donde vienen apagados (OWASP A02) | `false` en PROD | No |
-| `SPRING_MAIL_HOST` | Servidor SMTP para los avisos por correo. Sin esta variable no se envían correos (los avisos en plataforma siguen funcionando) | `smtp.ejemplo.co` | No |
+| `SPRING_MAIL_HOST` | Servidor SMTP para los avisos por correo. Sin esta variable no se envían correos (los avisos en plataforma siguen funcionando) | sin valor | No |
 | `SPRING_MAIL_PORT` | Puerto del servidor SMTP | `587` | No |
 | `SPRING_MAIL_USERNAME` / `SPRING_MAIL_PASSWORD` | Credenciales del SMTP. Se inyectan como variables de entorno o secretos; no se guardan en el repositorio | — | No |
 | `MAIL_FROM` | Dirección remitente de los correos | `no-reply@styleradar.co` | No |
@@ -37,7 +39,7 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 | `MAIL_RETRY_DELAY_MS` | Cada cuántos milisegundos se reintentan los correos pendientes (además de al arrancar el servicio) | `60000` | No |
 
 <details>
-<summary><b>Click para copiar la Plantilla de Archivo .env.example</b></summary>
+<summary><b>Plantilla de archivo .env.example para desarrollo local</b></summary>
 
 <br>
 
@@ -74,7 +76,7 @@ REDIS_PORT=6379
 CATALOG_SERVICE_URL=http://localhost:8220
 
 # Seguridad JWT
-JWT_SECRET=clave_secreta_minimo_256_bits_para_firmado_seguro_hs256_styleradar_2026
+JWT_SECRET=<clave-de-minimo-32-caracteres-compartida-con-ms-auth>
 JWT_EXPIRATION_MS=86400000
 ```
 

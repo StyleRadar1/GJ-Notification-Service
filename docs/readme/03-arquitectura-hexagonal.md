@@ -17,7 +17,7 @@ flowchart LR
 
     %% Capa de Infraestructura - Adaptadores de Entrada
     subgraph ADAPTERS_IN["Infraestructura: Entrada"]
-        REST_CTRL["AlertaController<br>& AlertaApi"]
+        REST_CTRL["AlertaController y<br>PreferenciaAvisoController"]
         AMQP_LISTENER["NotificacionesEventsListener<br>(Consumer + DLQ)"]
         SCHEDULER["CorreoPendienteRecuperador<br>(al arrancar y cada 60 s)"]
     end
@@ -53,7 +53,7 @@ flowchart LR
     subgraph EXT_OUT["Destinos Externos"]
         DB[(PostgreSQL 16<br>notificaciones_db)]
         CATALOGO["ms-item-catalogo<br>(Validación Stock)"]
-        ESTADISTICAS["ms-estadisticas<br>(AlertaCreada)"]
+        ESTADISTICAS["RabbitMQ<br>(evento alerta.creada)"]
         SSE_CLIENT["Campana Frontend<br>(text/event-stream)"]
         SMTP["Servidor SMTP<br>(opcional)"]
     end
@@ -97,16 +97,16 @@ flowchart LR
 
 ### Diagramas Oficiales del Microservicio (Draw.io & UML)
 
-> **Regla de Oro de Ingenieria StyleRadar:** Todo diagrama arquitectonico esta respaldado por su archivo fuente editable `.drawio`, su imagen y su justificacion tecnica documentada en [docs/DIAGRAMAS_NOT20.md](../DIAGRAMAS_NOT20.md).
+> **Regla de Oro de Ingeniería StyleRadar:** Todo diagrama arquitectónico está respaldado por su archivo fuente editable `.drawio`, su imagen y su justificación técnica documentada en [docs/DIAGRAMAS_NOT20.md](../DIAGRAMAS_NOT20.md).
 >
-> **Idioma:** los nueve diagramas (`.drawio` e imagenes) estan en ingles. Los nombres de clases, metodos, tablas, columnas y colas se dejan tal como estan en el codigo.
+> **Idioma:** los nueve diagramas (`.drawio` e imágenes) están en inglés. Los nombres de clases, métodos, tablas, columnas y colas se dejan tal como estan en el codigo.
 >
-> **Actualizacion del 17/11/2026:** los diagramas reflejan el codigo de `develop`: `itemId` como texto (UUID), migracion V6, `Alerta.activar()`, `ActivarAlertaUseCaseImpl`, `RateLimitFilter` y `MetricasConfig`.
+> **Actualización del 17/11/2026:** los diagramas reflejan el codigo de `develop`: `itemId` como texto (UUID), migracion V6, `Alerta.activar()`, `ActivarAlertaUseCaseImpl`, `RateLimitFilter` y `MetricasConfig`.
 
 #### 1. Diagrama de Componentes con Arquitectura Hexagonal (Especifico)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-componentes-especifico.drawio`](../uml/diagrama-componentes-especifico.drawio)
-* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 2)](../DIAGRAMAS_NOT20.md#2-diagrama-de-componentes-específico-arquitectura-hexagonal)
-* **Descripcion:** Modela adaptadores de entrada (Driving: REST Controller, RabbitMQ Listener), la capa de aplicacion (Input Ports, Use Cases, Application Services, DTOs, Mappers), el nucleo de dominio puro (Modelos, Value Objects, Domain Events, Validadores) y adaptadores de salida (Driven: JPA Repositories, Feign Client, Event Publisher, SSE Adapter, SMTP Adapter). Incluye los controladores de alertas y de preferencias de avisos, los 12 consumidores de eventos, el recuperador de correos pendientes (GJ-119), el caso de uso para reactivar alertas (`ActivarAlertaUseCaseImpl`), el filtro de limite de solicitudes (`RateLimitFilter`) y las metricas (`MetricasConfig`). Cada caja muestra solo su estereotipo y su nombre real.
+* **Documentación y Justificación Técnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 2)](../DIAGRAMAS_NOT20.md#2-diagrama-de-componentes-específico-arquitectura-hexagonal)
+* **Descripción:** Modela adaptadores de entrada (Driving: REST Controller, RabbitMQ Listener), la capa de aplicación (Input Ports, Use Cases, Application Services, DTOs, Mappers), el nucleo de dominio puro (Modelos, Value Objects, Domain Events, Validadores) y adaptadores de salida (Driven: JPA Repositories, Feign Client, Event Publisher, SSE Adapter, SMTP Adapter). Incluye los controladores de alertas y de preferencias de avisos, los 12 consumidores de eventos, el recuperador de correos pendientes (GJ-119), el caso de uso para reactivar alertas (`ActivarAlertaUseCaseImpl`), el filtro de limite de solicitudes (`RateLimitFilter`) y las metricas (`MetricasConfig`). Cada caja muestra solo su estereotipo y su nombre real.
 
 <p align="center">
   <a href="../images/diagrama-componentes-especifico.png" target="_blank">
@@ -118,8 +118,8 @@ flowchart LR
 
 #### 2. Diagrama de Clases (Modelo de Dominio y Patrones de Diseno)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-clases.drawio`](../uml/diagrama-clases.drawio)
-* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 3)](../DIAGRAMAS_NOT20.md#3-diagrama-de-clases-modelo-de-dominio)
-* **Descripcion:** Modela las entidades de dominio (`Alerta`, `Notificacion`, `PreferenciaAviso`, `BusquedaGuardadaCopia`, `EstadoCuentaCopia`), Value Objects (`CriterioBusquedaVO`, `DatosPrendaVO`), Enumeraciones (`TipoAlerta`, `TipoNotificacion`, `CanalNotificacion`, `CanalAviso`, `EstadoAlerta`, `EstadoCuenta`) y las reglas del dominio (`AlertaValidator` para las validaciones y `EvaluadorCriteriosMatcher` para el matching en memoria) y la pagina de resultados (`Pagina`), el correo pendiente de reintento (`CorreoPendiente` y `EstadoCorreo`) y las cinco excepciones de dominio (`AccesoDenegadoException`, `ConflictoException`, `RecursoNoEncontradoException`, `ReglaDeNegocioException` y `ServicioExternoNoDisponibleException`, todas hijas de `RuntimeException`), cada una con el codigo HTTP al que se traduce. El dominio no depende de Spring ni de JPA.
+* **Documentación y Justificación Técnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 3)](../DIAGRAMAS_NOT20.md#3-diagrama-de-clases-modelo-de-dominio)
+* **Descripción:** Modela las entidades de dominio (`Alerta`, `Notificacion`, `PreferenciaAviso`, `BusquedaGuardadaCopia`, `EstadoCuentaCopia`), Value Objects (`CriterioBusquedaVO`, `DatosPrendaVO`), Enumeraciones (`TipoAlerta`, `TipoNotificacion`, `CanalNotificacion`, `CanalAviso`, `EstadoAlerta`, `EstadoCuenta`) y las reglas del dominio (`AlertaValidator` para las validaciones y `EvaluadorCriteriosMatcher` para el matching en memoria) y la pagina de resultados (`Pagina`), el correo pendiente de reintento (`CorreoPendiente` y `EstadoCorreo`) y las cinco excepciones de dominio (`AccesoDenegadoException`, `ConflictoException`, `RecursoNoEncontradoException`, `ReglaDeNegocioException` y `ServicioExternoNoDisponibleException`, todas hijas de `RuntimeException`), cada una con el codigo HTTP al que se traduce. El dominio no depende de Spring ni de JPA.
 
 <p align="center">
   <a href="../images/diagrama-clases.png" target="_blank">
@@ -131,8 +131,8 @@ flowchart LR
 
 #### 3. Diagrama de Base de Datos (Modelo Relacional / ER - PostgreSQL 16)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-base-datos.drawio`](../uml/diagrama-base-datos.drawio)
-* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 4)](../DIAGRAMAS_NOT20.md#4-diagrama-de-base-de-datos-metamodelo-conceptual-y-físico)
-* **Descripcion:** Modela el esquema relacional fisico de PostgreSQL 16 gestionado por Flyway (migraciones V1 a V6; en V6 `item_id` pasa a `VARCHAR(100)` para aceptar UUID): `alertas`, `notificaciones`, `preferencias_avisos`, `busquedas_guardadas_copia`, `estados_cuenta_copia` y `correos_pendientes`, con sus indices y las restricciones unicas que dan la idempotencia. No hay llaves foraneas: los usuarios e items viven en otros servicios (Database-per-Service).
+* **Documentación y Justificación Técnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 4)](../DIAGRAMAS_NOT20.md#4-diagrama-de-base-de-datos-metamodelo-conceptual-y-físico)
+* **Descripción:** Modela el esquema relacional físico de PostgreSQL 16 gestionado por Flyway (migraciones V1 a V6; en V6 `item_id` pasa a `VARCHAR(100)` para aceptar UUID): `alertas`, `notificaciones`, `preferencias_avisos`, `busquedas_guardadas_copia`, `estados_cuenta_copia` y `correos_pendientes`, con sus indices y las restricciones unicas que dan la idempotencia. No hay llaves foraneas: los usuarios e items viven en otros servicios (Database-per-Service).
 
 <p align="center">
   <a href="../images/diagrama-base-datos.png" target="_blank">
@@ -144,8 +144,8 @@ flowchart LR
 
 #### 4. Diagrama de Contexto del Sistema (C4 L1)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-contexto.drawio`](../uml/diagrama-contexto.drawio)
-* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 1)](../DIAGRAMAS_NOT20.md#1-diagrama-de-contexto-del-sistema-nivel-c4---l1)
-* **Descripcion:** Delimita la frontera del microservicio y sus interacciones con el frontend SPA, broker RabbitMQ (exchange `styleradar.exchange`), microservicio de catalogo (via OpenFeign), identidad, donaciones, chat, pagos, tiendas, estadisticas y el servidor SMTP de los avisos por correo.
+* **Documentación y Justificación Técnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 1)](../DIAGRAMAS_NOT20.md#1-diagrama-de-contexto-del-sistema-nivel-c4---l1)
+* **Descripción:** Delimita la frontera del microservicio y sus interacciones con el frontend SPA, broker RabbitMQ (exchange `styleradar.exchange`), microservicio de catálogo (via OpenFeign), identidad, donaciones, chat, pagos, tiendas, estadísticas y el servidor SMTP de los avisos por correo.
 
 <p align="center">
   <a href="../images/diagrama-contexto.png" target="_blank">
@@ -155,17 +155,17 @@ flowchart LR
 
 ---
 
-#### 5. Diagrama de Despliegue (Topologia Azure & Docker Hub)
+#### 5. Diagrama de Despliegue (Topología Azure & Docker Hub)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-despliegue.drawio`](../uml/diagrama-despliegue.drawio)
-* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 5)](../DIAGRAMAS_NOT20.md#5-diagrama-de-despliegue)
-* **Descripcion:** Modela la topologia de ejecucion y despliegue continuo: estacion de desarrollo, pipeline de CI/CD en GitHub Actions, repositorio de imagenes en Azure Container Registry, y los ambientes de QA y PROD en Azure App Service (cada uno con su base de datos y su vhost del broker).
+* **Documentación y Justificación Técnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 5)](../DIAGRAMAS_NOT20.md#5-diagrama-de-despliegue)
+* **Descripción:** Modela la topologia de ejecucion y despliegue continuo: estacion de desarrollo, pipeline de CI/CD en GitHub Actions, repositorio de imágenes en Azure Container Registry, y los ambientes de QA y PROD en Azure App Service (cada uno con su base de datos y su vhost del broker).
 
 ---
 
 #### 6. Diagrama de Componentes General (Ecosistema StyleRadar)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-componentes-general.drawio`](../uml/diagrama-componentes-general.drawio)
-* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 7)](../DIAGRAMAS_NOT20.md#7-diagrama-de-componentes-general-ecosistema-styleradar)
-* **Descripcion:** Vista de todo el backend de StyleRadar, compartida por los equipos: el cliente web, el API Gateway, los 13 microservicios con su base de datos propia, las colas de RabbitMQ (Notificaciones, Pagos y Estadisticas), Redis y los sistemas externos (Google OAuth, MercadoPago, Azure Blob Storage y FASHN AI). `ms-notificaciones` aparece con su base `notificaciones_db` y su cola de RabbitMQ. El diagrama lo elaboro el equipo de arquitectura; este servicio solo lo conserva como referencia.
+* **Documentación y Justificación Técnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 7)](../DIAGRAMAS_NOT20.md#7-diagrama-de-componentes-general-ecosistema-styleradar)
+* **Descripción:** Vista de todo el backend de StyleRadar, compartida por los equipos: el cliente web, el API Gateway, los 13 microservicios con su base de datos propia, las colas de RabbitMQ (Notificaciones, Pagos y Estadisticas), Redis y los sistemas externos (Google OAuth, MercadoPago, Azure Blob Storage y FASHN AI). `ms-notificaciones` aparece con su base `notificaciones_db` y su cola de RabbitMQ. El diagrama lo elaboro el equipo de arquitectura; este servicio solo lo conserva como referencia.
 
 <p align="center">
   <a href="../images/diagrama-componentes-general.png" target="_blank">
@@ -177,8 +177,8 @@ flowchart LR
 
 #### 7. Diagrama de Despliegue General (Ecosistema StyleRadar)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-despliegue-general.drawio`](../uml/diagrama-despliegue-general.drawio)
-* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 8)](../DIAGRAMAS_NOT20.md#8-diagrama-de-despliegue-general-ecosistema-styleradar)
-* **Descripcion:** Topologia de ejecucion de todo el ecosistema: la aplicacion web entra por el API Gateway (`8080`) y cada microservicio corre como contenedor en su puerto, con su base en el servidor de PostgreSQL, su espacio en Redis cuando lo usa y su conexion al broker RabbitMQ. `ms-notificaciones` corre en el puerto `8300`. El de este servicio en detalle es el diagrama 5.
+* **Documentación y Justificación Técnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 8)](../DIAGRAMAS_NOT20.md#8-diagrama-de-despliegue-general-ecosistema-styleradar)
+* **Descripción:** Topología de ejecucion de todo el ecosistema: la aplicación web entra por el API Gateway (`8080`) y cada microservicio corre como contenedor en su puerto, con su base en el servidor de PostgreSQL, su espacio en Redis cuando lo usa y su conexion al broker RabbitMQ. `ms-notificaciones` corre en el puerto `8300`. El de este servicio en detalle es el diagrama 5.
 
 <p align="center">
   <a href="../images/diagrama-despliegue-general.png" target="_blank">
@@ -190,8 +190,8 @@ flowchart LR
 
 #### 8. Diagrama de Casos de Uso (ms-notificaciones)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-casos-de-uso.drawio`](../uml/diagrama-casos-de-uso.drawio)
-* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 9)](../DIAGRAMAS_NOT20.md#9-diagrama-de-casos-de-uso)
-* **Descripcion:** Un diagrama por microservicio con todos los requerimientos funcionales de `ms-notificaciones` (SR-RF-29, 30, 31, 32, 104, 105 y 106) y sus actores: usuario comprador, administrador de almacen, representante de fundacion aliada y administrador StyleRadar.
+* **Documentación y Justificación Técnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 9)](../DIAGRAMAS_NOT20.md#9-diagrama-de-casos-de-uso)
+* **Descripción:** Un diagrama por microservicio con todos los requerimientos funcionales de `ms-notificaciones` (SR-RF-29, 30, 31, 32, 104, 105 y 106) y sus actores: usuario comprador, administrador de almacen, representante de fundacion aliada y administrador StyleRadar.
 
 <p align="center">
   <a href="../images/diagrama-casos-de-uso.png" target="_blank">

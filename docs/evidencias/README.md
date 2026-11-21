@@ -20,3 +20,16 @@ Capturas y resultados que respaldan los criterios de aceptación de las historia
 | `GJ-117` | Avisar cuando una fundación se desactiva |
 | `GJ-118` | Paginación de la bandeja de notificaciones |
 | `GJ-119` | Reintentos de correo que sobreviven a un reinicio |
+
+## Evidencias transversales
+
+Las imágenes de esta carpeta que respaldan el README principal son capturas o reportes reales, con la fecha en que se obtuvieron:
+
+| Archivo | Qué muestra | Origen |
+| :--- | :--- | :--- |
+| `swagger-ui.png` | Los 14 endpoints agrupados en «Notification Preferences» y «Alerts & Notifications» | Swagger UI de `ms-notificaciones` |
+| `cobertura-jacoco.png` | Reporte HTML de JaCoCo con 94 % de instrucciones y 94,0 % de líneas | `target/site/jacoco/index.html` tras `mvn clean verify` (20/11/2026) |
+| `pipeline-ci-cd.png` | Ejecución en verde del pipeline CI / QA sobre `develop` (`build-and-verify` y `docker-verify-qa`) | Página pública de GitHub Actions (20/11/2026) |
+| `codeql-analysis.png` | Ejecución en verde del análisis CodeQL sobre `develop` | Página pública de GitHub Actions (20/11/2026) |
+| `health-qa.png` | Respuesta de `/actuator/health` del servicio desplegado en QA | `https://styleradar-notificaciones-qa.azurewebsites.net/actuator/health` (20/11/2026) |
+| `jira-tablero-epica.png` | Las 46 historias y tareas de la épica GJ-2 en estado «Listo» | Consulta `project = GJ AND parent = GJ-2` en Jira (20/11/2026) |

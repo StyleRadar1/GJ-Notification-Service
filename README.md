@@ -39,7 +39,7 @@
       <img src="https://img.shields.io/badge/Java-21_LTS-12063A?style=for-the-badge&logo=openjdk&logoColor=C4B5FD" alt="Java 21" />
     </a>
     <a href="docs/readme/06-tecnologias-y-dependencias.md">
-      <img src="https://img.shields.io/badge/Spring_Boot-3.2.x-12063A?style=for-the-badge&logo=spring&logoColor=C4B5FD" alt="Spring Boot 3.2" />
+      <img src="https://img.shields.io/badge/Spring_Boot-3.5.x-12063A?style=for-the-badge&logo=spring&logoColor=C4B5FD" alt="Spring Boot 3.5" />
     </a>
     <a href="docs/readme/07-ejecucion-local-y-docker.md">
       <img src="https://img.shields.io/badge/Docker-OCI_Container-12063A?style=for-the-badge&logo=docker&logoColor=C4B5FD" alt="Docker OCI" />
