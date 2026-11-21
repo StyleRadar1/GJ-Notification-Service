@@ -53,6 +53,7 @@ Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archi
 | Base de datos | [`diagrama-base-datos.drawio`](./uml/diagrama-base-datos.drawio) | [`diagrama-base-datos.png`](./images/diagrama-base-datos.png) |
 | Despliegue | [`diagrama-despliegue.drawio`](./uml/diagrama-despliegue.drawio) | [`diagrama-despliegue.png`](./images/diagrama-despliegue.png) |
 | Secuencia 7.8 | [`diagrama-secuencia.drawio`](./uml/diagrama-secuencia.drawio) | [`diagrama-secuencia.png`](./images/diagrama-secuencia.png) |
+| Casos de uso | [`diagrama-casos-de-uso.drawio`](./uml/diagrama-casos-de-uso.drawio) | [`diagrama-casos-de-uso.png`](./images/diagrama-casos-de-uso.png) |
 
 ---
 
@@ -295,3 +296,32 @@ El diagrama muestra el backend completo de StyleRadar dentro de un recuadro punt
 
 - **Contenedor por servicio:** cada microservicio se despliega y escala por separado.
 - **Bases y caché separadas por servicio:** un fallo o una migración en una base no afecta a los demás servicios.
+
+---
+
+## 9. Diagrama de casos de uso
+
+<p align="center">
+  <img src="./images/diagrama-casos-de-uso.png" alt="Diagrama de casos de uso de ms-notificaciones" width="85%" />
+</p>
+
+### 9.1. Explicación técnica
+
+Hay un diagrama de casos de uso por microservicio y este contiene todos los requerimientos funcionales de `ms-notificaciones`. El borde redondeado es el sistema, cada óvalo es un requerimiento (código y nombre) y las líneas unen cada caso de uso con los actores que participan. Los actores son los cuatro oficiales, los mismos del diagrama de contexto: usuario comprador, administrador de almacén, representante de fundación aliada y administrador StyleRadar.
+
+| Requerimiento | Caso de uso | Actor principal | Actor secundario |
+| :--- | :--- | :--- | :--- |
+| SR-RF-29 | Configurar alerta de disponibilidad | Usuario comprador | — |
+| SR-RF-30 | Detectar prendas que coinciden con una alerta | Administrador de almacén (lo inicia al publicar o reponer) | Usuario comprador (dueño de las alertas) |
+| SR-RF-31 | Notificar coincidencia o reposición de una prenda | Usuario comprador (quien recibe el aviso) | Administrador de almacén (inicia el caso vía SR-RF-30) |
+| SR-RF-32 | Consultar, desactivar y reactivar alertas | Usuario comprador | — |
+| SR-RF-104 | Consultar la bandeja de notificaciones | Usuario comprador, administrador de almacén y representante de fundación aliada | — |
+| SR-RF-105 | Elegir el canal de cada tipo de aviso | Usuario comprador, administrador de almacén y representante de fundación aliada | — |
+| SR-RF-106 | Avisar la actividad de otros módulos | Usuario comprador, administrador de almacén y representante de fundación aliada (reciben el aviso) | Administrador StyleRadar (sus moderaciones generan avisos) |
+
+La flecha discontinua «extend» de SR-RF-31 a SR-RF-30, con la condición «hay coincidencia», indica que la notificación solo ocurre si SR-RF-30 encontró al menos una coincidencia. Se usa `extend` y no `include` porque `include` significaría que SR-RF-30 siempre ejecuta SR-RF-31, y no es así. `SR-RNF-15` (resiliencia e idempotencia de los consumidores) es un requerimiento no funcional y por eso no es un caso de uso.
+
+### 9.2. Justificación arquitectónica
+
+- **Un diagrama por microservicio:** cada equipo responde por sus requerimientos y el contrato de sus actores.
+- **Actores como personas:** los consumidores de RabbitMQ no son actores; el actor es la persona cuya acción provoca el evento (publicar una prenda, mover una donación, moderar o pagar).

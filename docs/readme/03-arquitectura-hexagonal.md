@@ -99,7 +99,7 @@ flowchart LR
 
 > **Regla de Oro de Ingenieria StyleRadar:** Todo diagrama arquitectonico esta respaldado por su archivo fuente editable `.drawio`, su imagen y su justificacion tecnica documentada en [docs/DIAGRAMAS_NOT20.md](../DIAGRAMAS_NOT20.md).
 >
-> **Idioma:** los ocho diagramas (`.drawio` e imagenes) estan en ingles. Los nombres de clases, metodos, tablas, columnas y colas se dejan tal como estan en el codigo.
+> **Idioma:** los nueve diagramas (`.drawio` e imagenes) estan en ingles. Los nombres de clases, metodos, tablas, columnas y colas se dejan tal como estan en el codigo.
 >
 > **Actualizacion del 17/11/2026:** los diagramas reflejan el codigo de `develop`: `itemId` como texto (UUID), migracion V6, `Alerta.activar()`, `ActivarAlertaUseCaseImpl`, `RateLimitFilter` y `MetricasConfig`.
 
@@ -183,6 +183,19 @@ flowchart LR
 <p align="center">
   <a href="../images/diagrama-despliegue-general.png" target="_blank">
     <img src="../images/diagrama-despliegue-general.png" alt="Diagrama de Despliegue General del ecosistema StyleRadar" width="100%" style="border-radius: 8px; border: 1px solid #CBD5E1; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+  </a>
+</p>
+
+---
+
+#### 8. Diagrama de Casos de Uso (ms-notificaciones)
+* **Archivo Editable Draw.io:** [`docs/uml/diagrama-casos-de-uso.drawio`](../uml/diagrama-casos-de-uso.drawio)
+* **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 9)](../DIAGRAMAS_NOT20.md#9-diagrama-de-casos-de-uso)
+* **Descripcion:** Un diagrama por microservicio con todos los requerimientos funcionales de `ms-notificaciones` (SR-RF-29, 30, 31, 32, 104, 105 y 106) y sus actores: usuario comprador, administrador de almacen, representante de fundacion aliada y administrador StyleRadar.
+
+<p align="center">
+  <a href="../images/diagrama-casos-de-uso.png" target="_blank">
+    <img src="../images/diagrama-casos-de-uso.png" alt="Diagrama de casos de uso de ms-notificaciones" width="85%" />
   </a>
 </p>
 
