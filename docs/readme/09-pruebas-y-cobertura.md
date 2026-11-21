@@ -3,7 +3,7 @@
 
 ## <img src="https://img.shields.io/badge/09-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 9. PRUEBAS Y COBERTURA (≥ 85%)
 
-El proyecto exige una cobertura de código mínima del **85%** verificada automáticamente mediante el plugin de **JaCoCo** durante la fase de compilación.
+El proyecto exige una cobertura de líneas mínima del **85%** verificada automáticamente mediante el plugin de **JaCoCo** durante `mvn verify`.
 
 ### Comandos de Ejecución de Pruebas
 
@@ -17,24 +17,13 @@ mvn jacoco:report
 
 * **Ruta del Reporte HTML:** `target/site/jacoco/index.html`
 
-<div align="center">
-  <table width="100%" style="margin: 18px 0; border: 2px dashed #5600EF; border-radius: 8px; background-color: #FBFBFE;">
-    <tr>
-      <td align="center" style="padding: 22px;">
-        <p>
-          <img src="https://img.shields.io/badge/ESPACIO_DE_CAPTURA-EVIDENCIA_03-5600EF?style=for-the-badge" alt="Evidencia 03" /><br />
-          <strong><font color="#5600EF" size="3">REPORTE CONSOLIDADO DE COBERTURA JACOCO (≥ 85%)</font></strong>
-        </p>
-        <p>
-          <sub>Pega aquí la captura del reporte HTML (<code>target/site/jacoco/index.html</code>) evidenciando el cumplimiento de la cobertura mínima obligatoria (≥ 85%).</sub>
-        </p>
-        <p>
-          <img src="../evidencias/cobertura-jacoco.png" width="90%" alt="Reporte JaCoCo" /><br />
-        </p>
-      </td>
-    </tr>
-  </table>
-</div>
+<p align="center">
+  <img src="../evidencias/cobertura-jacoco.png" width="95%" alt="Reporte HTML de JaCoCo" />
+</p>
+
+<p align="center">
+  <sub>Reporte real de JaCoCo 0.8.16 (<code>target/site/jacoco/index.html</code>) generado con <code>mvn clean verify</code> el 20/11/2026: 94 % de instrucciones, 71 % de ramas y 1.905 líneas medidas, de las que 115 quedan sin cubrir (94,0 % de líneas).</sub>
+</p>
 
 
 ### Pirámide de Pruebas Implementada
@@ -46,7 +35,7 @@ mvn jacoco:report
 | **Pruebas de Integración y Contrato** | Controladores REST, Seguridad JWT, Flyway, Repositorios JPA, Consumidores AMQP, SSE y correo | Spring Boot Test, MockMvc, H2 PostgreSQL Mode, GreenMail | `src/test/java/.../integration/` | ≥ 85% |
 | **Pruebas con RabbitMQ real** | Publicación de `AlertaCreada` y consumo de eventos contra un broker real | Testcontainers (requieren Docker; en un equipo sin Docker se omiten y las corre el CI) | `src/test/java/.../integration/messaging/` | — |
 
-Estado actual: **169 pruebas, 0 fallos, cobertura de líneas 94,0 %** (11 pruebas con Docker omitidas en un equipo sin Docker).
+Estado actual (20/11/2026): **253 pruebas, 0 fallos y 0 errores; cobertura de líneas 94,0 %** (instrucciones 94,8 %, ramas 71,5 %). Hay 14 pruebas que necesitan Docker (Testcontainers con RabbitMQ y PostgreSQL reales): en un equipo sin Docker se omiten y las ejecuta el CI.
 
 > [!IMPORTANT]
-> **Criterio de Fallo en CI:** El archivo `pom.xml` contiene la regla `<limit><minimum>0.85</minimum></limit>`. Si la cobertura total consolidada es inferior al 85%, el comando `mvn verify` fallará con error y el pipeline bloqueará el Pull Request.
+> **Criterio de Fallo en CI:** El archivo `pom.xml` contiene la regla `<limit><minimum>0.85</minimum></limit>`. Si la cobertura de líneas consolidada es inferior al 85%, el comando `mvn verify` fallará con error y el pipeline bloqueará el Pull Request.

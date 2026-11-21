@@ -13,7 +13,7 @@ La comunicación asíncrona entre microservicios se orquesta a través de **Rabb
 
 | Tipo | Routing Key | Cola (Queue) | Microservicio Emisor / Receptor | Cuándo se Dispara / Acción |
 | :---: | :--- | :--- | :--- | :--- |
-| **PUBLICA** | `styleradar.notificaciones.alerta.creada` | N/A (Exchange) | `ms-notificaciones` &rarr; `ms-estadisticas` | Publica `AlertaCreadaDomainEvent` al persistir una alerta activa (NOT-16). |
+| **PUBLICA** | `styleradar.notificaciones.alerta.creada` | N/A (Exchange) | `ms-notificaciones` &rarr; broker (sin consumidor fijo) | Publica `AlertaCreadaDomainEvent` al persistir una alerta activa (NOT-16). |
 | **CONSUME** | `styleradar.inventario.actualizado` | `styleradar.notificaciones.inventario-actualizado.q` | `ms-inventario` &rarr; `ms-notificaciones` | Evalúa reposición de stock y criterios en memoria; genera notificación idempotente por ciclo (NOT-06, NOT-07, NOT-11). |
 | **CONSUME** | `styleradar.catalogo.prenda.publicada` | `styleradar.notificaciones.prenda-publicada.q` | `ms-item-catalogo` &rarr; `ms-notificaciones` | Evalúa en memoria si la prenda nueva coincide con búsquedas guardadas activas (NOT-06, NOT-07). |
 | **CONSUME** | `styleradar.usuarios.busqueda.sincronizada` | `styleradar.notificaciones.busqueda-guardada.q` | `ms-usuarios` &rarr; `ms-notificaciones` | Mantiene copia local de búsquedas guardadas y desactiva alertas si se elimina (NOT-08). |
@@ -27,7 +27,7 @@ La comunicación asíncrona entre microservicios se orquesta a través de **Rabb
 | **CONSUME** | `styleradar.pagos.pago.confirmado` | `styleradar.notificaciones.pago-confirmado.q` | `ms-pagos` &rarr; `ms-notificaciones` | Genera notificación `PAGO_CONFIRMADO`; si el usuario no existe en la copia local, el mensaje va a la DLQ (SR-RF-106 / GJ-65). |
 | **CONSUME** | `styleradar.tiendas.fundacion.desactivada` | `styleradar.notificaciones.fundacion-desactivada.q` | `ms-tiendas` &rarr; `ms-notificaciones` | Genera notificación `CAMBIO_DONACION` para cada donante afectado cuando una fundación aliada se desactiva (SR-RF-106 / GJ-117). |
 
-> **Nombres propuestos:** las tres últimas routing keys las definió `ms-notificaciones` y están pendientes de confirmar con los equipos emisores; cambiarlas solo requiere editar `application.messaging.routing-keys`. La especificación de cada payload está en [docs/CONTRATOS_EVENTOS_NOT21.md](../CONTRATOS_EVENTOS_NOT21.md). Todos los consumidores son idempotentes por `eventoId`.
+> **Routing keys:** los nombres están acordados con los equipos emisores (matriz de contrastación en la sección 4 de [docs/CONTRATOS_EVENTOS_NOT21.md](../CONTRATOS_EVENTOS_NOT21.md)). Si alguno cambia, solo hay que editar `application.messaging.routing-keys`. La especificación de cada payload está en [docs/CONTRATOS_EVENTOS_NOT21.md](../CONTRATOS_EVENTOS_NOT21.md). Todos los consumidores son idempotentes por `eventoId`.
 
 <details>
 <summary><b>Click para ver Esquema JSON del Evento Publicado (AlertaCreada - NOT-16)</b></summary>
@@ -40,7 +40,7 @@ La comunicación asíncrona entre microservicios se orquesta a través de **Rabb
   "alertaId": 75,
   "usuarioId": 501,
   "tipoAlerta": "ITEM_AGOTADO",
-  "itemId": 1045,
+  "itemId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "busquedaGuardadaId": null,
   "canal": "IN_APP",
   "fechaCreacion": "2026-11-02T12:30:00"
