@@ -307,19 +307,19 @@ El diagrama muestra el backend completo de StyleRadar dentro de un recuadro punt
 
 ### 9.1. Explicación técnica
 
-Hay un diagrama de casos de uso por microservicio y este contiene todos los requerimientos funcionales de `ms-notificaciones`. El borde redondeado es el sistema, cada óvalo es un requerimiento (código y nombre) y las líneas unen cada caso de uso con los actores que participan. Los actores principales van a la izquierda y el administrador StyleRadar, que origina eventos de moderación, a la derecha.
+Hay un diagrama de casos de uso por microservicio y este contiene todos los requerimientos funcionales de `ms-notificaciones`. El borde redondeado es el sistema, cada óvalo es un requerimiento (código y nombre) y las líneas unen cada caso de uso con los actores que participan. Los actores son los cuatro oficiales, los mismos del diagrama de contexto: usuario comprador, administrador de almacén, representante de fundación aliada y administrador StyleRadar.
 
-| Requerimiento | Caso de uso | Actores |
-| :--- | :--- | :--- |
-| SR-RF-29 | Configurar alerta de disponibilidad | Usuario comprador |
-| SR-RF-30 | Detectar prendas que coinciden con una alerta | Administrador de almacén (lo inicia al publicar o reponer) |
-| SR-RF-31 | Notificar coincidencia o reposición de una prenda | Usuario comprador (extiende a SR-RF-30 si existen coincidencias) |
-| SR-RF-32 | Consultar, desactivar y reactivar alertas | Usuario comprador |
-| SR-RF-104 | Consultar la bandeja de notificaciones | Usuario autenticado (usuario comprador, administrador de almacén y representante de fundación aliada) |
-| SR-RF-105 | Elegir el canal de cada tipo de aviso | Usuario autenticado (usuario comprador, administrador de almacén y representante de fundación aliada) |
-| SR-RF-106 | Avisar la actividad de otros módulos | Usuario autenticado (quien recibe el aviso) y administrador StyleRadar (sus moderaciones generan avisos) |
+| Requerimiento | Caso de uso | Actor principal | Actor secundario |
+| :--- | :--- | :--- | :--- |
+| SR-RF-29 | Configurar alerta de disponibilidad | Usuario comprador | — |
+| SR-RF-30 | Detectar prendas que coinciden con una alerta | Administrador de almacén (lo inicia al publicar o reponer) | Usuario comprador (dueño de las alertas) |
+| SR-RF-31 | Notificar coincidencia o reposición de una prenda | Usuario comprador (quien recibe el aviso) | Administrador de almacén (inicia el caso vía SR-RF-30) |
+| SR-RF-32 | Consultar, desactivar y reactivar alertas | Usuario comprador | — |
+| SR-RF-104 | Consultar la bandeja de notificaciones | Usuario comprador, administrador de almacén y representante de fundación aliada | — |
+| SR-RF-105 | Elegir el canal de cada tipo de aviso | Usuario comprador, administrador de almacén y representante de fundación aliada | — |
+| SR-RF-106 | Avisar la actividad de otros módulos | Usuario comprador, administrador de almacén y representante de fundación aliada (reciben el aviso) | Administrador StyleRadar (sus moderaciones generan avisos) |
 
-`Usuario autenticado` es un actor abstracto: el usuario comprador, el administrador de almacén y el representante de fundación aliada heredan de él (flecha con triángulo hueco) y por eso comparten SR-RF-104, 105 y 106. La flecha discontinua «extend» de SR-RF-31 a SR-RF-30 indica que la notificación solo ocurre si existen coincidencias. `SR-RNF-15` (resiliencia e idempotencia de los consumidores) es un requerimiento no funcional y por eso no es un caso de uso.
+La flecha discontinua «extend» de SR-RF-31 a SR-RF-30, con la condición «hay coincidencia», indica que la notificación solo ocurre si SR-RF-30 encontró al menos una coincidencia. Se usa `extend` y no `include` porque `include` significaría que SR-RF-30 siempre ejecuta SR-RF-31, y no es así. `SR-RNF-15` (resiliencia e idempotencia de los consumidores) es un requerimiento no funcional y por eso no es un caso de uso.
 
 ### 9.2. Justificación arquitectónica
 
