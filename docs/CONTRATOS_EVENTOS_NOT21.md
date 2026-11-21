@@ -1,14 +1,14 @@
 # Contratos de Eventos Asíncronos — Microservicio de Notificaciones (NOT-21)
 
-**Servicio:** `ms-notificaciones` (Puerto `8300`)  
+**Servicio:** `ms-Notifications` (Puerto `8300`)  
 **Broker:** RabbitMQ (`styleradar.exchange` — Tipo `topic`, Dead Letter Exchange `styleradar.dlx`)  
-**Acuerdos de Integración:** Catálogo (`ms-inventario`, `ms-item-catalogo`), Identidad (`ms-usuarios`), Mensajes (`ms-chat`), Donaciones (`ms-segunda-vida-donaciones`) y Estadísticas (`ms-estadisticas`).
+**Acuerdos de Integración:** Catálogo (`ms-Inventory`, `ms-ItemCatalog`), Identidad (`ms-Users`), Mensajes (`ms-Chat`), Donaciones (`ms-Donations`) y Estadísticas (`ms-Statistics`).
 
 ---
 
-## 1. Eventos Consumidos por `ms-notificaciones`
+## 1. Eventos Consumidos por `ms-Notifications`
 
-### 1.1 `InventarioActualizado` (Emisor: `ms-inventario`)
+### 1.1 `InventarioActualizado` (Emisor: `ms-Inventory`)
 - **Routing Key:** `styleradar.inventario.actualizado`
 - **Cola Destino:** `styleradar.notificaciones.inventario-actualizado.q`
 - **Propósito:** Notificar una reposición de stock o cambio de unidades por prenda/talla/sede. Se notifica cuando la prenda se repone (`stockAnterior == 0` o `stockAnterior == null` según backlog RES-133, y `stockActual > 0`); cualquier otro cambio de stock se ignora. El `cicloReposicion` preserva la restricción de idempotencia `(alerta_id, item_id, ciclo_reposicion)`.
@@ -54,7 +54,7 @@
 
 ---
 
-### 1.2 `PrendaPublicada` (Emisor: `ms-item-catalogo`)
+### 1.2 `PrendaPublicada` (Emisor: `ms-ItemCatalog`)
 - **Routing Key:** `styleradar.catalogo.prenda.publicada`
 - **Cola Destino:** `styleradar.notificaciones.prenda-publicada.q`
 - **Propósito:** Evaluar en memoria si una prenda recién publicada coincide con las alertas de tipo `BUSQUEDA_GUARDADA` activas.
@@ -96,7 +96,7 @@
 
 ---
 
-### 1.3 `UsuarioEstadoCambiado` (Emisor: `ms-usuarios`)
+### 1.3 `UsuarioEstadoCambiado` (Emisor: `ms-Users`)
 - **Routing Key:** `styleradar.usuarios.estado.cambiado`
 - **Cola Destino:** `styleradar.notificaciones.usuario-estado.q`
 - **Propósito:** Mantener actualizada la copia local del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`, `SUSPENDIDO`) para impedir que cuentas inactivas, bloqueadas o suspendidas creen alertas o reciban notificaciones (SR-RF-29, SR-RF-31, SR-RF-106 / NOT-09).
@@ -122,7 +122,7 @@
 
 ---
 
-### 1.4 `MensajeEnviado` (Emisor: `ms-chat`)
+### 1.4 `MensajeEnviado` (Emisor: `ms-Chat`)
 - **Routing Key:** `styleradar.chat.mensaje.enviado`
 - **Cola Destino:** `styleradar.notificaciones.mensaje-enviado.q`
 - **Propósito:** Generar una notificación en tiempo real (`TIPO: MENSAJE_NUEVO`) con enlace directo a la conversación (`/chat/conversaciones/{conversacionId}`) (NOT-14).
@@ -159,7 +159,7 @@
 - **`DonacionEstadoCambiado` (`styleradar.donaciones.estado.cambiado`):** Genera notificación de tipo `CAMBIO_DONACION` con enlace `/donaciones/{donacionId}`.
 - **`ModeracionPrendaCambiada` (`styleradar.catalogo.moderacion.cambiada`):** Genera notificación de tipo `MODERACION_PRENDA` con enlace `/catalogo/mis-prendas/{itemId}`.
 
-### 1.6 `PrendaRetirada` (Emisor: `ms-item-catalogo`)
+### 1.6 `PrendaRetirada` (Emisor: `ms-ItemCatalog`)
 - **Routing Key:** `styleradar.catalogo.prenda.retirada`
 - **Cola Destino:** `styleradar.notificaciones.prenda-retirada.q`
 - **Propósito:** Desactivar las alertas activas de una prenda que el catálogo retiró o eliminó, para que no queden alertas sobre un ítem que ya no existe.
@@ -181,8 +181,8 @@
 }
 ```
 
-### 1.7 `SolicitudDonacionCreada` (Emisor: `ms-segunda-vida-donaciones` / Donaciones) — GJ-61
-> **Contrato Oficial Verificado** con la Ficha Técnica de Integración de `ms-segunda-vida-donaciones` (Portal 8080 · Juan David Munar).
+### 1.7 `SolicitudDonacionCreada` (Emisor: `ms-Donations` / Donaciones) — GJ-61
+> **Contrato Oficial Verificado** con la Ficha Técnica de Integración de `ms-Donations` (Portal 8080 · Juan David Munar).
 - **Routing Key:** `styleradar.donaciones.solicitud.creada`
 - **Cola Destino:** `styleradar.notificaciones.solicitud-donacion.q`
 - **Propósito:** Avisar a la fundación destinataria de que le llegó una solicitud de donación. Genera una notificación `SOLICITUD_DONACION` con enlace `/donaciones/{donacionId}`.
@@ -191,7 +191,7 @@
 | :--- | :--- | :---: | :--- |
 | `eventoId` | `String` | Sí | Identificador del evento (clave de idempotencia) |
 | `donacionId` (alias `solicitudId`) | `Long` | Sí | ID de la donación o de la solicitud |
-| `fundacionUsuarioId` (alias `representanteId`) | `Long` | Sí | ID de usuario en ms-auth del representante de la fundación que recibe el aviso. No es el `fundacionId` de ms-tiendas |
+| `fundacionUsuarioId` (alias `representanteId`) | `Long` | Sí | ID de usuario en ms-Auth del representante de la fundación que recibe el aviso. No es el `fundacionId` de ms-Stores |
 | `nombreDonante` | `String` | No | Nombre visible de quien dona |
 | `resumen` | `String` | No | Descripción corta de lo que se dona |
 | `fechaEvento` | `LocalDateTime` | No | Fecha y hora de la solicitud |
@@ -207,8 +207,8 @@
 }
 ```
 
-### 1.8 `PrendaVendida` (Emisor: `ms-segunda-vida-donaciones`) — GJ-65
-> **Contrato Oficial Verificado** con las Fichas Técnicas de Integración de `ms-segunda-vida-donaciones` y `ms-chat` (Pág. 4).
+### 1.8 `PrendaVendida` (Emisor: `ms-Donations`) — GJ-65
+> **Contrato Oficial Verificado** con las Fichas Técnicas de Integración de `ms-Donations` y `ms-Chat` (Pág. 4).
 - **Routing Key:** `styleradar.segundavida.prenda.vendida` y `styleradar.segunda-mano.prenda.vendida` (la cola está vinculada a las dos; Donaciones publica la segunda). `interesadosIds` lo resuelve quien publica; vacío no avisa a nadie. No se avisa al comprador ni al vendedor (`vendedorId`).
 - **Cola Destino:** `styleradar.notificaciones.prenda-vendida.q`
 - **Propósito:** Avisar a los demás interesados en una prenda de segunda mano de que ya se vendió. Se genera una notificación `PRENDA_VENDIDA` por cada interesado, excepto el comprador, con enlace `/segunda-mano/{publicacionId}`.
@@ -234,8 +234,8 @@
 }
 ```
 
-### 1.9 `PagoConfirmado` (Emisor: `ms-pagos-suscripciones`) — GJ-65
-> **Contrato Oficial Verificado** con la Ficha Técnica de Integración de `ms-pagos` (Webhook Mercado Pago).
+### 1.9 `PagoConfirmado` (Emisor: `ms-Payment`) — GJ-65
+> **Contrato Oficial Verificado** con la Ficha Técnica de Integración de `ms-Payment` (Webhook Mercado Pago).
 - **Routing Key:** `styleradar.pagos.pago.confirmado` (con binding a `pago.confirmado`)
 - **Cola Destino:** `styleradar.notificaciones.pago-confirmado.q`
 - **Propósito:** Confirmar al usuario que su pago (plan Radar+ o cupos de almacén aliado) quedó aprobado. Genera una notificación `PAGO_CONFIRMADO` con enlace `/planes/mi-plan`.
@@ -262,8 +262,8 @@
 ### 1.10 Mensajes de la donación según el estado
 `DonacionEstadoCambiado` genera un texto distinto según `nuevoEstado`: contiene `APROB` → "fue aprobada"; `RECHAZ` → "fue rechazada"; `CITA` → "se programó una cita"; cualquier otro → "cambió a estado X". Si viene `motivo`, se agrega al final.
 
-### 1.11 `FundacionDesactivada` (Emisor: `ms-stores` / `ms-tiendas`) — GJ-117
-> **Contrato Oficial Verificado** con la Ficha Técnica de Integración de `ms-stores` (`ms-stores.pdf` · Pág. 6 y 18).
+### 1.11 `FundacionDesactivada` (Emisor: `ms-Stores`) — GJ-117
+> **Contrato Oficial Verificado** con la Ficha Técnica de Integración de `ms-Stores` (`ms-Stores.pdf` · Pág. 6 y 18).
 - **Routing Key:** `styleradar.tiendas.fundacion.desactivada` (con binding a `fundacion.desactivada`)
 - **Cola Destino:** `styleradar.notificaciones.fundacion-desactivada.q`
 - **Exchange:** `styleradar.fundaciones.exchange` (y `styleradar.exchange`)
@@ -291,9 +291,9 @@
 
 ---
 
-## 2. Eventos Publicados por `ms-notificaciones`
+## 2. Eventos Publicados por `ms-Notifications`
 
-### 2.1 `AlertaCreada` (Consumidor: `ms-estadisticas` — NOT-16)
+### 2.1 `AlertaCreada` (Consumidor: `ms-Statistics` — NOT-16)
 - **Routing Key:** `styleradar.notificaciones.alerta.creada`
 - **Ejemplo JSON:**
 ```json
@@ -335,16 +335,16 @@
 
 Todos los contratos fueron contrastados y verificados contra las Fichas Técnicas Oficiales de Integración compartidas por los equipos en Google Drive (`15wFfjZFzp1_Px9CEuXbxsgM8BpNCF8XP`):
 
-| Microservicio Emisor | Evento de Negocio | Routing Key Oficial Emisor | Routing Key Consumida en `ms-notificaciones` | Estado de Acuerdo |
+| Microservicio Emisor | Evento de Negocio | Routing Key Oficial Emisor | Routing Key Consumida en `ms-Notifications` | Estado de Acuerdo |
 | :--- | :--- | :--- | :--- | :---: |
-| **`ms-inventario`** | Reposición de Stock | `styleradar.inventario.actualizado` | `styleradar.inventario.actualizado` | **Confirmado 100%** |
-| **`ms-item-catalogo`** | Prenda Publicada | `styleradar.catalogo.prenda.publicada` | `styleradar.catalogo.prenda.publicada` | **Confirmado 100%** |
-| **`ms-item-catalogo`** | Prenda Retirada | `styleradar.catalogo.prenda.retirada` | `styleradar.catalogo.prenda.retirada` | **Confirmado 100%** |
-| **`ms-item-catalogo`** | Moderación Prenda | `styleradar.catalogo.moderacion.cambiada` | `styleradar.catalogo.moderacion.cambiada` | **Confirmado 100%** |
+| **`ms-Inventory`** | Reposición de Stock | `styleradar.inventario.actualizado` | `styleradar.inventario.actualizado` | **Confirmado 100%** |
+| **`ms-ItemCatalog`** | Prenda Publicada | `styleradar.catalogo.prenda.publicada` | `styleradar.catalogo.prenda.publicada` | **Confirmado 100%** |
+| **`ms-ItemCatalog`** | Prenda Retirada | `styleradar.catalogo.prenda.retirada` | `styleradar.catalogo.prenda.retirada` | **Confirmado 100%** |
+| **`ms-ItemCatalog`** | Moderación Prenda | `styleradar.catalogo.moderacion.cambiada` | `styleradar.catalogo.moderacion.cambiada` | **Confirmado 100%** |
 | **`ms-Users`** | Estado de Usuario | `usuario.estado.cambiado` | `styleradar.usuarios.estado.cambiado` | **Confirmado 100%** |
-| **`ms-chat`** | Mensaje STOMP Enviado | `styleradar.chat.mensaje.enviado` | `styleradar.chat.mensaje.enviado` | **Confirmado 100%** |
-| **`ms-segunda-vida-donaciones`** | Estado de Donación | `styleradar.donaciones.estado.cambiado` | `styleradar.donaciones.estado.cambiado` | **Confirmado 100%** |
-| **`ms-segunda-vida-donaciones`** | Solicitud Donación | `styleradar.donaciones.solicitud.creada` | `styleradar.donaciones.solicitud.creada` | **Confirmado 100%** |
-| **`ms-segunda-vida-donaciones`** | Prenda C2C Vendida | `segunda-mano.prenda.vendida` / `styleradar.segundavida.prenda.vendida` | `styleradar.segundavida.prenda.vendida` | **Confirmado 100%** |
-| **`ms-pagos-suscripciones`** | Pago Aprobado Webhook | `pago.confirmado` / `styleradar.pagos.pago.confirmado` | `styleradar.pagos.pago.confirmado` | **Confirmado 100%** |
-| **`ms-stores` (Tiendas)** | Fundación Desactivada | `fundacion.desactivada` / `styleradar.tiendas.fundacion.desactivada` | `styleradar.tiendas.fundacion.desactivada` | **Confirmado 100%** |
+| **`ms-Chat`** | Mensaje STOMP Enviado | `styleradar.chat.mensaje.enviado` | `styleradar.chat.mensaje.enviado` | **Confirmado 100%** |
+| **`ms-Donations`** | Estado de Donación | `styleradar.donaciones.estado.cambiado` | `styleradar.donaciones.estado.cambiado` | **Confirmado 100%** |
+| **`ms-Donations`** | Solicitud Donación | `styleradar.donaciones.solicitud.creada` | `styleradar.donaciones.solicitud.creada` | **Confirmado 100%** |
+| **`ms-Donations`** | Prenda C2C Vendida | `segunda-mano.prenda.vendida` / `styleradar.segundavida.prenda.vendida` | `styleradar.segundavida.prenda.vendida` | **Confirmado 100%** |
+| **`ms-Payment`** | Pago Aprobado Webhook | `pago.confirmado` / `styleradar.pagos.pago.confirmado` | `styleradar.pagos.pago.confirmado` | **Confirmado 100%** |
+| **`ms-Stores`** | Fundación Desactivada | `fundacion.desactivada` / `styleradar.tiendas.fundacion.desactivada` | `styleradar.tiendas.fundacion.desactivada` | **Confirmado 100%** |

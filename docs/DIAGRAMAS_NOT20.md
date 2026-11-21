@@ -1,6 +1,6 @@
 # DOCUMENTACIÓN ARQUITECTÓNICA Y DIAGRAMAS UML — GJ-Notification-Service (NOT-20)
 
-- **Microservicio:** `GJ-Notification-Service` (`ms-notificaciones`, puerto `8300`)
+- **Microservicio:** `GJ-Notification-Service` (`ms-Notifications`, puerto `8300`)
 - **Equipo:** Guatoque Jiraguas (`GJ`)
 - **Bounded Context:** Notificaciones, alertas de disponibilidad y tiempo real (`SSE`)
 - **Archivos fuente editables (Draw.io):** [`docs/uml/`](./uml/)
@@ -65,21 +65,21 @@ Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archi
 
 ### 1.1. Explicación técnica
 
-El diagrama muestra la frontera de `ms-notificaciones` (puerto `8300`) y los sistemas con los que se comunica.
+El diagrama muestra la frontera de `ms-Notifications` (puerto `8300`) y los sistemas con los que se comunica.
 
-1. **Frontend (SPA):** el usuario llega por HTTPS directamente al servicio; el API Gateway ya no se dibuja en los diagramas de ms-notificaciones. Las rutas REST de `/api/v1/users/{id}` y la suscripción SSE de la campana exigen un JWT Bearer (el stream también acepta un ticket de 60 s en `?ticket=`).
+1. **Frontend (SPA):** el usuario llega por HTTPS directamente al servicio; el API Gateway ya no se dibuja en los diagramas de ms-Notifications. Las rutas REST de `/api/v1/users/{id}` y la suscripción SSE de la campana exigen un JWT Bearer (el stream también acepta un ticket de 60 s en `?ticket=`).
 2. **Broker de eventos (RabbitMQ, `:5672`):** el servicio consume 12 colas durables sobre el exchange `styleradar.exchange`:
-   - `ms-inventario` (`:8200`) publica `InventarioActualizado`.
-   - `ms-usuarios` (`:8120`) publica el estado de cuenta y las búsquedas guardadas.
-   - `ms-chat` (`:8320`) publica `MensajeEnviado`.
-   - `ms-segunda-vida-donaciones` (`:8520`) publica `DonacionEstadoCambiado`.
-   - `ms-segunda-vida-donaciones` (`:8520`) publica además `SolicitudDonacionCreada` y `PrendaVendida` (nombres propuestos, por confirmar).
-   - `ms-pagos` publica `PagoConfirmado` (nombre propuesto, por confirmar).
-   - `ms-item-catalogo` (`:8220`) publica prenda publicada, prenda retirada y cambios de moderación.
-   - `ms-tiendas` (`:8140`) publica `FundacionDesactivada` (GJ-117), que avisa a los donantes afectados.
-3. **Publicación de `AlertaCreada`:** cada alerta nueva se publica en el broker y la consume `ms-estadisticas` (`:8420`).
-4. **Catálogo por OpenFeign:** al crear una alerta sobre una prenda, el servicio consulta la disponibilidad en `ms-item-catalogo`. Si Catálogo no responde, el cliente recibe `503` y no se crea la alerta.
-5. **Autenticación (`ms-auth`, `:8100`):** emite el JWT. `ms-notificaciones` no lo consulta: valida la firma HS256 con la clave compartida.
+   - `ms-Inventory` (`:8200`) publica `InventarioActualizado`.
+   - `ms-Users` (`:8120`) publica el estado de cuenta y las búsquedas guardadas.
+   - `ms-Chat` (`:8320`) publica `MensajeEnviado`.
+   - `ms-Donations` (`:8520`) publica `DonacionEstadoCambiado`.
+   - `ms-Donations` (`:8520`) publica además `SolicitudDonacionCreada` y `PrendaVendida` (nombres propuestos, por confirmar).
+   - `ms-Payment` publica `PagoConfirmado` (nombre propuesto, por confirmar).
+   - `ms-ItemCatalog` (`:8220`) publica prenda publicada, prenda retirada y cambios de moderación.
+   - `ms-Stores` (`:8140`) publica `FundacionDesactivada` (GJ-117), que avisa a los donantes afectados.
+3. **Publicación de `AlertaCreada`:** cada alerta nueva se publica en el broker y la consume `ms-Statistics` (`:8420`).
+4. **Catálogo por OpenFeign:** al crear una alerta sobre una prenda, el servicio consulta la disponibilidad en `ms-ItemCatalog`. Si Catálogo no responde, el cliente recibe `503` y no se crea la alerta.
+5. **Autenticación (`ms-Auth`, `:8100`):** emite el JWT. `ms-Notifications` no lo consulta: valida la firma HS256 con la clave compartida.
 6. **Base de datos propia:** `notificaciones_db` (PostgreSQL 16, `:5432`), sin tablas compartidas con otros servicios.
 7. **Redis:** está en `docker-compose`, pero el servicio todavía no lo usa.
 
@@ -87,14 +87,14 @@ El diagrama muestra la frontera de `ms-notificaciones` (puerto `8300`) y los sis
 
 - **Eventos en vez de consultas a otras bases de datos:** el monolito original detectaba reposiciones consultando tablas de inventario. En microservicios eso viola *Database-per-Service*. Consumir eventos elimina ese acoplamiento y reacciona al cambio en cuanto ocurre.
 - **Una sola llamada síncrona:** solo la creación de una alerta necesita una respuesta inmediata sobre el stock, por eso es la única comunicación HTTP hacia otro servicio.
-- **Validación local del token:** evita una llamada a `ms-auth` en cada petición y mantiene el servicio disponible aunque autenticación esté caída.
+- **Validación local del token:** evita una llamada a `ms-Auth` en cada petición y mantiene el servicio disponible aunque autenticación esté caída.
 
 ---
 
 ## 2. Diagrama de componentes específico (arquitectura hexagonal)
 
 <p align="center">
-  <img src="./images/diagrama-componentes-especifico.png" alt="Diagrama de componentes hexagonal de ms-notificaciones" width="95%" />
+  <img src="./images/diagrama-componentes-especifico.png" alt="Diagrama de componentes hexagonal de ms-Notifications" width="95%" />
 </p>
 
 ### 2.1. Explicación técnica
@@ -128,7 +128,7 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 ## 3. Diagrama de clases
 
 <p align="center">
-  <img src="./images/diagrama-clases.png" alt="Diagrama de clases del dominio de ms-notificaciones" width="95%" />
+  <img src="./images/diagrama-clases.png" alt="Diagrama de clases del dominio de ms-Notifications" width="95%" />
 </p>
 
 ### 3.1. Explicación técnica
@@ -197,12 +197,12 @@ Dos restricciones únicas dan la idempotencia: `uk_notificacion_alerta_item_cicl
 El diagrama muestra el equipo de desarrollo, GitHub y los dos entornos de Azure.
 
 **Equipo y GitHub**
-1. **Equipo del desarrollador:** `docker compose` levanta `ms-notificaciones` (`:8300`), PostgreSQL 16, RabbitMQ 3.13.7 y Redis 7.
+1. **Equipo del desarrollador:** `docker compose` levanta `ms-Notifications` (`:8300`), PostgreSQL 16, RabbitMQ 3.13.7 y Redis 7.
 2. **GitHub:** repositorio con las ramas `main` y `develop`. Los líderes aprueban los pull requests.
 3. **GitHub Actions:** `ci-qa.yml` ejecuta `mvn verify` con JaCoCo de al menos 85 %, comprueba el arranque con `docker compose`, publica la imagen y despliega en QA, y corre Newman contra QA. `cd-prod.yml` ejecuta `mvn verify`, construye la imagen y despliega en PROD.
 
 **Azure**
-4. **Azure Container Registry:** guarda la imagen `ms-notificaciones` que publican los pipelines.
+4. **Azure Container Registry:** guarda la imagen `ms-Notifications` que publican los pipelines.
 5. **App Service QA y App Service PROD:** el contenedor en el puerto `8300`, con Always On. QA comparte plan B1 con otro proyecto; PROD tiene plan propio.
 6. **Servidor PostgreSQL 16:** una sola instancia con dos bases separadas (`styleradar_notificaciones_qa` y `styleradar_notificaciones_prod`), por JDBC sobre TLS.
 7. **VM del broker:** RabbitMQ 3.13.7 con TLS y persistencia, administrado por Oscar. QA usa el vhost `/` y PROD el vhost `prod`; el servicio se conecta con AMQP sobre TLS.
@@ -219,7 +219,7 @@ El diagrama muestra el equipo de desarrollo, GitHub y los dos entornos de Azure.
 ## 6. Diagrama de secuencia 7.8 (eventos)
 
 <p align="center">
-  <img src="./images/diagrama-secuencia.png" alt="Diagrama de secuencia 7.8 con los eventos de ms-notificaciones" width="95%" />
+  <img src="./images/diagrama-secuencia.png" alt="Diagrama de secuencia 7.8 con los eventos de ms-Notifications" width="95%" />
 </p>
 
 ### 6.1. Explicación técnica
@@ -228,11 +228,11 @@ El diagrama muestra los dos recorridos principales del servicio.
 
 **Fase 1: crear una alerta (síncrono)**
 1. El frontend envía `POST /api/v1/users/{id}/alerts` con el JWT al `AlertaController`.
-2. El caso de uso consulta a `ms-item-catalogo` por OpenFeign que el ítem esté agotado. Si Catálogo no responde, la respuesta es `503` y no se crea la alerta.
-3. Se guarda la alerta en PostgreSQL, se publica `AlertaCreada` en el broker (la consume `ms-estadisticas`) y el cliente recibe `201 Created`.
+2. El caso de uso consulta a `ms-ItemCatalog` por OpenFeign que el ítem esté agotado. Si Catálogo no responde, la respuesta es `503` y no se crea la alerta.
+3. Se guarda la alerta en PostgreSQL, se publica `AlertaCreada` en el broker (la consume `ms-Statistics`) y el cliente recibe `201 Created`.
 
 **Fase 2: reposición de stock y notificación (asíncrono)**
-1. `ms-inventario` publica `InventarioActualizado` en RabbitMQ y el broker lo entrega a `NotificacionesEventsListener`.
+1. `ms-Inventory` publica `InventarioActualizado` en RabbitMQ y el broker lo entrega a `NotificacionesEventsListener`.
 2. El listener valida el payload y que sea una reposición (stock de cero a mayor que cero). Un payload inválido va a la cola de errores; un fallo transitorio se reintenta 3 veces.
 3. El caso de uso busca las alertas activas, guarda la notificación y, si la restricción única detecta un duplicado, lo descarta sin fallar.
 4. Por último empuja la notificación por SSE a la campana del usuario conectado.
@@ -253,19 +253,19 @@ El mismo mecanismo atiende los demás eventos: prenda publicada, estado de cuent
   <img src="./images/diagrama-componentes-general.png" alt="Diagrama de componentes general del ecosistema StyleRadar" width="95%" />
 </p>
 
-> Este diagrama lo elaboró el equipo de arquitectura y es el mismo para todos los microservicios. Se conserva aquí como referencia; el detalle de `ms-notificaciones` está en las secciones 1 a 6. Fuente editable: [`uml/diagrama-componentes-general.drawio`](./uml/diagrama-componentes-general.drawio).
+> Este diagrama lo elaboró el equipo de arquitectura y es el mismo para todos los microservicios. Se conserva aquí como referencia; el detalle de `ms-Notifications` está en las secciones 1 a 6. Fuente editable: [`uml/diagrama-componentes-general.drawio`](./uml/diagrama-componentes-general.drawio).
 
 ### 7.1. Explicación técnica
 
 El diagrama muestra el backend completo de StyleRadar dentro de un recuadro punteado («Back Ecosystem»).
 
 1. **Cliente y entrada:** la aplicación web (*StyleRadar Client*) habla solo con el **API Gateway**, que reparte las llamadas a cada microservicio.
-2. **Microservicios:** `ms-auth`, `ms-usuarios`, `ms-tiendas`, `ms-notificaciones`, `ms-inventario`, `ms-itemcatalogo`, `ms-segunda-vida`, `ms-chat`, `ms-playlist`, `ms-pagos`, `ms-geolocalizacion`, `ms-probador-virtual` y `ms-estadisticas`. Cada uno tiene su propia base de datos (`usuarios_db`, `notificaciones_db`, `catalogo_db`, etc.).
+2. **Microservicios:** `ms-Auth`, `ms-Users`, `ms-Stores`, `ms-Notifications`, `ms-Inventory`, `ms-ItemCatalog`, `ms-Donations`, `ms-Chat`, `ms-Playlist`, `ms-Payment`, `ms-Geolocation`, `ms-VirtualTryOn` y `ms-Statistics`. Cada uno tiene su propia base de datos (`usuarios_db`, `notificaciones_db`, `catalogo_db`, etc.).
 3. **Mensajería y caché:** hay colas de RabbitMQ para Notificaciones, Pagos y Estadísticas, y una instancia de Redis compartida.
 4. **Sistemas externos:** Google OAuth, la API de MercadoPago, Azure Blob Storage y la API de FASHN AI.
 5. **Interfaces:** las interfaces proporcionadas y requeridas (círculo y semicírculo) marcan quién ofrece y quién consume cada servicio.
 
-**Lo que corresponde a `ms-notificaciones`:** su base `notificaciones_db`, su cola de RabbitMQ y su entrada por el API Gateway. Los eventos que consume y publica están en [CONTRATOS_EVENTOS_NOT21.md](./CONTRATOS_EVENTOS_NOT21.md).
+**Lo que corresponde a `ms-Notifications`:** su base `notificaciones_db`, su cola de RabbitMQ y su entrada por el API Gateway. Los eventos que consume y publica están en [CONTRATOS_EVENTOS_NOT21.md](./CONTRATOS_EVENTOS_NOT21.md).
 
 ### 7.2. Justificación arquitectónica
 
@@ -280,7 +280,7 @@ El diagrama muestra el backend completo de StyleRadar dentro de un recuadro punt
   <img src="./images/diagrama-despliegue-general.png" alt="Diagrama de despliegue general del ecosistema StyleRadar" width="95%" />
 </p>
 
-> Elaborado por el equipo de arquitectura. Se conserva como referencia; el despliegue propio de `ms-notificaciones` (QA y PROD en Azure) está en la sección 5. Fuente editable: [`uml/diagrama-despliegue-general.drawio`](./uml/diagrama-despliegue-general.drawio). La imagen se generó a partir del archivo `.drawio`.
+> Elaborado por el equipo de arquitectura. Se conserva como referencia; el despliegue propio de `ms-Notifications` (QA y PROD en Azure) está en la sección 5. Fuente editable: [`uml/diagrama-despliegue-general.drawio`](./uml/diagrama-despliegue-general.drawio). La imagen se generó a partir del archivo `.drawio`.
 
 ### 8.1. Explicación técnica
 
@@ -302,12 +302,12 @@ El diagrama muestra el backend completo de StyleRadar dentro de un recuadro punt
 ## 9. Diagrama de casos de uso
 
 <p align="center">
-  <img src="./images/diagrama-casos-de-uso.png" alt="Diagrama de casos de uso de ms-notificaciones" width="85%" />
+  <img src="./images/diagrama-casos-de-uso.png" alt="Diagrama de casos de uso de ms-Notifications" width="85%" />
 </p>
 
 ### 9.1. Explicación técnica
 
-Hay un diagrama de casos de uso por microservicio y este contiene todos los requerimientos funcionales de `ms-notificaciones`. El borde redondeado es el sistema, cada óvalo es un requerimiento (código y nombre) y las líneas unen cada caso de uso con los actores que participan. Los actores son los cuatro oficiales, los mismos del diagrama de contexto: usuario comprador, administrador de almacén, representante de fundación aliada y administrador StyleRadar.
+Hay un diagrama de casos de uso por microservicio y este contiene todos los requerimientos funcionales de `ms-Notifications`. El borde redondeado es el sistema, cada óvalo es un requerimiento (código y nombre) y las líneas unen cada caso de uso con los actores que participan. Los actores son los cuatro oficiales, los mismos del diagrama de contexto: usuario comprador, administrador de almacén, representante de fundación aliada y administrador StyleRadar.
 
 | Requerimiento | Caso de uso | Actor principal | Actor secundario |
 | :--- | :--- | :--- | :--- |

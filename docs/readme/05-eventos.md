@@ -13,21 +13,43 @@ La comunicación asíncrona entre microservicios se orquesta a través de **Rabb
 
 | Tipo | Routing Key | Cola (Queue) | Microservicio Emisor / Receptor | Cuándo se Dispara / Acción |
 | :---: | :--- | :--- | :--- | :--- |
-| **PUBLICA** | `styleradar.notificaciones.alerta.creada` | N/A (Exchange) | `ms-notificaciones` &rarr; broker (sin consumidor fijo) | Publica `AlertaCreadaDomainEvent` al persistir una alerta activa (NOT-16). |
-| **CONSUME** | `styleradar.inventario.actualizado` | `styleradar.notificaciones.inventario-actualizado.q` | `ms-inventario` &rarr; `ms-notificaciones` | Evalúa reposición de stock y criterios en memoria; genera notificación idempotente por ciclo (NOT-06, NOT-07, NOT-11). |
-| **CONSUME** | `styleradar.catalogo.prenda.publicada` | `styleradar.notificaciones.prenda-publicada.q` | `ms-item-catalogo` &rarr; `ms-notificaciones` | Evalúa en memoria si la prenda nueva coincide con búsquedas guardadas activas (NOT-06, NOT-07). |
-| **CONSUME** | `styleradar.usuarios.busqueda.sincronizada` | `styleradar.notificaciones.busqueda-guardada.q` | `ms-usuarios` &rarr; `ms-notificaciones` | Mantiene copia local de búsquedas guardadas y desactiva alertas si se elimina (NOT-08). |
-| **CONSUME** | `styleradar.usuarios.estado.cambiado` | `styleradar.notificaciones.usuario-estado.q` | `ms-usuarios` &rarr; `ms-notificaciones` | Actualiza copia local del estado de cuenta para no enviar notificaciones a cuentas inactivas (NOT-09). |
-| **CONSUME** | `styleradar.chat.mensaje.enviado` | `styleradar.notificaciones.mensaje-enviado.q` | `ms-chat` &rarr; `ms-notificaciones` | Genera notificación `MENSAJE_NUEVO` con enlace a `/chat/conversaciones/{id}` y push SSE (NOT-14). |
-| **CONSUME** | `styleradar.donaciones.estado.cambiado` | `styleradar.notificaciones.donacion-cambiada.q` | `ms-segunda-vida-donaciones` &rarr; `ms-notificaciones` | Genera notificación `CAMBIO_DONACION` con enlace a `/donaciones/{id}` (NOT-14). |
-| **CONSUME** | `styleradar.catalogo.moderacion.cambiada` | `styleradar.notificaciones.moderacion-cambiada.q` | `ms-item-catalogo` &rarr; `ms-notificaciones` | Genera notificación `MODERACION_PRENDA` y desactiva alertas si la prenda fue retirada (NOT-08, NOT-14). |
-| **CONSUME** | `styleradar.catalogo.prenda.retirada` | `styleradar.notificaciones.prenda-retirada.q` | `ms-item-catalogo` &rarr; `ms-notificaciones` | Desactiva las alertas activas de la prenda retirada (NOT-08). |
-| **CONSUME** | `styleradar.donaciones.solicitud.creada` | `styleradar.notificaciones.solicitud-donacion.q` | `ms-segunda-vida-donaciones` &rarr; `ms-notificaciones` | Genera notificación `SOLICITUD_DONACION` para la fundación destinataria (soporta alias `solicitudId` y `representanteId`, SR-RF-106 / GJ-61). |
-| **CONSUME** | `styleradar.segundavida.prenda.vendida` / `styleradar.segunda-mano.prenda.vendida` | `styleradar.notificaciones.prenda-vendida.q` | `ms-segunda-vida-donaciones` &rarr; `ms-notificaciones` | Genera notificación `PRENDA_VENDIDA` para cada interesado, excluyendo al comprador y al vendedor (SR-RF-106 / GJ-65). |
-| **CONSUME** | `styleradar.pagos.pago.confirmado` | `styleradar.notificaciones.pago-confirmado.q` | `ms-pagos` &rarr; `ms-notificaciones` | Genera notificación `PAGO_CONFIRMADO`; si el usuario no existe en la copia local, el mensaje va a la DLQ (SR-RF-106 / GJ-65). |
-| **CONSUME** | `styleradar.tiendas.fundacion.desactivada` | `styleradar.notificaciones.fundacion-desactivada.q` | `ms-tiendas` &rarr; `ms-notificaciones` | Genera notificación `CAMBIO_DONACION` para cada donante afectado cuando una fundación aliada se desactiva (SR-RF-106 / GJ-117). |
+| **PUBLICA** | `styleradar.notificaciones.alerta.creada` | N/A (Exchange) | `ms-Notifications` &rarr; `ms-Statistics` | Publica `AlertaCreadaDomainEvent` al persistir una alerta activa (NOT-16). El consumidor es `ms-Statistics`, según el contrato. |
+| **CONSUME** | `styleradar.inventario.actualizado` | `styleradar.notificaciones.inventario-actualizado.q` | `ms-Inventory` &rarr; `ms-Notifications` | Evalúa reposición de stock y criterios en memoria; genera notificación idempotente por ciclo (NOT-06, NOT-07, NOT-11). |
+| **CONSUME** | `styleradar.catalogo.prenda.publicada` | `styleradar.notificaciones.prenda-publicada.q` | `ms-ItemCatalog` &rarr; `ms-Notifications` | Evalúa en memoria si la prenda nueva coincide con búsquedas guardadas activas (NOT-06, NOT-07). |
+| **CONSUME** | `styleradar.usuarios.busqueda.sincronizada` | `styleradar.notificaciones.busqueda-guardada.q` | `ms-Users` &rarr; `ms-Notifications` | Mantiene copia local de búsquedas guardadas y desactiva alertas si se elimina (NOT-08). |
+| **CONSUME** | `styleradar.usuarios.estado.cambiado` | `styleradar.notificaciones.usuario-estado.q` | `ms-Users` &rarr; `ms-Notifications` | Actualiza copia local del estado de cuenta para no enviar notificaciones a cuentas inactivas (NOT-09). |
+| **CONSUME** | `styleradar.chat.mensaje.enviado` | `styleradar.notificaciones.mensaje-enviado.q` | `ms-Chat` &rarr; `ms-Notifications` | Genera notificación `MENSAJE_NUEVO` con enlace a `/chat/conversaciones/{id}` y push SSE (NOT-14). |
+| **CONSUME** | `styleradar.donaciones.estado.cambiado` | `styleradar.notificaciones.donacion-cambiada.q` | `ms-Donations` &rarr; `ms-Notifications` | Genera notificación `CAMBIO_DONACION` con enlace a `/donaciones/{id}` (NOT-14). |
+| **CONSUME** | `styleradar.catalogo.moderacion.cambiada` | `styleradar.notificaciones.moderacion-cambiada.q` | `ms-ItemCatalog` &rarr; `ms-Notifications` | Genera notificación `MODERACION_PRENDA` y desactiva alertas si la prenda fue retirada (NOT-08, NOT-14). |
+| **CONSUME** | `styleradar.catalogo.prenda.retirada` | `styleradar.notificaciones.prenda-retirada.q` | `ms-ItemCatalog` &rarr; `ms-Notifications` | Desactiva las alertas activas de la prenda retirada (NOT-08). |
+| **CONSUME** | `styleradar.donaciones.solicitud.creada` | `styleradar.notificaciones.solicitud-donacion.q` | `ms-Donations` &rarr; `ms-Notifications` | Genera notificación `SOLICITUD_DONACION` para la fundación destinataria (soporta alias `solicitudId` y `representanteId`, SR-RF-106 / GJ-61). |
+| **CONSUME** | `styleradar.segundavida.prenda.vendida` / `styleradar.segunda-mano.prenda.vendida` | `styleradar.notificaciones.prenda-vendida.q` | `ms-Donations` &rarr; `ms-Notifications` | Genera notificación `PRENDA_VENDIDA` para cada interesado, excluyendo al comprador y al vendedor (SR-RF-106 / GJ-65). |
+| **CONSUME** | `styleradar.pagos.pago.confirmado` | `styleradar.notificaciones.pago-confirmado.q` | `ms-Payment` &rarr; `ms-Notifications` | Genera notificación `PAGO_CONFIRMADO`; si el usuario no existe en la copia local, el mensaje va a la DLQ (SR-RF-106 / GJ-65). |
+| **CONSUME** | `styleradar.tiendas.fundacion.desactivada` | `styleradar.notificaciones.fundacion-desactivada.q` | `ms-Stores` &rarr; `ms-Notifications` | Genera notificación `CAMBIO_DONACION` para cada donante afectado cuando una fundación aliada se desactiva (SR-RF-106 / GJ-117). |
 
 > **Routing keys:** los nombres están acordados con los equipos emisores (matriz de contrastación en la sección 4 de [docs/CONTRATOS_EVENTOS_NOT21.md](../CONTRATOS_EVENTOS_NOT21.md)). Si alguno cambia, solo hay que editar `application.messaging.routing-keys`. La especificación de cada payload está en [docs/CONTRATOS_EVENTOS_NOT21.md](../CONTRATOS_EVENTOS_NOT21.md). Todos los consumidores son idempotentes por `eventoId`.
+
+### Conexiones de ms-Notifications con otros servicios
+
+Resumen de con quién se comunica el servicio y por qué canal. Es la fuente única que deben seguir los diagramas y los contratos.
+
+| Servicio o sistema | Canal | Sentido | Detalle |
+| :--- | :--- | :---: | :--- |
+| `ms-Inventory` | RabbitMQ | Entra | `styleradar.inventario.actualizado` |
+| `ms-ItemCatalog` | RabbitMQ | Entra | `styleradar.catalogo.prenda.publicada`, `.prenda.retirada` y `.moderacion.cambiada` |
+| `ms-Users` | RabbitMQ | Entra | `styleradar.usuarios.estado.cambiado` y `styleradar.usuarios.busqueda.sincronizada` |
+| `ms-Chat` | RabbitMQ | Entra | `styleradar.chat.mensaje.enviado` |
+| `ms-Donations` | RabbitMQ | Entra | `styleradar.donaciones.estado.cambiado`, `.solicitud.creada` y `styleradar.segundavida.prenda.vendida` |
+| `ms-Payment` | RabbitMQ | Entra | `styleradar.pagos.pago.confirmado` |
+| `ms-Stores` | RabbitMQ | Entra | `styleradar.tiendas.fundacion.desactivada` |
+| `ms-Statistics` | RabbitMQ | Sale | `styleradar.notificaciones.alerta.creada` |
+| `ms-ItemCatalog` | HTTP (OpenFeign) | Sale | Comprueba que la prenda siga agotada al crear una alerta |
+| `ms-Auth` | Clave JWT compartida | No hay llamada | `ms-Auth` firma el token y este servicio valida la firma con `JWT_SECRET` |
+| Frontend | REST con JWT y SSE | Entra y sale | Alertas, bandeja y campana en tiempo real |
+| Servidor SMTP | SMTP | Sale | Correos opcionales |
+| PostgreSQL | JDBC | Sale | Base propia `notificaciones_db` |
+
+Todos los eventos de entrada usan el exchange `styleradar.exchange` y las 12 colas del servicio. Redis no interviene.
 
 <details>
 <summary><b>Click para ver Esquema JSON del Evento Publicado (AlertaCreada - NOT-16)</b></summary>
