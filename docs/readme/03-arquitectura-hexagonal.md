@@ -191,7 +191,7 @@ flowchart LR
 #### 8. Diagrama de Casos de Uso (ms-notificaciones)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-casos-de-uso.drawio`](../uml/diagrama-casos-de-uso.drawio)
 * **Documentacion y Justificacion Tecnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 9)](../DIAGRAMAS_NOT20.md#9-diagrama-de-casos-de-uso)
-* **Descripcion:** Un diagrama por microservicio con todos los requerimientos funcionales de `ms-notificaciones` (SR-RF-29, 30, 31, 32, 104, 105 y 106) y sus actores: usuario comprador, administrador de almacen, representante de fundacion y administrador StyleRadar.
+* **Descripcion:** Un diagrama por microservicio con todos los requerimientos funcionales de `ms-notificaciones` (SR-RF-29, 30, 31, 32, 104, 105 y 106) y sus actores: usuario comprador, administrador de almacen, representante de fundacion aliada, administrador StyleRadar y el actor abstracto usuario autenticado.
 
 <p align="center">
   <a href="../images/diagrama-casos-de-uso.png" target="_blank">
