@@ -1,12 +1,13 @@
 package edu.dosw.styleradar.notificaciones.application.dto.event;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import java.time.LocalDateTime;
 
 public record UsuarioEstadoCambiadoEventPayload(
-        String eventoId,
+        @JsonAlias("eventId") String eventoId,
         Long usuarioId,
         String email,
-        String nuevoEstado,
+        @JsonAlias("estadoNuevo") String nuevoEstado,
         LocalDateTime fechaCambio
 ) {
 }

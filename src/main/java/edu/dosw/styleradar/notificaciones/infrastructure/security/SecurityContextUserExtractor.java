@@ -68,6 +68,8 @@ public class SecurityContextUserExtractor {
         return auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_ADMIN")
                             || a.getAuthority().equalsIgnoreCase("ROLE_ADMIN_STYLERADAR")
+                            || a.getAuthority().equalsIgnoreCase("ROLE_STYLERADAR_ADMIN")
+                            || a.getAuthority().equalsIgnoreCase("STYLERADAR_ADMIN")
                             || a.getAuthority().equalsIgnoreCase("ADMIN"));
     }
 }

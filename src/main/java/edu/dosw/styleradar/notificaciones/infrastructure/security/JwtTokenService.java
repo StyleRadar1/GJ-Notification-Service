@@ -199,7 +199,9 @@ public class JwtTokenService {
     public String extractRole(String token) {
         List<String> roles = extractRoles(token);
         for (String r : roles) {
-            if ("ADMIN_STYLERADAR".equalsIgnoreCase(r) || "ADMIN".equalsIgnoreCase(r)) {
+            if ("ADMIN_STYLERADAR".equalsIgnoreCase(r)
+                    || "STYLERADAR_ADMIN".equalsIgnoreCase(r)
+                    || "ADMIN".equalsIgnoreCase(r)) {
                 return r;
             }
         }

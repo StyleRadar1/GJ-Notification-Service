@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import edu.dosw.styleradar.notificaciones.application.dto.event.FundacionDesactivadaEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.FundacionReactivadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.InventarioActualizadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaRetiradaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.UsuarioEstadoCambiadoEventPayload;
@@ -189,6 +190,74 @@ class NotificacionesEventsListenerTest {
 
         verify(useCase, times(1)).generarNotificacionDirecta(any(), any(), any(), any(), any(), any(), any());
         verify(useCase).generarNotificacionDirecta(eq(105L), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("CADCHE v2 - Estados ACTIVA, INACTIVA, BLOQUEADA y SUSPENDIDA se normalizan correctamente")
+    void estadosEnFemeninoSeNormalizanCorrectamente() {
+        listener.onUsuarioEstadoCambiado(new UsuarioEstadoCambiadoEventPayload("e1", 12L, null, "ACTIVA", null));
+        listener.onUsuarioEstadoCambiado(new UsuarioEstadoCambiadoEventPayload("e2", 12L, null, "INACTIVA", null));
+        listener.onUsuarioEstadoCambiado(new UsuarioEstadoCambiadoEventPayload("e3", 12L, null, "BLOQUEADA", null));
+        listener.onUsuarioEstadoCambiado(new UsuarioEstadoCambiadoEventPayload("e4", 12L, null, "SUSPENDIDA", null));
+
+        verify(useCase).actualizarEstadoCuenta(12L, null, edu.dosw.styleradar.notificaciones.domain.model.EstadoCuenta.ACTIVO);
+        verify(useCase).actualizarEstadoCuenta(12L, null, edu.dosw.styleradar.notificaciones.domain.model.EstadoCuenta.INACTIVO);
+        verify(useCase).actualizarEstadoCuenta(12L, null, edu.dosw.styleradar.notificaciones.domain.model.EstadoCuenta.BLOQUEADO);
+        verify(useCase).actualizarEstadoCuenta(12L, null, edu.dosw.styleradar.notificaciones.domain.model.EstadoCuenta.SUSPENDIDO);
+    }
+
+    @Test
+    @DisplayName("CADCHE v2 - Fundacion desactivada notifica al representante y deduplica si coincide con donante")
+    void fundacionDesactivadaAvisaRepresentanteYSinDuplicar() {
+        listener.onFundacionDesactivada(new FundacionDesactivadaEventPayload(
+                "evt-cad-1", 3L, "Fundación Abrigo Solidario", List.of(101L, 24L),
+                "Cierre temporal", LocalDateTime.now(), 24L));
+
+        verify(useCase, times(1)).generarNotificacionDirecta(
+                eq(101L), eq(TipoNotificacion.CAMBIO_DONACION), eq("Fundacion desactivada"),
+                eq("La fundacion Fundación Abrigo Solidario ha sido desactivada: Cierre temporal"),
+                eq("/donaciones"), eq(null), eq("evt-cad-1"));
+        verify(useCase, times(1)).generarNotificacionDirecta(
+                eq(24L), eq(TipoNotificacion.CAMBIO_DONACION), eq("Fundacion desactivada"),
+                eq("La fundacion Fundación Abrigo Solidario ha sido desactivada: Cierre temporal"),
+                eq("/donaciones"), eq(null), eq("evt-cad-1"));
+        verify(useCase, times(2)).generarNotificacionDirecta(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("CADCHE v2 - Fundacion reactivada avisa al representante con su motivo o sin el")
+    void fundacionReactivadaAvisaAlRepresentante() {
+        listener.onFundacionReactivada(new FundacionReactivadaEventPayload(
+                "evt-react-1", 3L, "Fundación Abrigo Solidario", 24L,
+                "Reapertura de recepción de donaciones", LocalDateTime.now()));
+        listener.onFundacionReactivada(new FundacionReactivadaEventPayload(
+                "evt-react-2", 3L, null, 24L, " ", null));
+
+        verify(useCase).generarNotificacionDirecta(
+                eq(24L), eq(TipoNotificacion.CAMBIO_DONACION), eq("Fundacion reactivada"),
+                eq("La fundacion Fundación Abrigo Solidario ha sido reactivada y vuelve a recibir donaciones: Reapertura de recepción de donaciones"),
+                eq("/donaciones"), eq(null), eq("evt-react-1"));
+        verify(useCase).generarNotificacionDirecta(
+                eq(24L), eq(TipoNotificacion.CAMBIO_DONACION), eq("Fundacion reactivada"),
+                eq("La fundacion una fundacion aliada ha sido reactivada y vuelve a recibir donaciones"),
+                eq("/donaciones"), eq(null), eq("evt-react-2"));
+    }
+
+    @Test
+    @DisplayName("CADCHE v2 - Fundacion reactivada sin representante termina limpio y si es invalida va a DLQ")
+    void fundacionReactivadaCasosBordeYDlq() {
+        listener.onFundacionReactivada(new FundacionReactivadaEventPayload(
+                "evt-react-3", 3L, "X", null, null, null));
+        verifyNoInteractions(useCase);
+
+        assertThatThrownBy(() -> listener.onFundacionReactivada(null))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+        assertThatThrownBy(() -> listener.onFundacionReactivada(new FundacionReactivadaEventPayload(
+                "evt-react-4", null, "X", 24L, null, null)))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+        assertThatThrownBy(() -> listener.onFundacionReactivada(new FundacionReactivadaEventPayload(
+                " ", 3L, "X", 24L, null, null)))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
     }
 
     @Test

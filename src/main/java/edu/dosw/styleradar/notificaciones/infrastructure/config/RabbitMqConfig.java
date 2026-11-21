@@ -1,5 +1,10 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.config;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import java.time.LocalDateTime;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
@@ -57,6 +62,9 @@ public class RabbitMqConfig {
     @Value("${application.messaging.queues.foundation-deactivated:styleradar.notificaciones.fundacion-desactivada.q}")
     private String foundationDeactivatedQueueName;
 
+    @Value("${application.messaging.queues.foundation-reactivated:styleradar.notificaciones.fundacion-reactivada.q}")
+    private String foundationReactivatedQueueName;
+
     @Value("${application.messaging.queues.dlq:styleradar.notificaciones.dlq}")
     private String dlqName;
 
@@ -68,6 +76,10 @@ public class RabbitMqConfig {
 
     @Value("${application.messaging.routing-keys.user-status-changed:styleradar.usuarios.estado.cambiado}")
     private String userStatusChangedKey;
+
+    /** Clave unificada v2 (CADCHE ms-usuarios / ms-auth); la misma cola recibe ambas. */
+    @Value("${application.messaging.routing-keys.user-status-changed-alt:user.status.changed}")
+    private String userStatusChangedAltKey;
 
     @Value("${application.messaging.routing-keys.saved-search-synced:styleradar.usuarios.busqueda.sincronizada}")
     private String savedSearchSyncedKey;
@@ -99,6 +111,17 @@ public class RabbitMqConfig {
 
     @Value("${application.messaging.routing-keys.foundation-deactivated:styleradar.tiendas.fundacion.desactivada}")
     private String foundationDeactivatedKey;
+
+    /** Clave v2 publicada por ms-tiendas (CADCHE); la misma cola recibe ambas. */
+    @Value("${application.messaging.routing-keys.foundation-deactivated-alt:foundation.deactivated}")
+    private String foundationDeactivatedAltKey;
+
+    @Value("${application.messaging.routing-keys.foundation-reactivated:styleradar.tiendas.fundacion.reactivada}")
+    private String foundationReactivatedKey;
+
+    /** Clave v2 publicada por ms-tiendas (CADCHE) al reactivar una fundacion aliada. */
+    @Value("${application.messaging.routing-keys.foundation-reactivated-alt:foundation.reactivated}")
+    private String foundationReactivatedAltKey;
 
     @Value("${application.messaging.routing-keys.dlq:styleradar.notificaciones.error}")
     private String dlqRoutingKey;
@@ -179,6 +202,11 @@ public class RabbitMqConfig {
     }
 
     @Bean
+    public Binding userStatusChangedAltBinding(Queue userStatusChangedQueue, TopicExchange styleradarExchange) {
+        return BindingBuilder.bind(userStatusChangedQueue).to(styleradarExchange).with(userStatusChangedAltKey);
+    }
+
+    @Bean
     public Binding savedSearchSyncedBinding(Queue savedSearchSyncedQueue, TopicExchange styleradarExchange) {
         return BindingBuilder.bind(savedSearchSyncedQueue).to(styleradarExchange).with(savedSearchSyncedKey);
     }
@@ -229,6 +257,26 @@ public class RabbitMqConfig {
     }
 
     @Bean
+    public Binding foundationDeactivatedAltBinding(Queue foundationDeactivatedQueue, TopicExchange styleradarExchange) {
+        return BindingBuilder.bind(foundationDeactivatedQueue).to(styleradarExchange).with(foundationDeactivatedAltKey);
+    }
+
+    @Bean
+    public Queue foundationReactivatedQueue() {
+        return buildDurableQueueWithDlq(foundationReactivatedQueueName);
+    }
+
+    @Bean
+    public Binding foundationReactivatedBinding(Queue foundationReactivatedQueue, TopicExchange styleradarExchange) {
+        return BindingBuilder.bind(foundationReactivatedQueue).to(styleradarExchange).with(foundationReactivatedKey);
+    }
+
+    @Bean
+    public Binding foundationReactivatedAltBinding(Queue foundationReactivatedQueue, TopicExchange styleradarExchange) {
+        return BindingBuilder.bind(foundationReactivatedQueue).to(styleradarExchange).with(foundationReactivatedAltKey);
+    }
+
+    @Bean
     public Binding donationRequestedBinding(Queue donationRequestedQueue, TopicExchange styleradarExchange) {
         return BindingBuilder.bind(donationRequestedQueue).to(styleradarExchange).with(donationRequestedKey);
     }
@@ -250,7 +298,14 @@ public class RabbitMqConfig {
 
     @Bean
     public MessageConverter jackson2JsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
+        SimpleModule moduloFechas = new SimpleModule()
+                .addDeserializer(LocalDateTime.class, new FlexibleLocalDateTimeDeserializer());
+        ObjectMapper objectMapper = JsonMapper.builder()
+                .findAndAddModules()
+                .addModule(moduloFechas)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .build();
+        return new Jackson2JsonMessageConverter(objectMapper);
     }
 
     private Queue buildDurableQueueWithDlq(String queueName) {
