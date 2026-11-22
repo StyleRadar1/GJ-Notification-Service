@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import edu.dosw.styleradar.notificaciones.application.dto.event.FundacionDesactivadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.FundacionReactivadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.InventarioActualizadoEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.ModeracionPrendaCambiadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaRetiradaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.UsuarioEstadoCambiadoEventPayload;
 import edu.dosw.styleradar.notificaciones.domain.model.DatosPrendaVO;
@@ -276,6 +277,41 @@ class NotificacionesEventsListenerTest {
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
 
         verify(useCase, never()).generarNotificacionDirecta(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("ModeracionCambiada sin propietarioUsuarioId omite notificacion sin enviar a DLQ")
+    void moderacionCambiadaSinPropietarioOmiteNotificacionYNoVaADlq() {
+        listener.onModeracionPrendaCambiada(new ModeracionPrendaCambiadaEventPayload(
+                "evt-mod-sin-owner-1", "3fa85f64-5717-4562-b3fc-2c963f66afa6", null,
+                "Chaqueta Denim", "APROBADA", "Aprobada sin propietario registrado", LocalDateTime.now()));
+
+        verifyNoInteractions(useCase);
+    }
+
+    @Test
+    @DisplayName("ModeracionCambiada RETIRADA sin propietarioUsuarioId desactiva alertas sin notificar")
+    void moderacionCambiadaRetiradaSinPropietarioDesactivaAlertasSinNotificar() {
+        String itemId = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        listener.onModeracionPrendaCambiada(new ModeracionPrendaCambiadaEventPayload(
+                "evt-mod-sin-owner-2", itemId, null,
+                "Chaqueta Denim", "RETIRADA", "Incumple politicas", LocalDateTime.now()));
+
+        verify(useCase).desactivarAlertasPorItemEliminado(itemId);
+        verify(useCase, never()).generarNotificacionDirecta(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("ModeracionCambiada sin itemId es invalido y va directo a DLQ")
+    void moderacionCambiadaSinItemIdVaADlq() {
+        assertThatThrownBy(() -> listener.onModeracionPrendaCambiada(new ModeracionPrendaCambiadaEventPayload(
+                "evt-mod-invalido-1", null, 12L, "Prenda", "APROBADA", null, null)))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+        assertThatThrownBy(() -> listener.onModeracionPrendaCambiada(new ModeracionPrendaCambiadaEventPayload(
+                "evt-mod-invalido-2", "  ", 12L, "Prenda", "APROBADA", null, null)))
+                .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+
+        verifyNoInteractions(useCase);
     }
 
     private InventarioActualizadoEventPayload inventario(Integer anterior, Integer actual, Integer ciclo) {

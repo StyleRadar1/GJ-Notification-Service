@@ -171,12 +171,17 @@ public class NotificacionesEventsListener {
 
     @RabbitListener(queues = "${application.messaging.queues.moderation-changed:styleradar.notificaciones.moderacion-cambiada.q}")
     public void onModeracionPrendaCambiada(ModeracionPrendaCambiadaEventPayload payload) {
-        if (payload == null || payload.propietarioUsuarioId() == null || payload.itemId() == null || payload.itemId().isBlank()) {
-            throw payloadInvalido("ModeracionPrendaCambiada", "incompleto");
+        if (payload == null || payload.itemId() == null || payload.itemId().isBlank()) {
+            throw payloadInvalido("ModeracionPrendaCambiada", "sin itemId");
         }
         if ("RETIRADA".equalsIgnoreCase(payload.estadoModeracion())
                 || "ELIMINADA".equalsIgnoreCase(payload.estadoModeracion())) {
             procesarEventosExternosUseCase.desactivarAlertasPorItemEliminado(payload.itemId());
+        }
+        if (payload.propietarioUsuarioId() == null) {
+            log.warn("ModeracionPrendaCambiada del item {} sin propietarioUsuarioId, se omite la notificacion",
+                    payload.itemId());
+            return;
         }
         String detalle = "La prenda '" + payload.nombrePrenda() + "' fue marcada como " + payload.estadoModeracion();
         if (payload.observacion() != null && !payload.observacion().isBlank()) {
