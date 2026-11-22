@@ -1,6 +1,6 @@
-# Contrato de autenticación JWT — ms-notificaciones (GJ-35)
+# Contrato de autenticación JWT — ms-Notifications (GJ-35)
 
-`ms-notificaciones` no emite tokens: valida el JWT que emite el servicio de autenticación y toma el usuario de él. Este documento fija lo que debe cumplir ese token. Lo que dice aquí es lo que implementa `JwtTokenService` y `JwtAuthenticationFilter`.
+`ms-Notifications` no emite tokens: valida el JWT que emite el servicio de autenticación y toma el usuario de él. Este documento fija lo que debe cumplir ese token. Lo que dice aquí es lo que implementa `JwtTokenService` y `JwtAuthenticationFilter`.
 
 ## Lo que debe cumplir el token
 
@@ -36,5 +36,5 @@ Solo `/actuator/health` y la documentación de Swagger (`/swagger-ui`, `/v3/api-
 
 ## Supuestos sobre el servicio de autenticación
 
-- `ms-auth` firma los tokens con `HS256` y una clave de 32 bytes o más, que comparte con este servicio por variable de entorno (`JWT_SECRET`).
+- `ms-Auth` firma los tokens con `HS256` y una clave de 32 bytes o más, que comparte con este servicio por variable de entorno (`JWT_SECRET`).
 - El token incluye `userId` (o `sub` con el id numérico) y el rol del usuario.

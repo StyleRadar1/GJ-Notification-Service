@@ -1,6 +1,6 @@
 # Evidencias del Sprint 3
 
-Capturas y resultados que respaldan los criterios de aceptación de las historias GJ-60 a GJ-65 de ms-notificaciones. Cada carpeta tiene su propio `README.md` que explica qué muestra cada archivo y cómo se generó.
+Capturas y resultados que respaldan los criterios de aceptación de las historias GJ-60 a GJ-65 de ms-Notifications. Cada carpeta tiene su propio `README.md` que explica qué muestra cada archivo y cómo se generó.
 
 | Carpeta | Tarea |
 | :--- | :--- |
@@ -27,7 +27,7 @@ Las imágenes de esta carpeta que respaldan el README principal son capturas o r
 
 | Archivo | Qué muestra | Origen |
 | :--- | :--- | :--- |
-| `swagger-ui.png` | Los 14 endpoints agrupados en «Notification Preferences» y «Alerts & Notifications» | Swagger UI de `ms-notificaciones` |
+| `swagger-ui.png` | Los 14 endpoints agrupados en «Notification Preferences» y «Alerts & Notifications» | Swagger UI de `ms-Notifications` |
 | `cobertura-jacoco.png` | Reporte HTML de JaCoCo con 94 % de instrucciones y 94,0 % de líneas | `target/site/jacoco/index.html` tras `mvn clean verify` (20/11/2026) |
 | `pipeline-ci-cd.png` | Ejecución en verde del pipeline CI / QA sobre `develop` (`build-and-verify` y `docker-verify-qa`) | Página pública de GitHub Actions (20/11/2026) |
 | `codeql-analysis.png` | Ejecución en verde del análisis CodeQL sobre `develop` | Página pública de GitHub Actions (20/11/2026) |

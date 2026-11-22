@@ -8,7 +8,7 @@
 
   <p align="center">
     <img src="https://img.shields.io/badge/EQUIPO-Guatoque_Jiraguas_(GJ)-12063A?style=for-the-badge" alt="Equipo" />
-    <img src="https://img.shields.io/badge/SERVICIO-ms--notificaciones-5600EF?style=for-the-badge" alt="Servicio" />
+    <img src="https://img.shields.io/badge/SERVICIO-ms--Notifications-5600EF?style=for-the-badge" alt="Servicio" />
   </p>
 
   <p align="center">
@@ -27,7 +27,7 @@
       <img src="https://github.com/StyleRadar1/GJ-Notification-Service/actions/workflows/ci-qa.yml/badge.svg?branch=develop" alt="CI / QA Pipeline Status" />
     </a>
     <a href="docs/readme/04-endpoints-y-swagger.md">
-      <img src="https://img.shields.io/badge/Swagger_UI-ms--notificaciones_(:8300)-5600EF?style=for-the-badge&logo=swagger&logoColor=white" alt="Swagger UI ms-notificaciones" />
+      <img src="https://img.shields.io/badge/Swagger_UI-ms--Notifications_(:8300)-5600EF?style=for-the-badge&logo=swagger&logoColor=white" alt="Swagger UI ms-Notifications" />
     </a>
     <a href="docs/readme/04-endpoints-y-swagger.md">
       <img src="https://img.shields.io/badge/OpenAPI-3.0-16A34A?style=for-the-badge&logo=openapi-initiative&logoColor=white" alt="OpenAPI 3.0" />
