@@ -2,6 +2,7 @@ package edu.dosw.styleradar.notificaciones.infrastructure.config;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import java.time.LocalDateTime;
@@ -304,6 +305,7 @@ public class RabbitMqConfig {
                 .findAndAddModules()
                 .addModule(moduloFechas)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .build();
         return new Jackson2JsonMessageConverter(objectMapper);
     }
