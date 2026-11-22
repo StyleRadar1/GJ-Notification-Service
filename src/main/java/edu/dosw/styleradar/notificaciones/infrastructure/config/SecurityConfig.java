@@ -50,7 +50,7 @@ public class SecurityConfig {
                         ).permitAll()
                         // metricas: solo administradores (A02/A09); health sigue publico para el health check de Azure
                         .requestMatchers("/actuator/metrics/**", "/actuator/prometheus")
-                        .hasAnyRole("ADMIN", "ADMIN_STYLERADAR")
+                        .hasAnyRole("ADMIN", "ADMIN_STYLERADAR", "STYLERADAR_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

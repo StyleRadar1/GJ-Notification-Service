@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import edu.dosw.styleradar.notificaciones.application.dto.event.DonacionEstadoCambiadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.FundacionDesactivadaEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.FundacionReactivadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.MensajeEnviadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.PagoConfirmadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.PrendaVendidaEventPayload;
@@ -242,6 +243,24 @@ class ConsumidoresEventosExternosTest {
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
 
         assertThat(deTipo(6_515L, TipoNotificacion.CAMBIO_DONACION)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("CADCHE v2 - Una fundacion reactivada avisa al representante y no se duplica")
+    void fundacionReactivadaPersisteNotificacionYEsIdempotente() {
+        long representante = 6_530L;
+        FundacionReactivadaEventPayload evento = new FundacionReactivadaEventPayload(
+                "evt-fun-react-1", 3L, "Fundación Abrigo Solidario", representante,
+                "Reapertura de donaciones", LocalDateTime.now());
+
+        listener.onFundacionReactivada(evento);
+        listener.onFundacionReactivada(evento);
+
+        List<Notificacion> resultado = deTipo(representante, TipoNotificacion.CAMBIO_DONACION);
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).getTitulo()).isEqualTo("Fundacion reactivada");
+        assertThat(resultado.get(0).getMensaje()).contains("Fundación Abrigo Solidario").contains("Reapertura de donaciones");
+        assertThat(resultado.get(0).getEnlace()).isEqualTo("/donaciones");
     }
 
     private List<Notificacion> deTipo(long usuarioId, TipoNotificacion tipo) {

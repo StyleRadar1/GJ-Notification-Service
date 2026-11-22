@@ -97,28 +97,32 @@
 ---
 
 ### 1.3 `UsuarioEstadoCambiado` (Emisor: `ms-Users`)
-- **Routing Key:** `styleradar.usuarios.estado.cambiado`
+- **Routing Keys:** `styleradar.usuarios.estado.cambiado` y alias unificado v2 `user.status.changed` (la misma cola recibe ambas)
 - **Cola Destino:** `styleradar.notificaciones.usuario-estado.q`
-- **Propósito:** Mantener actualizada la copia local del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`, `SUSPENDIDO`) para impedir que cuentas inactivas, bloqueadas o suspendidas creen alertas o reciban notificaciones (SR-RF-29, SR-RF-31, SR-RF-106 / NOT-09).
+- **Propósito:** Mantener actualizada la copia local del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`, `SUSPENDIDO`; acepta equivalentes en femenino `ACTIVA`, `INACTIVA`, `BLOQUEADA`, `SUSPENDIDA` e inglés) para impedir que cuentas inactivas, bloqueadas o suspendidas creen alertas o reciban notificaciones (SR-RF-29, SR-RF-31, SR-RF-106 / NOT-09).
 
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
-| `eventoId` | `String` | Sí | Identificador del evento |
-| `usuarioId` | `Long` | Sí | ID del usuario |
+| `eventoId` (alias `eventId`) | `String` | No | Identificador del evento |
+| `usuarioId` (alias `userId`) | `Long` | Sí | ID del usuario |
 | `email` | `String` | No | Correo electrónico del usuario |
-| `nuevoEstado` | `String` | Sí | `ACTIVO`, `INACTIVO`, `BLOQUEADO` o `SUSPENDIDO` |
-| `fechaCambio` | `LocalDateTime` | Sí | Fecha del cambio de estado |
+| `nuevoEstado` (alias `estadoNuevo`, `newStatus`) | `String` | Sí | `ACTIVO`/`ACTIVA`/`ACTIVE`, `INACTIVO`/`INACTIVA`/`INACTIVE`, `BLOQUEADO`/`BLOQUEADA`/`BLOCKED` o `SUSPENDIDO`/`SUSPENDIDA`/`SUSPENDED` |
+| `fechaCambio` (alias `changedAt`) | `LocalDateTime` | No | Fecha del cambio de estado (acepta ISO-8601 con o sin sufijo `Z`) |
 
-**Ejemplo JSON:**
+**Ejemplo JSON (v2 en inglés):**
 ```json
 {
-  "eventoId": "evt-usr-7741",
-  "usuarioId": 501,
+  "eventId": "evt-usr-7741",
+  "userId": 501,
   "email": "mateo@styleradar.co",
-  "nuevoEstado": "INACTIVO",
-  "fechaCambio": "2026-11-02T12:15:00"
+  "previousStatus": "ACTIVE",
+  "newStatus": "INACTIVE",
+  "changedBy": 1,
+  "reason": "Incumplimiento de terminos",
+  "changedAt": "2026-11-02T12:15:00Z"
 }
 ```
+*(También se siguen aceptando los campos en español de v1 y campos informativos adicionales como `previousStatus`, `changedBy` y `reason`.)*
 
 ---
 
@@ -263,29 +267,56 @@
 `DonacionEstadoCambiado` genera un texto distinto según `nuevoEstado`: contiene `APROB` → "fue aprobada"; `RECHAZ` → "fue rechazada"; `CITA` → "se programó una cita"; cualquier otro → "cambió a estado X". Si viene `motivo`, se agrega al final.
 
 ### 1.11 `FundacionDesactivada` (Emisor: `ms-Stores`) — GJ-117
-> **Contrato Oficial Verificado** con la Ficha Técnica de Integración de `ms-Stores` (`ms-Stores.pdf` · Pág. 6 y 18).
-- **Routing Key:** `styleradar.tiendas.fundacion.desactivada` (con binding a `fundacion.desactivada`)
+> **Contrato Oficial Verificado** con la Ficha Técnica de Integración de `ms-Stores` (`ms-Stores.pdf` · Pág. 6 y 18) y esquema v2 CADCHE.
+- **Routing Keys:** `styleradar.tiendas.fundacion.desactivada` y `foundation.deactivated` (la cola está vinculada a ambas en `styleradar.exchange`)
 - **Cola Destino:** `styleradar.notificaciones.fundacion-desactivada.q`
-- **Exchange:** `styleradar.fundaciones.exchange` (y `styleradar.exchange`)
-- **Propósito:** Avisar a los donantes afectados cuando una fundación aliada es desactivada administrativamente (`activa: false`), para evitar que lleven prendas a un centro que ya no las recibe. Genera notificación con enlace `/donaciones/mis-donaciones`.
+- **Exchange:** `styleradar.exchange` (`topic`, durable)
+- **Propósito:** Avisar a los donantes afectados (`donantesAfectadosIds`) y/o al representante de la fundación (`representanteId`/`representativeId`) cuando una fundación aliada es desactivada administrativamente (`activa: false`). Genera notificación `CAMBIO_DONACION` con enlace `/donaciones`.
 
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
-| `eventoId` | `String` | Sí | Identificador único del evento (clave de idempotencia) |
-| `fundacionId` | `Long` | Sí | ID de la fundación desactivada |
-| `nombreFundacion` | `String` | Sí | Nombre oficial de la fundación aliada |
+| `eventoId` (alias `eventId`) | `String` | Sí | Identificador único del evento (clave de idempotencia) |
+| `fundacionId` (alias `foundationId`) | `Long` | Sí | ID de la fundación desactivada |
+| `nombreFundacion` (alias `foundationName`) | `String` | No | Nombre oficial de la fundación aliada |
 | `donantesAfectadosIds` | `List<Long>` | No | Lista de IDs de donantes con solicitudes activas |
-| `motivo` | `String` | No | Motivo de la desactivación administrativa |
-| `fechaEvento` | `LocalDateTime` | Sí | Marca de tiempo ISO-8601 de la desactivación |
+| `representanteId` (alias `representativeId`) | `Long` | No | ID de usuario del representante de la fundación |
+| `motivo` (alias `reason`) | `String` | No | Motivo de la desactivación administrativa |
+| `fechaEvento` (alias `deactivatedAt`) | `LocalDateTime` | No | Marca de tiempo ISO-8601 (con o sin `Z`) |
 
 ```json
 {
-  "eventoId": "evt-fund-9901",
-  "fundacionId": 3,
-  "nombreFundacion": "Fundación Abrigo Solidario",
-  "donantesAfectadosIds": [501, 502, 620],
-  "motivo": "Desactivación administrativa por cambio de sede",
-  "fechaEvento": "2026-11-16T10:00:00"
+  "eventId": "550e8400-e29b-41d4-a716-446655440000",
+  "foundationId": 3,
+  "foundationName": "Fundación Abrigo Solidario",
+  "representativeId": 24,
+  "deactivatedAt": "2026-11-21T22:30:00Z",
+  "reason": "Cierre temporal de operaciones"
+}
+```
+
+### 1.12 `FundacionReactivada` (Emisor: `ms-Stores`)
+- **Routing Keys:** `styleradar.tiendas.fundacion.reactivada` y `foundation.reactivated`
+- **Cola Destino:** `styleradar.notificaciones.fundacion-reactivada.q`
+- **Exchange:** `styleradar.exchange` (`topic`, durable)
+- **Propósito:** Avisar al representante de la fundación (`representanteId`/`representativeId`) cuando su fundación vuelve a quedar activa para recibir donaciones. Genera notificación `CAMBIO_DONACION` con título «Fundacion reactivada» y enlace `/donaciones`.
+
+| Campo | Tipo | Obligatorio | Descripción |
+| :--- | :--- | :---: | :--- |
+| `eventoId` (alias `eventId`) | `String` | Sí | Identificador único del evento (clave de idempotencia) |
+| `fundacionId` (alias `foundationId`) | `Long` | Sí | ID de la fundación reactivada |
+| `nombreFundacion` (alias `foundationName`) | `String` | No | Nombre oficial de la fundación aliada |
+| `representanteId` (alias `representativeId`) | `Long` | No | ID de usuario del representante destinatario |
+| `motivo` (alias `reason`) | `String` | No | Motivo o nota de reapertura |
+| `fechaEvento` (alias `reactivatedAt`) | `LocalDateTime` | No | Marca de tiempo ISO-8601 (con o sin `Z`) |
+
+```json
+{
+  "eventId": "550e8400-e29b-41d4-a716-446655440001",
+  "foundationId": 3,
+  "foundationName": "Fundación Abrigo Solidario",
+  "representativeId": 24,
+  "reactivatedAt": "2026-11-21T22:35:00Z",
+  "reason": "Reapertura de recepción de donaciones"
 }
 ```
 
@@ -318,8 +349,8 @@
 | Exchange | `styleradar.exchange` (tipo `topic`, durable) |
 | Dead Letter Exchange | `styleradar.dlx` |
 | Cola de errores (DLQ) | `styleradar.notificaciones.dlq` (routing key `styleradar.notificaciones.error`) |
-| Colas consumidas | 12 (11 de Sprint 3 + 1 de Backlog GJ-117), todas durables y con DLX configurada |
-| Formato del mensaje | JSON (`application/json`), fechas en ISO-8601 |
+| Colas consumidas | 13 (11 de Sprint 3 + 2 de Backlog GJ-117 / CADCHE v2), todas durables y con DLX configurada |
+| Formato del mensaje | JSON (`application/json`), fechas ISO-8601 (con o sin sufijo `Z`) |
 | Virtual host | `RABBITMQ_VHOST` (por defecto `/`) |
 | TLS | `RABBITMQ_SSL_ENABLED` (puerto `5671` cuando está activo) |
 
@@ -341,10 +372,11 @@ Todos los contratos fueron contrastados y verificados contra las Fichas Técnica
 | **`ms-ItemCatalog`** | Prenda Publicada | `styleradar.catalogo.prenda.publicada` | `styleradar.catalogo.prenda.publicada` | **Confirmado 100%** |
 | **`ms-ItemCatalog`** | Prenda Retirada | `styleradar.catalogo.prenda.retirada` | `styleradar.catalogo.prenda.retirada` | **Confirmado 100%** |
 | **`ms-ItemCatalog`** | Moderación Prenda | `styleradar.catalogo.moderacion.cambiada` | `styleradar.catalogo.moderacion.cambiada` | **Confirmado 100%** |
-| **`ms-Users`** | Estado de Usuario | `usuario.estado.cambiado` | `styleradar.usuarios.estado.cambiado` | **Confirmado 100%** |
+| **`ms-Users`** | Estado de Usuario | `user.status.changed` / `styleradar.usuarios.estado.cambiado` | `styleradar.usuarios.estado.cambiado` + `user.status.changed` | **Confirmado 100%** |
 | **`ms-Chat`** | Mensaje STOMP Enviado | `styleradar.chat.mensaje.enviado` | `styleradar.chat.mensaje.enviado` | **Confirmado 100%** |
 | **`ms-Donations`** | Estado de Donación | `styleradar.donaciones.estado.cambiado` | `styleradar.donaciones.estado.cambiado` | **Confirmado 100%** |
 | **`ms-Donations`** | Solicitud Donación | `styleradar.donaciones.solicitud.creada` | `styleradar.donaciones.solicitud.creada` | **Confirmado 100%** |
 | **`ms-Donations`** | Prenda C2C Vendida | `segunda-mano.prenda.vendida` / `styleradar.segundavida.prenda.vendida` | `styleradar.segundavida.prenda.vendida` | **Confirmado 100%** |
 | **`ms-Payment`** | Pago Aprobado Webhook | `pago.confirmado` / `styleradar.pagos.pago.confirmado` | `styleradar.pagos.pago.confirmado` | **Confirmado 100%** |
-| **`ms-Stores`** | Fundación Desactivada | `fundacion.desactivada` / `styleradar.tiendas.fundacion.desactivada` | `styleradar.tiendas.fundacion.desactivada` | **Confirmado 100%** |
+| **`ms-Stores` (Tiendas)** | Fundación Desactivada | `foundation.deactivated` / `styleradar.tiendas.fundacion.desactivada` | `styleradar.tiendas.fundacion.desactivada` + `foundation.deactivated` | **Confirmado 100%** |
+| **`ms-Stores` (Tiendas)** | Fundación Reactivada | `foundation.reactivated` / `styleradar.tiendas.fundacion.reactivada` | `styleradar.tiendas.fundacion.reactivada` + `foundation.reactivated` | **Confirmado 100%** |
