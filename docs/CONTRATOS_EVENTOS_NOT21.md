@@ -104,21 +104,25 @@
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
 | `eventoId` (alias `eventId`) | `String` | No | Identificador del evento |
-| `usuarioId` | `Long` | Sí | ID del usuario |
+| `usuarioId` (alias `userId`) | `Long` | Sí | ID del usuario |
 | `email` | `String` | No | Correo electrónico del usuario |
-| `nuevoEstado` (alias `estadoNuevo`) | `String` | Sí | `ACTIVO`/`ACTIVA`, `INACTIVO`/`INACTIVA`, `BLOQUEADO`/`BLOQUEADA` o `SUSPENDIDO` |
-| `fechaCambio` | `LocalDateTime` | No | Fecha del cambio de estado (acepta ISO-8601 con o sin sufijo `Z`) |
+| `nuevoEstado` (alias `estadoNuevo`, `newStatus`) | `String` | Sí | `ACTIVO`/`ACTIVA`/`ACTIVE`, `INACTIVO`/`INACTIVA`/`INACTIVE`, `BLOQUEADO`/`BLOQUEADA`/`BLOCKED` o `SUSPENDIDO`/`SUSPENDIDA`/`SUSPENDED` |
+| `fechaCambio` (alias `changedAt`) | `LocalDateTime` | No | Fecha del cambio de estado (acepta ISO-8601 con o sin sufijo `Z`) |
 
-**Ejemplo JSON:**
+**Ejemplo JSON (v2 en inglés):**
 ```json
 {
-  "eventoId": "evt-usr-7741",
-  "usuarioId": 501,
+  "eventId": "evt-usr-7741",
+  "userId": 501,
   "email": "mateo@styleradar.co",
-  "nuevoEstado": "INACTIVO",
-  "fechaCambio": "2026-11-02T12:15:00"
+  "previousStatus": "ACTIVE",
+  "newStatus": "INACTIVE",
+  "changedBy": 1,
+  "reason": "Incumplimiento de terminos",
+  "changedAt": "2026-11-02T12:15:00Z"
 }
 ```
+*(También se siguen aceptando los campos en español de v1 y campos informativos adicionales como `previousStatus`, `changedBy` y `reason`.)*
 
 ---
 

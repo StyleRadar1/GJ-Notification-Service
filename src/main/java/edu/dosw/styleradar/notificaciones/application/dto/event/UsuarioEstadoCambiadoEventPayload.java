@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 
 public record UsuarioEstadoCambiadoEventPayload(
         @JsonAlias("eventId") String eventoId,
-        Long usuarioId,
+        @JsonAlias("userId") Long usuarioId,
         String email,
-        @JsonAlias("estadoNuevo") String nuevoEstado,
-        LocalDateTime fechaCambio
+        @JsonAlias({"estadoNuevo", "newStatus"}) String nuevoEstado,
+        @JsonAlias("changedAt") LocalDateTime fechaCambio
 ) {
 }

@@ -54,6 +54,31 @@ class EventosCadcheContratoTest {
     }
 
     @Test
+    @DisplayName("UsuarioEstadoCambiado acepta el JSON v2 en ingles acordado con ms-usuarios")
+    void usuarioEstadoCambiadoFormatoInglesV2() {
+        String json = """
+                {
+                  "eventId": "evt-usr-8802",
+                  "userId": 12,
+                  "email": "usuario@styleradar.co",
+                  "previousStatus": "ACTIVE",
+                  "newStatus": "BLOCKED",
+                  "changedBy": 1,
+                  "reason": "Incumplimiento de terminos",
+                  "changedAt": "2026-11-21T23:55:00Z"
+                }
+                """;
+
+        UsuarioEstadoCambiadoEventPayload evento = leer(json, UsuarioEstadoCambiadoEventPayload.class);
+
+        assertThat(evento.eventoId()).isEqualTo("evt-usr-8802");
+        assertThat(evento.usuarioId()).isEqualTo(12L);
+        assertThat(evento.email()).isEqualTo("usuario@styleradar.co");
+        assertThat(evento.nuevoEstado()).isEqualTo("BLOCKED");
+        assertThat(evento.fechaCambio()).isEqualTo(LocalDateTime.of(2026, 11, 21, 23, 55));
+    }
+
+    @Test
     @DisplayName("FundacionDesactivada acepta el JSON exacto de ms-tiendas v2 (ingles + deactivatedAt con Z)")
     void fundacionDesactivadaFormatoCadche() {
         String json = """
