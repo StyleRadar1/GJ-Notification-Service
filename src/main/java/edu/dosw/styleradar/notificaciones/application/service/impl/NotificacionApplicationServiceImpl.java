@@ -2,6 +2,7 @@ package edu.dosw.styleradar.notificaciones.application.service.impl;
 
 import edu.dosw.styleradar.notificaciones.application.service.NotificacionApplicationService;
 import edu.dosw.styleradar.notificaciones.domain.exception.AccesoDenegadoException;
+import edu.dosw.styleradar.notificaciones.domain.exception.CodigoError;
 import edu.dosw.styleradar.notificaciones.domain.exception.RecursoNoEncontradoException;
 import edu.dosw.styleradar.notificaciones.domain.exception.ReglaDeNegocioException;
 import edu.dosw.styleradar.notificaciones.domain.model.Notificacion;
@@ -52,7 +53,7 @@ public class NotificacionApplicationServiceImpl implements NotificacionApplicati
     @Override
     public Notificacion marcarComoLeida(Long notificacionId, Long usuarioId) {
         Notificacion notificacion = notificacionRepositoryPort.buscarPorId(notificacionId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro la notificacion"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro la notificacion", CodigoError.NOTIFICATION_NOT_FOUND));
 
         if (!notificacion.getUsuarioId().equals(usuarioId)) {
             throw new AccesoDenegadoException("No tiene permisos para modificar una notificacion de otro usuario");

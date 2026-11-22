@@ -147,6 +147,46 @@ class PreferenciasYCorreoUseCasesTest {
                 .isInstanceOf(ReglaDeNegocioException.class);
     }
 
+    @Test
+    @DisplayName("Si la alerta pidio correo (EMAIL o AMBOS) se envia aunque la preferencia sea solo plataforma")
+    void alertaConCorreoEnviaAunqueLaPreferenciaSeaSoloPlataforma() {
+        when(preferencias.buscar(USUARIO, TipoNotificacion.REPOSICION_STOCK)).thenReturn(
+                Optional.of(new PreferenciaAviso(USUARIO, TipoNotificacion.REPOSICION_STOCK, CanalAviso.SOLO_PLATAFORMA, null)));
+
+        enviarCorreo.enviarSiCorresponde(avisoConCanal(CanalNotificacion.AMBOS));
+        enviarCorreo.enviarSiCorresponde(avisoConCanal(CanalNotificacion.EMAIL));
+
+        verify(correo, org.mockito.Mockito.times(2)).enviar(eq(USUARIO), eq("ana@styleradar.co"), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("Una alerta IN_APP o PUSH no fuerza el correo")
+    void alertaSinCorreoNoFuerzaElEnvio() {
+        when(preferencias.buscar(USUARIO, TipoNotificacion.REPOSICION_STOCK)).thenReturn(Optional.empty());
+
+        enviarCorreo.enviarSiCorresponde(avisoConCanal(CanalNotificacion.IN_APP));
+        enviarCorreo.enviarSiCorresponde(avisoConCanal(CanalNotificacion.PUSH));
+
+        verify(correo, never()).enviar(any(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("Una alerta con correo pero sin email guardado no envia y no falla")
+    void alertaConCorreoSinEmail() {
+        when(cuentas.buscarPorUsuarioId(USUARIO)).thenReturn(Optional.of(
+                new EstadoCuentaCopia(USUARIO, null, EstadoCuenta.ACTIVO, LocalDateTime.now())));
+
+        assertThatCode(() -> enviarCorreo.enviarSiCorresponde(avisoConCanal(CanalNotificacion.AMBOS))).doesNotThrowAnyException();
+
+        verify(correo, never()).enviar(any(), anyString(), anyString(), anyString());
+    }
+
+    private Notificacion avisoConCanal(CanalNotificacion canal) {
+        return new Notificacion(
+                9L, USUARIO, 7L, "item-1", 1, TipoNotificacion.REPOSICION_STOCK, canal,
+                "Prenda disponible", "Volvio a haber stock", "/x", false, LocalDateTime.now(), null);
+    }
+
     private Notificacion aviso(TipoNotificacion tipo) {
         Notificacion n = new Notificacion(
                 9L, USUARIO, null, null, null, tipo, CanalNotificacion.IN_APP,

@@ -4,6 +4,7 @@ import edu.dosw.styleradar.notificaciones.application.dto.request.CrearAlertaReq
 import edu.dosw.styleradar.notificaciones.application.dto.response.AlertaResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.ContadorNoLeidasResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.NotificacionResponse;
+import edu.dosw.styleradar.notificaciones.application.dto.response.SuscripcionAlertaResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.TicketStreamResponse;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -44,7 +45,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = AlertaResponse.class),
                             examples = @ExampleObject(
                                     name = "AlertaCreadaEjemplo",
-                                    value = "{\"id\":501,\"usuarioId\":101,\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"tallaObjetivo\":\"M\",\"busquedaGuardadaId\":null,\"canal\":\"IN_APP\",\"estado\":\"ACTIVA\",\"fechaCreacion\":\"2026-11-02T10:15:30\",\"fechaActualizacion\":\"2026-11-02T10:15:30\"}"
+                                    value = "{\"id\":501,\"usuarioId\":101,\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"tallaObjetivo\":\"M\",\"busquedaGuardadaId\":null,\"nombreBusqueda\":null,\"canal\":\"IN_APP\",\"estado\":\"ACTIVA\",\"fechaCreacion\":\"2026-11-02T10:15:30\",\"fechaActualizacion\":\"2026-11-02T10:15:30\"}"
                             )
                     )
             ),
@@ -56,7 +57,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "ValidacionFallida",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Error de validacion en la solicitud\",\"status\":400,\"detail\":\"El tipo de alerta es obligatorio\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"El tipo de alerta es obligatorio\",\"errors\":{\"tipoAlerta\":\"El tipo de alerta es obligatorio\"}}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Error de validacion en la solicitud\",\"status\":400,\"code\":\"VALIDATION_ERROR\",\"detail\":\"El tipo de alerta es obligatorio\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"El tipo de alerta es obligatorio\",\"errors\":{\"tipoAlerta\":\"El tipo de alerta es obligatorio\"}}"
                             )
                     )
             ),
@@ -68,7 +69,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "NoAutenticado",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"No autenticado\",\"status\":401,\"detail\":\"Token JWT ausente, invalido o expirado\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"Token JWT ausente, invalido o expirado\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"No autenticado\",\"status\":401,\"code\":\"UNAUTHENTICATED\",\"detail\":\"Token JWT ausente, invalido o expirado\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"Token JWT ausente, invalido o expirado\"}"
                             )
                     )
             ),
@@ -80,7 +81,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "AccesoDenegado",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Acceso denegado\",\"status\":403,\"detail\":\"No tienes autorizacion para acceder o modificar los recursos de otro usuario\",\"instance\":\"/api/v1/users/202/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"No tienes autorizacion para acceder o modificar los recursos de otro usuario\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Acceso denegado\",\"status\":403,\"code\":\"ACCESS_DENIED\",\"detail\":\"No tienes autorizacion para acceder o modificar los recursos de otro usuario\",\"instance\":\"/api/v1/users/202/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"No tienes autorizacion para acceder o modificar los recursos de otro usuario\"}"
                             )
                     )
             ),
@@ -92,7 +93,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "AlertaDuplicada",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Conflicto de estado del recurso\",\"status\":409,\"detail\":\"Ya existe una alerta activa configurada para este recurso\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"Ya existe una alerta activa configurada para este recurso\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Conflicto de estado del recurso\",\"status\":409,\"code\":\"ALERT_ALREADY_ACTIVE\",\"detail\":\"Ya existe una alerta activa configurada para este recurso\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"Ya existe una alerta activa configurada para este recurso\"}"
                             )
                     )
             ),
@@ -104,7 +105,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "ItemConStock",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Violacion de regla de negocio\",\"status\":422,\"detail\":\"No se puede crear una alerta de reposicion porque la prenda actualmente tiene stock disponible\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"No se puede crear una alerta de reposicion porque la prenda actualmente tiene stock disponible\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Violacion de regla de negocio\",\"status\":422,\"code\":\"ITEM_HAS_STOCK\",\"detail\":\"No se puede crear una alerta de reposicion porque la prenda actualmente tiene stock disponible\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"No se puede crear una alerta de reposicion porque la prenda actualmente tiene stock disponible\"}"
                             )
                     )
             ),
@@ -116,7 +117,7 @@ public interface AlertaApi {
                             schema = @Schema(implementation = ProblemDetail.class),
                             examples = @ExampleObject(
                                     name = "CatalogoCaido",
-                                    value = "{\"type\":\"about:blank\",\"title\":\"Servicio externo no disponible\",\"status\":503,\"detail\":\"El catalogo no esta disponible en este momento, intente nuevamente mas tarde\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"El catalogo no esta disponible en este momento, intente nuevamente mas tarde\"}"
+                                    value = "{\"type\":\"about:blank\",\"title\":\"Servicio externo no disponible\",\"status\":503,\"code\":\"CATALOG_UNAVAILABLE\",\"detail\":\"El catalogo no esta disponible en este momento, intente nuevamente mas tarde\",\"instance\":\"/api/v1/users/101/alerts\",\"timestamp\":\"2026-11-17T15:30:00Z\",\"mensaje\":\"El catalogo no esta disponible en este momento, intente nuevamente mas tarde\"}"
                             )
                     )
             )
@@ -136,7 +137,7 @@ public interface AlertaApi {
                             array = @ArraySchema(schema = @Schema(implementation = AlertaResponse.class)),
                             examples = @ExampleObject(
                                     name = "ListaAlertas",
-                                    value = "[{\"id\":501,\"usuarioId\":101,\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"tallaObjetivo\":\"M\",\"busquedaGuardadaId\":null,\"canal\":\"IN_APP\",\"estado\":\"ACTIVA\",\"fechaCreacion\":\"2026-11-02T10:15:30\",\"fechaActualizacion\":\"2026-11-02T10:15:30\"}]"
+                                    value = "[{\"id\":501,\"usuarioId\":101,\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"tallaObjetivo\":\"M\",\"busquedaGuardadaId\":null,\"nombreBusqueda\":null,\"canal\":\"IN_APP\",\"estado\":\"ACTIVA\",\"fechaCreacion\":\"2026-11-02T10:15:30\",\"fechaActualizacion\":\"2026-11-02T10:15:30\"}]"
                             )
                     )
             ),
@@ -202,13 +203,41 @@ public interface AlertaApi {
     );
 
     @Operation(
+            summary = "Check whether the user already has an alert for a garment",
+            description = "Lightweight lookup for the out-of-stock garment page: returns suscrita=true and the alertId when the user "
+                    + "has an ACTIVE out-of-stock alert for the given itemId and size (tallaObjetivo, optional), so the front can "
+                    + "paint the alert button without downloading the whole list."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Subscription state",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = SuscripcionAlertaResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "itemId missing",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            )
+    })
+    ResponseEntity<SuscripcionAlertaResponse> comprobarSuscripcion(
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "itemId", description = "Garment id (UUID or text)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") String itemId,
+            @Parameter(name = "tallaObjetivo", description = "Size (optional)", example = "M") String tallaObjetivo
+    );
+
+    @Operation(
             summary = "Reactivate an alert",
             description = "Sets a deactivated alert back to ACTIVE. Applies the same rules as creating it: the account must "
                     + "not be inactive, there must be no other active identical alert (409), and the garment must still be "
                     + "out of stock or the saved search still active (422). An already active alert is returned unchanged."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Alert is active"),
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Alert is active",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AlertaResponse.class))
+            ),
             @ApiResponse(
                     responseCode = "403",
                     description = "Alert belongs to another user",
@@ -228,6 +257,11 @@ public interface AlertaApi {
                     responseCode = "422",
                     description = "Business rule violation (account inactive, garment has stock, saved search inactive)",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "Catalog microservice unavailable",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
     ResponseEntity<AlertaResponse> activarAlerta(
@@ -237,7 +271,7 @@ public interface AlertaApi {
 
     @Operation(
             summary = "List user notifications",
-            description = "Retrieves user notifications, most recent first. Without 'page', 'size' or 'leida' it returns a direct array. With any of them it returns a page (content, page, size, totalElements, totalPages, hasNext, hasPrevious). 'leida=false' returns only unread notifications."
+            description = "Retrieves user notifications, most recent first. Without 'page', 'size' or 'read' it returns a direct array. With any of them it returns a page (content, page, size, totalElements, totalPages, hasNext, hasPrevious). 'read=false' returns only unread notifications."
     )
     @ApiResponses({
             @ApiResponse(
@@ -253,7 +287,7 @@ public interface AlertaApi {
                                     ),
                                     @ExampleObject(
                                             name = "EstructuraPaginada",
-                                            summary = "With page, size or leida (paginated)",
+                                            summary = "With page, size or read (paginated)",
                                             value = "{\"content\":[{\"id\":901,\"usuarioId\":101,\"alertaId\":501,\"itemId\":\"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"cicloReposicion\":1,\"tipo\":\"REPOSICION_STOCK\",\"canal\":\"IN_APP\",\"titulo\":\"Prenda disponible nuevamente\",\"mensaje\":\"Chaqueta Bomber Oversize Negra volvio a tener unidades en la talla M\",\"enlace\":\"/catalogo/prendas/3fa85f64-5717-4562-b3fc-2c963f66afa6\",\"leida\":false,\"fechaCreacion\":\"2026-11-06T08:00:00\",\"fechaLectura\":null}],\"page\":0,\"size\":20,\"totalElements\":1,\"totalPages\":1,\"hasNext\":false,\"hasPrevious\":false}"
                                     )
                             }
@@ -277,10 +311,10 @@ public interface AlertaApi {
     })
     ResponseEntity<?> listarMisNotificaciones(
             @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
-            @Parameter(description = "Shortcut: true returns only unread notifications (same as leida=false)", example = "true") Boolean unreadOnly,
+            @Parameter(hidden = true) Boolean unreadOnly,
             @Parameter(hidden = true) Boolean soloNoLeidas,
-            @Parameter(hidden = true) Boolean read,
-            @Parameter(description = "Filter by read status (true=read, false=unread). Activates the paginated response", example = "false") Boolean leida,
+            @Parameter(description = "Single read-status filter: true = read, false = unread. Activates the paginated response", example = "false") Boolean read,
+            @Parameter(hidden = true) Boolean leida,
             @Parameter(description = "Page number (zero-indexed, >= 0)", example = "0") @Min(value = 0, message = "page debe ser 0 o mayor") Integer page,
             @Parameter(description = "Page size (1 to 100)", example = "20") @Min(value = 1, message = "size debe ser al menos 1") @Max(value = 100, message = "size no puede superar 100") Integer size
     );
@@ -335,7 +369,7 @@ public interface AlertaApi {
             @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
     );
 
-    @Operation(summary = "Get unread notifications count", description = "Returns total count of unread notifications for frontend bell badge")
+    @Operation(summary = "Get unread notifications count", description = "Returns the total count of unread notifications for the frontend bell badge")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -393,7 +427,11 @@ public interface AlertaApi {
                     + "only opens the stream; a session JWT in the URL is rejected."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Ticket issued"),
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Ticket issued",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TicketStreamResponse.class))
+            ),
             @ApiResponse(
                     responseCode = "401",
                     description = "Unauthorized",

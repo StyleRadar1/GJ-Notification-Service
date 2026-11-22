@@ -1,6 +1,7 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.config;
 
 import edu.dosw.styleradar.notificaciones.domain.exception.AccesoDenegadoException;
+import edu.dosw.styleradar.notificaciones.domain.exception.CodigoError;
 import edu.dosw.styleradar.notificaciones.domain.exception.ConflictoException;
 import edu.dosw.styleradar.notificaciones.domain.exception.RecursoNoEncontradoException;
 import edu.dosw.styleradar.notificaciones.domain.exception.ReglaDeNegocioException;
@@ -21,6 +22,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
@@ -41,7 +43,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining("; "));
         Map<String, String> errores = new LinkedHashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(e -> errores.merge(e.getField(), String.valueOf(e.getDefaultMessage()), (a, b) -> a + "; " + b));
-        return buildProblemDetail(HttpStatus.BAD_REQUEST, "Error de validacion en la solicitud", detail, request, errores);
+        return buildProblemDetail(HttpStatus.BAD_REQUEST, CodigoError.VALIDATION_ERROR, "Error de validacion en la solicitud", detail, request, errores);
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
@@ -61,7 +63,7 @@ public class GlobalExceptionHandler {
                     .collect(Collectors.joining("; "));
             errores.merge(parametro != null ? parametro : "parametro", mensaje, (a, b) -> a + "; " + b);
         });
-        return buildProblemDetail(HttpStatus.BAD_REQUEST, "Error de validacion en la solicitud", detail, request, errores);
+        return buildProblemDetail(HttpStatus.BAD_REQUEST, CodigoError.VALIDATION_ERROR, "Error de validacion en la solicitud", detail, request, errores);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -71,10 +73,21 @@ public class GlobalExceptionHandler {
     ) {
         return buildProblemDetail(
                 HttpStatus.BAD_REQUEST,
-                "Parametro invalido",
+                CodigoError.INVALID_PARAMETER, "Parametro invalido",
                 "El valor del parametro '" + ex.getName() + "' no es valido",
                 request
         );
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ProblemDetail> handleMissingParameter(
+            MissingServletRequestParameterException ex,
+            HttpServletRequest request
+    ) {
+        String mensaje = "El parametro '" + ex.getParameterName() + "' es obligatorio";
+        Map<String, String> errores = new LinkedHashMap<>();
+        errores.put(ex.getParameterName(), mensaje);
+        return buildProblemDetail(HttpStatus.BAD_REQUEST, CodigoError.VALIDATION_ERROR, "Error de validacion en la solicitud", mensaje, request, errores);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -84,7 +97,7 @@ public class GlobalExceptionHandler {
     ) {
         return buildProblemDetail(
                 HttpStatus.BAD_REQUEST,
-                "Cuerpo de solicitud malformado",
+                CodigoError.MALFORMED_REQUEST, "Cuerpo de solicitud malformado",
                 "El formato JSON enviado no es valido",
                 request
         );
@@ -95,7 +108,7 @@ public class GlobalExceptionHandler {
             AuthenticationException ex,
             HttpServletRequest request
     ) {
-        return buildProblemDetail(HttpStatus.UNAUTHORIZED, "No autenticado", ex.getMessage(), request);
+        return buildProblemDetail(HttpStatus.UNAUTHORIZED, CodigoError.UNAUTHENTICATED, "No autenticado", ex.getMessage(), request);
     }
 
     @ExceptionHandler({AccesoDenegadoException.class, AccessDeniedException.class})
@@ -103,7 +116,7 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
-        return buildProblemDetail(HttpStatus.FORBIDDEN, "Acceso denegado", ex.getMessage(), request);
+        return buildProblemDetail(HttpStatus.FORBIDDEN, ex instanceof AccesoDenegadoException a ? a.getCodigo() : CodigoError.ACCESS_DENIED, "Acceso denegado", ex.getMessage(), request);
     }
 
     @ExceptionHandler(RecursoNoEncontradoException.class)
@@ -111,7 +124,7 @@ public class GlobalExceptionHandler {
             RecursoNoEncontradoException ex,
             HttpServletRequest request
     ) {
-        return buildProblemDetail(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage(), request);
+        return buildProblemDetail(HttpStatus.NOT_FOUND, ex.getCodigo(), "Recurso no encontrado", ex.getMessage(), request);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -121,6 +134,7 @@ public class GlobalExceptionHandler {
     ) {
         return buildProblemDetail(
                 HttpStatus.NOT_FOUND,
+                CodigoError.ROUTE_NOT_FOUND,
                 "Recurso no encontrado",
                 "La ruta solicitada no existe",
                 request
@@ -132,7 +146,7 @@ public class GlobalExceptionHandler {
             ConflictoException ex,
             HttpServletRequest request
     ) {
-        return buildProblemDetail(HttpStatus.CONFLICT, "Conflicto de estado del recurso", ex.getMessage(), request);
+        return buildProblemDetail(HttpStatus.CONFLICT, ex.getCodigo(), "Conflicto de estado del recurso", ex.getMessage(), request);
     }
 
     @ExceptionHandler(ReglaDeNegocioException.class)
@@ -142,7 +156,7 @@ public class GlobalExceptionHandler {
     ) {
         return buildProblemDetail(
                 HttpStatus.UNPROCESSABLE_ENTITY,
-                "Violacion de regla de negocio",
+                ex.getCodigo(), "Violacion de regla de negocio",
                 ex.getMessage(),
                 request
         );
@@ -155,7 +169,7 @@ public class GlobalExceptionHandler {
     ) {
         return buildProblemDetail(
                 HttpStatus.SERVICE_UNAVAILABLE,
-                "Servicio externo no disponible",
+                ex.getCodigo(), "Servicio externo no disponible",
                 ex.getMessage(),
                 request
         );
@@ -169,7 +183,7 @@ public class GlobalExceptionHandler {
         log.error("Error interno no controlado en {}: {}", request.getRequestURI(), ex.getMessage(), ex);
         return buildProblemDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Error interno del servidor",
+                CodigoError.INTERNAL_ERROR, "Error interno del servidor",
                 "Ocurrio un error inesperado al procesar la solicitud",
                 request
         );
@@ -177,16 +191,18 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ProblemDetail> buildProblemDetail(
             HttpStatus status,
+            CodigoError codigo,
             String title,
             String detail,
             HttpServletRequest request
     ) {
-        return buildProblemDetail(status, title, detail, request, null);
+        return buildProblemDetail(status, codigo, title, detail, request, null);
     }
 
     /** {@code errores} lleva un mensaje por campo en los 400 de validacion; en los demas errores va vacio. */
     private ResponseEntity<ProblemDetail> buildProblemDetail(
             HttpStatus status,
+            CodigoError codigo,
             String title,
             String detail,
             HttpServletRequest request,
@@ -196,6 +212,7 @@ public class GlobalExceptionHandler {
         problem.setTitle(title);
         problem.setInstance(URI.create(request.getRequestURI()));
         problem.setProperty("timestamp", Instant.now().toString());
+        problem.setProperty("code", codigo.name());
         problem.setProperty("mensaje", detail);
         if (errores != null && !errores.isEmpty()) {
             problem.setProperty("errors", errores);

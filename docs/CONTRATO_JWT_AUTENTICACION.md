@@ -34,7 +34,7 @@ Solo `/actuator/health` y la documentación de Swagger (`/swagger-ui`, `/v3/api-
 
 `SeguridadJwtHttpTest` cubre los 401 (sin token, vencido, otra firma, manipulado) y los 403 (alerta y notificación ajenas). `JwtSecretConfigurationTest` comprueba que el servicio no arranca sin `JWT_SECRET`.
 
-## Pendiente de confirmar con el servicio de autenticación
+## Supuestos sobre el servicio de autenticación
 
-- Que firme con `HS256` y con una clave de 32 bytes o más compartida por variable de entorno.
-- Que incluya `userId` (o `sub` con el id numérico) en el token.
+- `ms-auth` firma los tokens con `HS256` y una clave de 32 bytes o más, que comparte con este servicio por variable de entorno (`JWT_SECRET`).
+- El token incluye `userId` (o `sub` con el id numérico) y el rol del usuario.

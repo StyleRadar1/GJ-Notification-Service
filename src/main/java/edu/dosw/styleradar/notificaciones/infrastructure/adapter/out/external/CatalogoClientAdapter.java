@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.external;
 
+import edu.dosw.styleradar.notificaciones.domain.exception.CodigoError;
 import edu.dosw.styleradar.notificaciones.domain.exception.ReglaDeNegocioException;
 import edu.dosw.styleradar.notificaciones.domain.exception.ServicioExternoNoDisponibleException;
 import edu.dosw.styleradar.notificaciones.domain.port.out.CatalogoClientPort;
@@ -40,14 +41,14 @@ public class CatalogoClientAdapter implements CatalogoClientPort {
             disp = catalogoFeignClient.consultarDisponibilidad(itemId);
         } catch (FeignException.NotFound ex) {
             log.debug("El item {} no existe en el catalogo", itemId);
-            throw new ReglaDeNegocioException("La prenda indicada no existe en el catalogo");
+            throw new ReglaDeNegocioException("La prenda indicada no existe en el catalogo", CodigoError.ITEM_NOT_FOUND);
         } catch (Exception ex) {
             log.warn("No fue posible consultar ms-item-catalogo para el item {}: {}", itemId, ex.getMessage());
-            throw new ServicioExternoNoDisponibleException(MENSAJE_NO_DISPONIBLE, ex);
+            throw new ServicioExternoNoDisponibleException(MENSAJE_NO_DISPONIBLE, ex, CodigoError.CATALOG_UNAVAILABLE);
         }
         if (disp == null) {
             log.warn("ms-item-catalogo respondio sin datos para el item {}", itemId);
-            throw new ServicioExternoNoDisponibleException(MENSAJE_NO_DISPONIBLE);
+            throw new ServicioExternoNoDisponibleException(MENSAJE_NO_DISPONIBLE, CodigoError.CATALOG_UNAVAILABLE);
         }
         return disp;
     }

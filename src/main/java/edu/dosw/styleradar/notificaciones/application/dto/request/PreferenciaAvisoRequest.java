@@ -4,9 +4,9 @@ import edu.dosw.styleradar.notificaciones.domain.model.CanalAviso;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
-@Schema(description = "Canal por el que el usuario quiere recibir un tipo de aviso")
+@Schema(description = "Channel through which the user wants to receive a notification type")
 public record PreferenciaAvisoRequest(
-        @Schema(description = "SOLO_PLATAFORMA o CORREO_Y_PLATAFORMA", example = "CORREO_Y_PLATAFORMA")
+        @Schema(description = "SOLO_PLATAFORMA or CORREO_Y_PLATAFORMA", example = "CORREO_Y_PLATAFORMA")
         @NotNull(message = "El canal es obligatorio")
         CanalAviso canal
 ) {

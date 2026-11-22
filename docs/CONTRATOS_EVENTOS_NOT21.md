@@ -99,14 +99,14 @@
 ### 1.3 `UsuarioEstadoCambiado` (Emisor: `ms-usuarios`)
 - **Routing Key:** `styleradar.usuarios.estado.cambiado`
 - **Cola Destino:** `styleradar.notificaciones.usuario-estado.q`
-- **Propósito:** Mantener actualizada la copia local del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`) para impedir que cuentas inactivas o bloqueadas reciban notificaciones (NOT-09).
+- **Propósito:** Mantener actualizada la copia local del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`, `SUSPENDIDO`) para impedir que cuentas inactivas, bloqueadas o suspendidas creen alertas o reciban notificaciones (SR-RF-29, SR-RF-31, SR-RF-106 / NOT-09).
 
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
 | `eventoId` | `String` | Sí | Identificador del evento |
 | `usuarioId` | `Long` | Sí | ID del usuario |
 | `email` | `String` | No | Correo electrónico del usuario |
-| `nuevoEstado` | `String` | Sí | `ACTIVO`, `INACTIVO` o `BLOQUEADO` |
+| `nuevoEstado` | `String` | Sí | `ACTIVO`, `INACTIVO`, `BLOQUEADO` o `SUSPENDIDO` |
 | `fechaCambio` | `LocalDateTime` | Sí | Fecha del cambio de estado |
 
 **Ejemplo JSON:**
@@ -190,8 +190,8 @@
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
 | `eventoId` | `String` | Sí | Identificador del evento (clave de idempotencia) |
-| `donacionId` | `Long` | Sí | ID de la donación |
-| `fundacionUsuarioId` | `Long` | Sí | ID del usuario de la fundación que recibe el aviso |
+| `donacionId` (alias `solicitudId`) | `Long` | Sí | ID de la donación o de la solicitud |
+| `fundacionUsuarioId` (alias `representanteId`) | `Long` | Sí | ID de usuario en ms-auth del representante de la fundación que recibe el aviso. No es el `fundacionId` de ms-tiendas |
 | `nombreDonante` | `String` | No | Nombre visible de quien dona |
 | `resumen` | `String` | No | Descripción corta de lo que se dona |
 | `fechaEvento` | `LocalDateTime` | No | Fecha y hora de la solicitud |
@@ -209,7 +209,7 @@
 
 ### 1.8 `PrendaVendida` (Emisor: `ms-segunda-vida-donaciones`) — GJ-65
 > **Contrato Oficial Verificado** con las Fichas Técnicas de Integración de `ms-segunda-vida-donaciones` y `ms-chat` (Pág. 4).
-- **Routing Key:** `styleradar.segundavida.prenda.vendida` (con alias `segunda-mano.prenda.vendida`)
+- **Routing Key:** `styleradar.segundavida.prenda.vendida` y `styleradar.segunda-mano.prenda.vendida` (la cola está vinculada a las dos; Donaciones publica la segunda). `interesadosIds` lo resuelve quien publica; vacío no avisa a nadie. No se avisa al comprador ni al vendedor (`vendedorId`).
 - **Cola Destino:** `styleradar.notificaciones.prenda-vendida.q`
 - **Propósito:** Avisar a los demás interesados en una prenda de segunda mano de que ya se vendió. Se genera una notificación `PRENDA_VENDIDA` por cada interesado, excepto el comprador, con enlace `/segunda-mano/{publicacionId}`.
 
@@ -219,6 +219,7 @@
 | `publicacionId` | `String (UUID / texto)` | Sí | ID de la publicación vendida (UUID o numérico) |
 | `nombrePrenda` | `String` | No | Nombre de la prenda |
 | `compradorId` | `Long` | No | Usuario que compró (no recibe el aviso) |
+| `vendedorId` | `Long` | No | Usuario que vendió (no recibe el aviso; si falta se ignora sin error) |
 | `interesadosIds` | `List<Long>` | No | Usuarios con conversación abierta sobre la prenda |
 | `fechaEvento` | `LocalDateTime` | No | Fecha y hora de la venta |
 

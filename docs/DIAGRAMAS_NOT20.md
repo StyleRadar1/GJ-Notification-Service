@@ -10,7 +10,7 @@
 
 > **Idioma:** los diagramas (`.drawio` e imágenes) están en inglés; los nombres de clases, métodos, tablas, columnas y colas se dejan como en el código. Esta explicación sigue en español.
 >
-> **Actualización del 17/11/2026:** reflejan el código de `develop` (`itemId` de texto, migración V6, `Alerta.activar()`, `ActivarAlertaUseCaseImpl`, `RateLimitFilter`, `MetricasConfig`).
+> **Actualización del 18/11/2026:** reflejan el código de cierre del Sprint 3 (`itemId` de texto con migración V6, `GET /alerts/check` con `ConsultarSuscripcionAlertaUseCaseImpl` y `SuscripcionAlertaResponse`, filtro único `read` en notificaciones, `Alerta.activar()` con `ActivarAlertaUseCaseImpl`, canal `AMBOS`, estado de cuenta `SUSPENDIDO`, campo `nombreBusqueda` en `AlertaResponse`, `CodigoError` (`code`) en las excepciones de dominio y `ProblemDetail`, `RateLimitFilter`, `MetricasConfig` y Swagger en inglés).
 
 ## Plantilla de estilo
 
@@ -24,6 +24,23 @@ Todos los diagramas siguen la plantilla de diagramas de StyleRadar: fondo blanco
 | Apoyo | Broker y notas informativas | `#BAB9C9` |
 | Base | Fondo | `#FFFFFF` |
 
+Cada diagrama empieza con la cabecera común: logo de StyleRadar y el título `STYLERADAR — <TIPO> DIAGRAM : <microservicio> (<equipo>)`.
+
+**Notación de componentes.** Cada componente se dibuja con el símbolo UML de componente (rectángulo con las dos pestañas a la izquierda) y su color indica el tipo:
+
+| Tipo | Color | Valor |
+| :--- | :--- | :---: |
+| Controller (controladores, filtros, listeners y configuración) | Beige | `#E8DDCA` |
+| UseCase (casos de uso, servicios y reglas de dominio) | Rosa | `#FFCCCC` |
+| Adapter | Amarillo | `#FFFF99` |
+| Mapper | Cian | `#99FFFF` |
+| Repository y puertos | Blanco | `#FFFFFF` |
+| Exception | Verde | `#99FFCC` |
+| Sistemas externos | Azul | `#99CCFF` |
+| Base de datos | Rojo | `#FF9999` |
+
+En el diagrama de clases, la cabecera de cada clase indica su tipo: interfaz (naranja `#FFE6CC`), clase abstracta (azul `#CCE5FF`), objeto de valor (amarillo `#FFFF99`), enumeración (rosa `#FFCCCC`) y clase (lila `#E4DBF0`). En el de base de datos, cada tabla lleva la cabecera lila y una columna de claves (`PK`, `FK`, `UK`).
+
 Los valores se tomaron de la imagen de la propuesta de estilo. Si el curso publica los códigos oficiales, se reemplazan en los cinco archivos `.drawio`.
 
 Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archivo `.drawio`. Después de editarlos se exporta el PNG con el mismo nombre.
@@ -36,6 +53,7 @@ Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archi
 | Base de datos | [`diagrama-base-datos.drawio`](./uml/diagrama-base-datos.drawio) | [`diagrama-base-datos.png`](./images/diagrama-base-datos.png) |
 | Despliegue | [`diagrama-despliegue.drawio`](./uml/diagrama-despliegue.drawio) | [`diagrama-despliegue.png`](./images/diagrama-despliegue.png) |
 | Secuencia 7.8 | [`diagrama-secuencia.drawio`](./uml/diagrama-secuencia.drawio) | [`diagrama-secuencia.png`](./images/diagrama-secuencia.png) |
+| Casos de uso | [`diagrama-casos-de-uso.drawio`](./uml/diagrama-casos-de-uso.drawio) | [`diagrama-casos-de-uso.png`](./images/diagrama-casos-de-uso.png) |
 
 ---
 
@@ -49,7 +67,7 @@ Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archi
 
 El diagrama muestra la frontera de `ms-notificaciones` (puerto `8300`) y los sistemas con los que se comunica.
 
-1. **Frontend y API Gateway (`api-gateway`, `:8080`):** el usuario llega por HTTPS a través del gateway. Las rutas REST de `/api/v1/users/{id}` y la suscripción SSE de la campana exigen un JWT Bearer (el stream también acepta un ticket de 60 s en `?ticket=`).
+1. **Frontend (SPA):** el usuario llega por HTTPS directamente al servicio; el API Gateway ya no se dibuja en los diagramas de ms-notificaciones. Las rutas REST de `/api/v1/users/{id}` y la suscripción SSE de la campana exigen un JWT Bearer (el stream también acepta un ticket de 60 s en `?ticket=`).
 2. **Broker de eventos (RabbitMQ, `:5672`):** el servicio consume 12 colas durables sobre el exchange `styleradar.exchange`:
    - `ms-inventario` (`:8200`) publica `InventarioActualizado`.
    - `ms-usuarios` (`:8120`) publica el estado de cuenta y las búsquedas guardadas.
@@ -84,12 +102,12 @@ El diagrama muestra la frontera de `ms-notificaciones` (puerto `8300`) y los sis
 El servicio se organiza en puertos y adaptadores, con las dependencias apuntando hacia el dominio.
 
 1. **Adaptadores de entrada (`infrastructure/adapter/in`):**
-   - `AlertaController` implementa `AlertaApi` (documentación Swagger) y expone 9 endpoints, incluida la suscripción SSE con reconexión por `Last-Event-ID`. `PreferenciaAvisoController` expone 2 más: listar y elegir el canal de cada tipo de aviso.
+   - `AlertaController` implementa `AlertaApi` (documentación Swagger en inglés) y expone 11 endpoints bajo `/api/v1/users/{id}` (incluidos `GET /alerts/check`, `PATCH /alerts/{alertId}/activate`, `GET /notifications` con filtro único `read`, `POST /notifications/stream-ticket` y la suscripción SSE con reconexión por `Last-Event-ID`). `PreferenciaAvisoController` expone 2 más: listar y elegir el canal de cada tipo de aviso (14 endpoints en total junto a `/actuator/health`).
    - `NotificacionesEventsListener` consume las 12 colas. Un payload inválido va directo a la cola de errores; un fallo transitorio se reintenta 3 veces antes de llegar a ella (`RabbitRetryConfig`).
-   - `JwtAuthenticationFilter` y `SecurityConfig` validan el JWT sin estado. Solo `/actuator/health` y la documentación Swagger son públicos.
-   - `GlobalExceptionHandler` responde con `ProblemDetail` (RFC 7807).
+   - `JwtAuthenticationFilter` y `SecurityConfig` validan el JWT sin estado (y el ticket de 60 s en `?ticket=` únicamente para el stream SSE). Solo `/actuator/health` y la documentación Swagger (en local y QA; apagada en PROD) son públicos.
+   - `GlobalExceptionHandler` responde con `ProblemDetail` (RFC 7807) con `type: "about:blank"`, un campo `code` estable (`CodigoError`), `mensaje`, `timestamp` y `errors` por campo en los `400` de validación.
    - `CorreoPendienteRecuperador` (`adapter/in/scheduler`) reintenta los correos pendientes al arrancar el servicio y cada 60 s (GJ-119).
-2. **Aplicación (`application`):** los nueve puertos de entrada (`domain/port/in`) son interfaces de casos de uso. Cada una tiene su implementación `*UseCaseImpl`, que delega en `AlertaApplicationService` y `NotificacionApplicationService` (también interfaz más implementación). Los DTO son `records` y el mapeo usa MapStruct.
+2. **Aplicación (`application`):** los once puertos de entrada (`domain/port/in`) son interfaces de casos de uso (`CrearAlertaUseCase`, `ConsultarSuscripcionAlertaUseCase`, `ListarAlertasUseCase`, `DesactivarAlertaUseCase`, `ActivarAlertaUseCase`, `ListarNotificacionesUseCase`, `MarcarNotificacionLeidaUseCase`, `PreferenciasAvisosUseCase`, `ProcesarEventosExternosUseCase`, `EnviarAvisoPorCorreoUseCase` y `ReenviarCorreosPendientesUseCase`). Cada una tiene su implementación `*UseCaseImpl`, que delega en `AlertaApplicationService` y `NotificacionApplicationService` (también interfaz más implementación). Los DTO son `records` (incluyendo `SuscripcionAlertaResponse`, `TicketStreamResponse` y `AlertaResponse` con `nombreBusqueda`) y el mapeo usa MapStruct.
 3. **Dominio (`domain`):** modelos, objetos de valor, reglas (`AlertaValidator`, `EvaluadorCriteriosMatcher`), evento y excepciones, sin Spring, JPA ni Lombok. Los puertos de salida son interfaces del dominio.
 4. **Adaptadores de salida (`infrastructure/adapter/out`):** implementan los puertos de salida: JPA sobre PostgreSQL, cliente OpenFeign de Catálogo, publicador de `AlertaCreada`, `SseEmitter` por usuario y `CorreoSmtpAdapter`, que envía los avisos por correo con `JavaMailSender` en un hilo aparte, con 3 intentos y espera creciente; si se agotan, guarda el correo como pendiente (`CorreoPendienteRepositoryAdapter`). El mismo adaptador implementa `EnvioCorreoPort`, el envío inmediato que usa el reintento.
 
@@ -118,11 +136,12 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 1. **Entidades:** `Notificacion`, `Alerta`, `PreferenciaAviso`, `BusquedaGuardadaCopia` y `EstadoCuentaCopia`. Los identificadores de usuario y búsqueda son `Long` y el del ítem es `String` (UUID); todos apuntan a otros servicios, por lo que no hay referencias a sus clases. `Alerta` tiene `activar()` y `desactivar()`.
 2. **Relaciones por id:** `Notificacion` referencia a `Alerta` por `alertaId`, y `Alerta` referencia a `BusquedaGuardadaCopia` por `busquedaGuardadaId`. Son relaciones lógicas, no objetos enlazados.
 3. **Objetos de valor:** `CriterioBusquedaVO` (composición de la búsqueda guardada) y `DatosPrendaVO` (datos del evento de prenda).
-4. **Enumeraciones:** `TipoNotificacion` (9 tipos), `CanalNotificacion`, `CanalAviso` (`SOLO_PLATAFORMA` o `CORREO_Y_PLATAFORMA`), `TipoAlerta`, `EstadoAlerta` y `EstadoCuenta`.
-5. **Reglas:** `AlertaValidator` valida la creación, la propiedad y los duplicados de una alerta. `EvaluadorCriteriosMatcher` compara una búsqueda guardada o una alerta contra los datos de un evento, en memoria.
+4. **Enumeraciones:** `TipoNotificacion` (9 tipos), `CanalNotificacion` (`IN_APP`, `EMAIL`, `PUSH`, `AMBOS`), `CanalAviso` (`SOLO_PLATAFORMA` o `CORREO_Y_PLATAFORMA`), `TipoAlerta`, `EstadoAlerta`, `EstadoCuenta` (`ACTIVO`, `INACTIVO`, `BLOQUEADO`, `SUSPENDIDO`) y `CodigoError`.
+5. **Reglas:** `AlertaValidator` valida la creación, la propiedad y los duplicados de una alerta (asignando el `CodigoError` correspondiente a cada excepción). `EvaluadorCriteriosMatcher` compara una búsqueda guardada o una alerta contra los datos de un evento, en memoria.
 6. **Evento de dominio:** `AlertaCreadaDomainEvent`, que el servicio publica al registrar una alerta.
-7. **Excepciones de dominio:** cinco clases hijas de `RuntimeException` que `AlertaValidator`, los casos de uso y los adaptadores lanzan: `AccesoDenegadoException` (403), `RecursoNoEncontradoException` (404), `ConflictoException` (409), `ReglaDeNegocioException` (422) y `ServicioExternoNoDisponibleException` (503). `GlobalExceptionHandler` las traduce a respuestas `ProblemDetail`.
-8. **Reintento de correos y paginación:** `CorreoPendiente` es el correo que no se pudo enviar (con sus intentos y su `EstadoCorreo`: `PENDIENTE`, `ENVIADO` o `FALLIDO`) y `Pagina<T>` es la página de resultados de la bandeja, sin depender de Spring Data.
+7. **Excepciones de dominio:** cinco clases hijas de `RuntimeException` que portan su `CodigoError` estable y que `AlertaValidator`, los casos de uso y los adaptadores lanzan: `AccesoDenegadoException` (403, `ACCESS_DENIED`), `RecursoNoEncontradoException` (404, `ALERT_NOT_FOUND` / `NOTIFICATION_NOT_FOUND`), `ConflictoException` (409, `ALERT_ALREADY_ACTIVE`), `ReglaDeNegocioException` (422, `ITEM_HAS_STOCK` / `ITEM_NOT_FOUND` / `ACCOUNT_NOT_ALLOWED` / `SAVED_SEARCH_NOT_AVAILABLE` / `INVALID_ALERT`) y `ServicioExternoNoDisponibleException` (503, `CATALOG_UNAVAILABLE`). `GlobalExceptionHandler` las traduce a respuestas `ProblemDetail` con su `code`.
+8. **Puertos (interfaces):** el diagrama muestra los 11 puertos de salida (`domain.port.out`, que implementan los adaptadores) y los 11 de entrada (`domain.port.in`, que implementan los casos de uso), con las firmas de sus métodos.
+9. **Reintento de correos y paginación:** `CorreoPendiente` es el correo que no se pudo enviar (con sus intentos y su `EstadoCorreo`: `PENDIENTE`, `ENVIADO` o `FALLIDO`) y `Pagina<T>` es la página de resultados de la bandeja, sin depender de Spring Data.
 
 ### 3.2. Justificación arquitectónica
 
@@ -148,7 +167,7 @@ El esquema relacional de `notificaciones_db` (PostgreSQL 16) lo gestionan las mi
 | `notificaciones` | Bandeja de cada usuario, con estado de lectura, ciclo de reposición y `evento_id` del evento que la originó. |
 | `preferencias_avisos` | Canal elegido por usuario y tipo de aviso. Sin fila se aplica solo plataforma. |
 | `busquedas_guardadas_copia` | Copia local de las búsquedas guardadas, actualizada por eventos. |
-| `estados_cuenta_copia` | Copia local del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`). |
+| `estados_cuenta_copia` | Copia local del estado de cuenta (`ACTIVO`, `INACTIVO`, `BLOQUEADO`, `SUSPENDIDO`). |
 | `correos_pendientes` | Correos que no se pudieron enviar tras los reintentos inmediatos, con sus intentos y su estado (`PENDIENTE`, `ENVIADO` o `FALLIDO`). Se reintentan al arrancar el servicio y cada 60 s. |
 
 Dos restricciones únicas dan la idempotencia: `uk_notificacion_alerta_item_ciclo` impide más de una notificación por alerta, ítem y ciclo de reposición, y `uk_notificacion_evento_usuario` (`evento_id`, `usuario_id`) impide que un evento repetido genere una segunda notificación directa. `preferencias_avisos` es única por `(usuario_id, tipo)`.
@@ -277,3 +296,32 @@ El diagrama muestra el backend completo de StyleRadar dentro de un recuadro punt
 
 - **Contenedor por servicio:** cada microservicio se despliega y escala por separado.
 - **Bases y caché separadas por servicio:** un fallo o una migración en una base no afecta a los demás servicios.
+
+---
+
+## 9. Diagrama de casos de uso
+
+<p align="center">
+  <img src="./images/diagrama-casos-de-uso.png" alt="Diagrama de casos de uso de ms-notificaciones" width="85%" />
+</p>
+
+### 9.1. Explicación técnica
+
+Hay un diagrama de casos de uso por microservicio y este contiene todos los requerimientos funcionales de `ms-notificaciones`. El borde redondeado es el sistema, cada óvalo es un requerimiento (código y nombre) y las líneas unen cada caso de uso con los actores que participan. Los actores son los cuatro oficiales, los mismos del diagrama de contexto: usuario comprador, administrador de almacén, representante de fundación aliada y administrador StyleRadar.
+
+| Requerimiento | Caso de uso | Actor principal | Actor secundario |
+| :--- | :--- | :--- | :--- |
+| SR-RF-29 | Configurar alerta de disponibilidad | Usuario comprador | — |
+| SR-RF-30 | Detectar prendas que coinciden con una alerta | Administrador de almacén (lo inicia al publicar o reponer) | Usuario comprador (dueño de las alertas) |
+| SR-RF-31 | Notificar coincidencia o reposición de una prenda | Usuario comprador (quien recibe el aviso) | Administrador de almacén (inicia el caso vía SR-RF-30) |
+| SR-RF-32 | Consultar, desactivar y reactivar alertas | Usuario comprador | — |
+| SR-RF-104 | Consultar la bandeja de notificaciones | Usuario comprador, administrador de almacén y representante de fundación aliada | — |
+| SR-RF-105 | Elegir el canal de cada tipo de aviso | Usuario comprador, administrador de almacén y representante de fundación aliada | — |
+| SR-RF-106 | Avisar la actividad de otros módulos | Usuario comprador, administrador de almacén y representante de fundación aliada (reciben el aviso) | Administrador StyleRadar (sus moderaciones generan avisos) |
+
+La flecha discontinua «extend» de SR-RF-31 a SR-RF-30, con la condición «hay coincidencia», indica que la notificación solo ocurre si SR-RF-30 encontró al menos una coincidencia. Se usa `extend` y no `include` porque `include` significaría que SR-RF-30 siempre ejecuta SR-RF-31, y no es así. `SR-RNF-15` (resiliencia e idempotencia de los consumidores) es un requerimiento no funcional y por eso no es un caso de uso.
+
+### 9.2. Justificación arquitectónica
+
+- **Un diagrama por microservicio:** cada equipo responde por sus requerimientos y el contrato de sus actores.
+- **Actores como personas:** los consumidores de RabbitMQ no son actores; el actor es la persona cuya acción provoca el evento (publicar una prenda, mover una donación, moderar o pagar).

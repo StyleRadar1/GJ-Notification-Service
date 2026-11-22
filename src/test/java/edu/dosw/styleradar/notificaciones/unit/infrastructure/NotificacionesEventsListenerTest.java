@@ -106,12 +106,26 @@ class NotificacionesEventsListenerTest {
     @DisplayName("NOT-09 - Un estado de cuenta desconocido es invalido y va directo a la cola de errores")
     void estadoDeCuentaDesconocidoEsInvalido() {
         UsuarioEstadoCambiadoEventPayload payload = new UsuarioEstadoCambiadoEventPayload(
-                "evt-usr-1", 501L, "mateo@styleradar.co", "SUSPENDIDO", LocalDateTime.now());
+                "evt-usr-1", 501L, "mateo@styleradar.co", "DESCONOCIDO", LocalDateTime.now());
 
         assertThatThrownBy(() -> listener.onUsuarioEstadoCambiado(payload))
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
 
         verifyNoInteractions(useCase);
+    }
+
+    @Test
+    @DisplayName("NOT-09 - Una cuenta SUSPENDIDA se guarda con ese estado y deja de recibir avisos")
+    void cuentaSuspendidaSeGuarda() {
+        listener.onUsuarioEstadoCambiado(new UsuarioEstadoCambiadoEventPayload(
+                "evt-usr-2", 501L, "mateo@styleradar.co", "SUSPENDIDO", LocalDateTime.now()));
+
+        verify(useCase).actualizarEstadoCuenta(501L, "mateo@styleradar.co",
+                edu.dosw.styleradar.notificaciones.domain.model.EstadoCuenta.SUSPENDIDO);
+        org.assertj.core.api.Assertions.assertThat(new edu.dosw.styleradar.notificaciones.domain.model.EstadoCuentaCopia(
+                501L, "mateo@styleradar.co",
+                edu.dosw.styleradar.notificaciones.domain.model.EstadoCuenta.SUSPENDIDO, LocalDateTime.now())
+                .puedeRecibirNotificaciones()).isFalse();
     }
 
     @Test
