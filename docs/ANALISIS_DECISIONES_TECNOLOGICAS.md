@@ -1,12 +1,12 @@
 # Documento de Análisis y Justificación de Decisiones Tecnológicas
-## Microservicio de Notificaciones y Alertas (`ms-notificaciones` · Puerto 8300)
+## Microservicio de Notificaciones y Alertas (`ms-Notifications` · Puerto 8300)
 ### Proyecto StyleRadar · Asignatura: DOSW 2026 · Squad: Guatoque Jiraguas (GJ)
 
 ---
 
 ## 1. Resumen Ejecutivo y Criterios Globales de Selección
 
-El **Microservicio de Notificaciones y Alertas (`ms-notificaciones`)** es el componente del ecosistema StyleRadar encargado de:
+El **Microservicio de Notificaciones y Alertas (`ms-Notifications`)** es el componente del ecosistema StyleRadar encargado de:
 1. Gestionar las alertas de prendas agotadas (`ITEM_AGOTADO`) y búsquedas guardadas (`BUSQUEDA_GUARDADA`) configuradas por los usuarios.
 2. Procesar de forma asíncrona los eventos emitidos por otros dominios (catálogo, inventario, usuarios, donaciones, pagos y chat).
 3. Entregar notificaciones multicanal (campana in-app en tiempo real mediante SSE y correos electrónicos transaccionales).
@@ -115,7 +115,7 @@ Consumir eventos asíncronos emitidos por los microservicios de StyleRadar:
 3. **Ecosistema Spring Boot 3.5 Integrado:**
    * **Spring Web MVC:** Controladores REST limpios desacoplados mediante interfaces de documentación (`AlertaApi`).
    * **Spring Data JPA & Hibernate 6:** Gestión de transacciones declarativas (`@Transactional`), mapeo entidad-relacional y prevención del problema N+1.
-   * **Spring Cloud OpenFeign:** Cliente HTTP declarativo para consultar la disponibilidad de stock en `ms-item-catalogo` (`GET /api/v1/catalogo/items/{id}/disponibilidad`) con timeout configurable.
+   * **Spring Cloud OpenFeign:** Cliente HTTP declarativo para consultar la disponibilidad de stock en `ms-ItemCatalog` (`GET /api/v1/catalogo/items/{id}/disponibilidad`) con timeout configurable.
    * **Spring Security 6:** Filtro stateless que valida la firma criptográfica HS256 del token JWT en cada petición sin consultar bases de datos externas.
    * **Springdoc OpenAPI 2.5:** Generación automática de contratos OpenAPI 3.0 en `/v3/api-docs` e interfaz Swagger en `/swagger-ui/index.html`.
 
@@ -142,7 +142,7 @@ Actualizar en tiempo real el ícono de la campana en la barra de navegación del
    En Spring Boot se gestiona mediante `SseEmitter`. Un emitter inactivo solo retiene un puntero en memoria sin requerir hilos dedicados del servidor web gracias a la arquitectura no bloqueante.
 
 #### Alternativas Evaluadas y Descartadas:
-* **WebSockets con STOMP:** Descartado para la campana de notificaciones. WebSockets es un protocolo bidireccional y persistente (*stateful*), indispensable para aplicaciones de interacción cruzada como el chat de segunda mano (`ms-chat` en puerto 8089). Utilizar WebSockets para una simple campana de alertas introduce sobrecarga innecesaria de memoria, complejidad en el handshake, gestión de sesiones y dificultades de balanceo en el API Gateway.
+* **WebSockets con STOMP:** Descartado para la campana de notificaciones. WebSockets es un protocolo bidireccional y persistente (*stateful*), indispensable para aplicaciones de interacción cruzada como el chat de segunda mano (`ms-Chat` en puerto 8089). Utilizar WebSockets para una simple campana de alertas introduce sobrecarga innecesaria de memoria, complejidad en el handshake, gestión de sesiones y dificultades de balanceo en el API Gateway.
 * **Short Polling (Peticiones cada N segundos):** Descartado por ineficiencia crítica. Enviar peticiones HTTP cada 5 segundos desde miles de clientes saturaría la red y la base de datos, donde el 99% de las respuestas serían arrays vacíos o códigos `304 Not Modified`.
 * **Long Polling:** Descartado porque mantiene un hilo bloqueado por cliente esperando una respuesta y obliga a reiniciar la conexión HTTP con todo el overhead de cabeceras en cada notificación recibida.
 
@@ -173,7 +173,7 @@ Enviar correos electrónicos transaccionales para alertas de alta prioridad (ej.
 
 ## 4. Conclusión Técnica
 
-La arquitectura tecnológica adoptada para el **Microservicio de Notificaciones y Alertas (`ms-notificaciones`)** garantiza el equilibrio óptimo entre:
+La arquitectura tecnológica adoptada para el **Microservicio de Notificaciones y Alertas (`ms-Notifications`)** garantiza el equilibrio óptimo entre:
 1. **Persistencia robusta e idempotente** con PostgreSQL 16 para evitar fallos de negocio (duplicación de alertas).
 2. **Comunicación reactiva asíncrona** con RabbitMQ 3.13 para tolerar caídas de servicios externos sin pérdida de eventos mediante DLQ.
 3. **Entrega ágil en tiempo real** con Server-Sent Events (SSE), minimizando la carga en el servidor y optimizando la experiencia del usuario.
