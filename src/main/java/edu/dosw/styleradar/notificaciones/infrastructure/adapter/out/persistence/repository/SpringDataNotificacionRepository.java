@@ -48,6 +48,15 @@ public interface SpringDataNotificacionRepository extends JpaRepository<Notifica
     int eliminarLeidasPorUsuario(@Param("usuarioId") Long usuarioId, @Param("fecha") LocalDateTime fecha);
 
     @Modifying(clearAutomatically = true)
+    @Query("UPDATE NotificacionJpaEntity n SET n.eliminadaEn = :fecha "
+            + "WHERE n.usuarioId = :usuarioId AND n.id IN :ids AND n.eliminadaEn IS NULL")
+    int eliminarSeleccionadasPorUsuario(
+            @Param("usuarioId") Long usuarioId,
+            @Param("ids") Collection<Long> ids,
+            @Param("fecha") LocalDateTime fecha
+    );
+
+    @Modifying(clearAutomatically = true)
     @Query("DELETE FROM NotificacionJpaEntity n WHERE n.usuarioId = :usuarioId")
     int eliminarPorUsuario(@Param("usuarioId") Long usuarioId);
 
