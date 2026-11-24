@@ -81,6 +81,16 @@ class CatalogoClientAdapterWireMockTest {
     }
 
     @Test
+    @DisplayName("NOT-10 - Debe rechazar con regla de negocio un item con formato invalido (400 en Catalogo)")
+    void debeRechazarItemConFormatoInvalidoEnCatalogo() {
+        catalogo.stubFor(get(urlEqualTo(RUTA_ITEM)).willReturn(aResponse().withStatus(400)));
+
+        assertThatThrownBy(() -> catalogoClientPort.verificarItemAgotado("1045", null))
+                .isInstanceOf(ReglaDeNegocioException.class)
+                .hasMessage("La prenda indicada no existe en el catalogo");
+    }
+
+    @Test
     @DisplayName("NOT-10 - Debe indicar servicio no disponible cuando Catalogo responde con error")
     void debeIndicarServicioNoDisponibleCuandoCatalogoFalla() {
         catalogo.stubFor(get(urlEqualTo(RUTA_ITEM)).willReturn(aResponse().withStatus(500)));

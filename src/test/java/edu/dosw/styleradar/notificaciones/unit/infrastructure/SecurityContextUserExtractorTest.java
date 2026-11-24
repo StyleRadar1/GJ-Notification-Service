@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 
@@ -73,8 +74,26 @@ class SecurityContextUserExtractorTest {
                 .hasMessageContaining("Identificador de usuario invalido");
     }
 
+    @Test
+    void styleradarAdminEsReconocidoComoAdminYBuyerNo() {
+        autenticar(new AuthenticatedUserPrincipal(1L, "admin@styleradar.co", "STYLERADAR_ADMIN"),
+                List.of(new SimpleGrantedAuthority("ROLE_STYLERADAR_ADMIN")));
+        assertThat(extractor.esAdmin()).isTrue();
+        assertThat(extractor.validarAccesoUsuario("999")).isEqualTo(999L);
+
+        autenticar(new AuthenticatedUserPrincipal(12L, "buyer@styleradar.co", "BUYER"),
+                List.of(new SimpleGrantedAuthority("ROLE_BUYER")));
+        assertThat(extractor.esAdmin()).isFalse();
+        assertThatThrownBy(() -> extractor.validarAccesoUsuario("999"))
+                .isInstanceOf(AccesoDenegadoException.class);
+    }
+
     private void autenticar(Object principal) {
+        autenticar(principal, List.of());
+    }
+
+    private void autenticar(Object principal, List<SimpleGrantedAuthority> authorities) {
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(principal, null, List.of()));
+                new UsernamePasswordAuthenticationToken(principal, null, authorities));
     }
 }

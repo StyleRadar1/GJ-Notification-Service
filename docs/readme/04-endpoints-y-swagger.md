@@ -6,9 +6,9 @@
 La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encuentran desplegados y clasificados por entorno:
 
 > [!IMPORTANT]
-> **Alcance Exclusivo del Microservicio:** Esta documentación Swagger y especificación OpenAPI 3.0 pertenece **única y exclusivamente al Microservicio de Notificaciones y Alertas (`ms-notificaciones` / Puerto 8300)** del equipo **Guatoque Jiraguas (GJ)**. No contiene ni mezcla endpoints de otros microservicios del ecosistema (como autenticación, usuarios, tiendas o catálogo), garantizando el desacoplamiento estricto por servicio (Database-per-Service & API Isolation).
+> **Alcance Exclusivo del Microservicio:** Esta documentación Swagger y especificación OpenAPI 3.0 pertenece **única y exclusivamente al Microservicio de Notificaciones y Alertas (`ms-Notifications` / Puerto 8300)** del equipo **Guatoque Jiraguas (GJ)**. No contiene ni mezcla endpoints de otros microservicios del ecosistema (como autenticación, usuarios, tiendas o catálogo), garantizando el desacoplamiento estricto por servicio (Database-per-Service & API Isolation).
 
-### Matriz Oficial de Enlaces de Swagger para `ms-notificaciones`
+### Matriz Oficial de Enlaces de Swagger para `ms-Notifications`
 
 | Entorno | Estado | Propósito | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
 | :--- | :---: | :--- | :--- | :--- | :--- |
@@ -22,11 +22,11 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 ### Captura de Swagger UI
 
 <p align="center">
-  <img src="../evidencias/swagger-ui.png" width="95%" alt="Swagger UI de ms-notificaciones con los 14 endpoints" />
+  <img src="../evidencias/swagger-ui.png" width="95%" alt="Swagger UI de ms-Notifications con los 14 endpoints" />
 </p>
 
 <p align="center">
-  <sub>Swagger UI de <code>ms-notificaciones</code>: grupos <b>Notification Preferences</b> (2 endpoints) y <b>Alerts &amp; Notifications</b> (12 endpoints), 14 en total bajo <code>/api/v1/users/{id}</code>.</sub>
+  <sub>Swagger UI de <code>ms-Notifications</code>: grupos <b>Notification Preferences</b> (2 endpoints) y <b>Alerts &amp; Notifications</b> (12 endpoints), 14 en total bajo <code>/api/v1/users/{id}</code>.</sub>
 </p>
 
 ### Tabla de Endpoints Expuestos

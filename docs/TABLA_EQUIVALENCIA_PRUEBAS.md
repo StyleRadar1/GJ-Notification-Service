@@ -1,4 +1,4 @@
-# Tabla de pruebas de ms-notificaciones (GJ-36 y GJ-51)
+# Tabla de pruebas de ms-Notifications (GJ-36 y GJ-51)
 
 ## Aclaración sobre el origen de las pruebas
 

@@ -52,8 +52,8 @@ flowchart LR
     %% Destinos Externos
     subgraph EXT_OUT["Destinos Externos"]
         DB[(PostgreSQL 16<br>notificaciones_db)]
-        CATALOGO["ms-item-catalogo<br>(Validación Stock)"]
-        ESTADISTICAS["RabbitMQ<br>(evento alerta.creada)"]
+        CATALOGO["ms-ItemCatalog<br>(Validación Stock)"]
+        ESTADISTICAS["ms-Statistics<br>(alerta.creada)"]
         SSE_CLIENT["Campana Frontend<br>(text/event-stream)"]
         SMTP["Servidor SMTP<br>(opcional)"]
     end
@@ -165,7 +165,7 @@ flowchart LR
 #### 6. Diagrama de Componentes General (Ecosistema StyleRadar)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-componentes-general.drawio`](../uml/diagrama-componentes-general.drawio)
 * **Documentación y Justificación Técnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 7)](../DIAGRAMAS_NOT20.md#7-diagrama-de-componentes-general-ecosistema-styleradar)
-* **Descripción:** Vista de todo el backend de StyleRadar, compartida por los equipos: el cliente web, el API Gateway, los 13 microservicios con su base de datos propia, las colas de RabbitMQ (Notificaciones, Pagos y Estadisticas), Redis y los sistemas externos (Google OAuth, MercadoPago, Azure Blob Storage y FASHN AI). `ms-notificaciones` aparece con su base `notificaciones_db` y su cola de RabbitMQ. El diagrama lo elaboro el equipo de arquitectura; este servicio solo lo conserva como referencia.
+* **Descripción:** Vista de todo el backend de StyleRadar, compartida por los equipos: el cliente web, el API Gateway, los 13 microservicios con su base de datos propia, las colas de RabbitMQ (Notificaciones, Pagos y Estadisticas), Redis y los sistemas externos (Google OAuth, MercadoPago, Azure Blob Storage y FASHN AI). `ms-Notifications` aparece con su base `notificaciones_db` y su cola de RabbitMQ. El diagrama lo elaboro el equipo de arquitectura; este servicio solo lo conserva como referencia.
 
 <p align="center">
   <a href="../images/diagrama-componentes-general.png" target="_blank">
@@ -178,7 +178,7 @@ flowchart LR
 #### 7. Diagrama de Despliegue General (Ecosistema StyleRadar)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-despliegue-general.drawio`](../uml/diagrama-despliegue-general.drawio)
 * **Documentación y Justificación Técnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 8)](../DIAGRAMAS_NOT20.md#8-diagrama-de-despliegue-general-ecosistema-styleradar)
-* **Descripción:** Topología de ejecucion de todo el ecosistema: la aplicación web entra por el API Gateway (`8080`) y cada microservicio corre como contenedor en su puerto, con su base en el servidor de PostgreSQL, su espacio en Redis cuando lo usa y su conexion al broker RabbitMQ. `ms-notificaciones` corre en el puerto `8300`. El de este servicio en detalle es el diagrama 5.
+* **Descripción:** Topología de ejecucion de todo el ecosistema: la aplicación web entra por el API Gateway (`8080`) y cada microservicio corre como contenedor en su puerto, con su base en el servidor de PostgreSQL, su espacio en Redis cuando lo usa y su conexion al broker RabbitMQ. `ms-Notifications` corre en el puerto `8300`. El de este servicio en detalle es el diagrama 5.
 
 <p align="center">
   <a href="../images/diagrama-despliegue-general.png" target="_blank">
@@ -188,14 +188,14 @@ flowchart LR
 
 ---
 
-#### 8. Diagrama de Casos de Uso (ms-notificaciones)
+#### 8. Diagrama de Casos de Uso (ms-Notifications)
 * **Archivo Editable Draw.io:** [`docs/uml/diagrama-casos-de-uso.drawio`](../uml/diagrama-casos-de-uso.drawio)
 * **Documentación y Justificación Técnica:** [docs/DIAGRAMAS_NOT20.md (Seccion 9)](../DIAGRAMAS_NOT20.md#9-diagrama-de-casos-de-uso)
-* **Descripción:** Un diagrama por microservicio con todos los requerimientos funcionales de `ms-notificaciones` (SR-RF-29, 30, 31, 32, 104, 105 y 106) y sus actores: usuario comprador, administrador de almacen, representante de fundacion aliada y administrador StyleRadar.
+* **Descripción:** Un diagrama por microservicio con todos los requerimientos funcionales de `ms-Notifications` (SR-RF-29, 30, 31, 32, 104, 105 y 106) y sus actores: usuario comprador, administrador de almacen, representante de fundacion aliada y administrador StyleRadar.
 
 <p align="center">
   <a href="../images/diagrama-casos-de-uso.png" target="_blank">
-    <img src="../images/diagrama-casos-de-uso.png" alt="Diagrama de casos de uso de ms-notificaciones" width="85%" />
+    <img src="../images/diagrama-casos-de-uso.png" alt="Diagrama de casos de uso de ms-Notifications" width="85%" />
   </a>
 </p>
 

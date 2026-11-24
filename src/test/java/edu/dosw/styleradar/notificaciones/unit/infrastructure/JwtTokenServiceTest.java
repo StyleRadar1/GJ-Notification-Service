@@ -88,6 +88,37 @@ class JwtTokenServiceTest {
     }
 
     @Test
+    @DisplayName("Debe reconocer STYLERADAR_ADMIN y validar tokens CADCHE v2 (sub numerico, roles en ingles, sin email)")
+    void validaFormatoCadcheV2YStyleradarAdmin() {
+        JwtTokenService service = new JwtTokenService(BASE64_SECRET, 3600000L);
+
+        String tokenBuyer = Jwts.builder()
+                .setId("jti-123")
+                .setSubject("12")
+                .claim("roles", List.of("BUYER"))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 60000))
+                .signWith(Keys.hmacShaKeyFor(RAW_256_BIT_KEY), SignatureAlgorithm.HS256)
+                .compact();
+
+        assertThat(service.isTokenValid(tokenBuyer)).isTrue();
+        assertThat(service.extractUsuarioId(tokenBuyer)).isEqualTo(12L);
+        assertThat(service.extractRoles(tokenBuyer)).containsExactly("BUYER");
+        assertThat(service.extractRole(tokenBuyer)).isEqualTo("BUYER");
+        assertThat(service.extractEmail(tokenBuyer)).isEqualTo("12");
+
+        String tokenAdmin = Jwts.builder()
+                .setSubject("99")
+                .claim("roles", List.of("BUYER", "STYLERADAR_ADMIN"))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 60000))
+                .signWith(Keys.hmacShaKeyFor(RAW_256_BIT_KEY), SignatureAlgorithm.HS256)
+                .compact();
+
+        assertThat(service.extractRole(tokenAdmin)).isEqualTo("STYLERADAR_ADMIN");
+    }
+
+    @Test
     @DisplayName("Debe manejar roles con prefijo ROLE_ y normalizarlos")
     void normalizaPrefijoRole() {
         JwtTokenService service = new JwtTokenService(BASE64_SECRET, 3600000L);

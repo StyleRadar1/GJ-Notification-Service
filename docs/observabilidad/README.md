@@ -1,4 +1,4 @@
-# Observabilidad de ms-notificaciones
+# Observabilidad de ms-Notifications
 
 Metricas y alertas del servicio (OWASP A09, registro y alertas).
 

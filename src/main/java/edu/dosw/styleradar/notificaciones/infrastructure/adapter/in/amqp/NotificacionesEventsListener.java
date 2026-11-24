@@ -3,6 +3,7 @@ package edu.dosw.styleradar.notificaciones.infrastructure.adapter.in.amqp;
 import edu.dosw.styleradar.notificaciones.application.dto.event.BusquedaGuardadaSincronizadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.DonacionEstadoCambiadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.FundacionDesactivadaEventPayload;
+import edu.dosw.styleradar.notificaciones.application.dto.event.FundacionReactivadaEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.InventarioActualizadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.MensajeEnviadoEventPayload;
 import edu.dosw.styleradar.notificaciones.application.dto.event.ModeracionPrendaCambiadaEventPayload;
@@ -20,7 +21,10 @@ import edu.dosw.styleradar.notificaciones.domain.model.EstadoCuenta;
 import edu.dosw.styleradar.notificaciones.domain.model.TipoNotificacion;
 import edu.dosw.styleradar.notificaciones.domain.port.in.ProcesarEventosExternosUseCase;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
@@ -98,12 +102,7 @@ public class NotificacionesEventsListener {
         if (payload == null || payload.usuarioId() == null || payload.nuevoEstado() == null) {
             throw payloadInvalido("UsuarioEstadoCambiado", "incompleto");
         }
-        EstadoCuenta nuevoEstado;
-        try {
-            nuevoEstado = EstadoCuenta.valueOf(payload.nuevoEstado().trim().toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            throw payloadInvalido("UsuarioEstadoCambiado", "estado desconocido '" + payload.nuevoEstado() + "'");
-        }
+        EstadoCuenta nuevoEstado = parsearEstadoCuenta(payload.nuevoEstado());
         procesarEventosExternosUseCase.actualizarEstadoCuenta(payload.usuarioId(), payload.email(), nuevoEstado);
     }
 
@@ -172,12 +171,17 @@ public class NotificacionesEventsListener {
 
     @RabbitListener(queues = "${application.messaging.queues.moderation-changed:styleradar.notificaciones.moderacion-cambiada.q}")
     public void onModeracionPrendaCambiada(ModeracionPrendaCambiadaEventPayload payload) {
-        if (payload == null || payload.propietarioUsuarioId() == null || payload.itemId() == null || payload.itemId().isBlank()) {
-            throw payloadInvalido("ModeracionPrendaCambiada", "incompleto");
+        if (payload == null || payload.itemId() == null || payload.itemId().isBlank()) {
+            throw payloadInvalido("ModeracionPrendaCambiada", "sin itemId");
         }
         if ("RETIRADA".equalsIgnoreCase(payload.estadoModeracion())
                 || "ELIMINADA".equalsIgnoreCase(payload.estadoModeracion())) {
             procesarEventosExternosUseCase.desactivarAlertasPorItemEliminado(payload.itemId());
+        }
+        if (payload.propietarioUsuarioId() == null) {
+            log.warn("ModeracionPrendaCambiada del item {} sin propietarioUsuarioId, se omite la notificacion",
+                    payload.itemId());
+            return;
         }
         String detalle = "La prenda '" + payload.nombrePrenda() + "' fue marcada como " + payload.estadoModeracion();
         if (payload.observacion() != null && !payload.observacion().isBlank()) {
@@ -266,22 +270,28 @@ public class NotificacionesEventsListener {
                 || payload.eventoId() == null || payload.eventoId().isBlank()) {
             throw payloadInvalido("FundacionDesactivada", "sin fundacionId o eventoId");
         }
-        List<Long> donantes = payload.donantesAfectadosIds();
-        if (donantes == null || donantes.isEmpty()) {
-            log.warn("FundacionDesactivada {} sin donantes afectados, no hay a quien avisar", payload.fundacionId());
+        Set<Long> destinatarios = new LinkedHashSet<>();
+        if (payload.donantesAfectadosIds() != null) {
+            for (Long donanteId : payload.donantesAfectadosIds()) {
+                if (donanteId != null) {
+                    destinatarios.add(donanteId);
+                }
+            }
+        }
+        if (payload.representanteId() != null) {
+            destinatarios.add(payload.representanteId());
+        }
+        if (destinatarios.isEmpty()) {
+            log.warn("FundacionDesactivada {} sin destinatarios (donantes ni representante), no hay a quien avisar",
+                    payload.fundacionId());
             return;
         }
-        String fundacion = payload.nombreFundacion() != null && !payload.nombreFundacion().isBlank()
-                ? payload.nombreFundacion() : "una fundacion aliada";
-        String mensaje = "La fundacion " + fundacion + " ha sido desactivada"
-                + (payload.motivo() != null && !payload.motivo().isBlank() ? ": " + payload.motivo() : "");
-        for (Long donanteId : donantes) {
-            if (donanteId == null) {
-                continue;
-            }
-            // La clave de idempotencia es (eventoId, donanteId): un evento repetido no duplica el aviso.
+        String fundacion = textoOValorPorDefecto(payload.nombreFundacion(), "una fundacion aliada");
+        String mensaje = "La fundacion " + fundacion + " ha sido desactivada" + sufijoMotivo(payload.motivo());
+        for (Long destinatarioId : destinatarios) {
+            // La clave de idempotencia es (eventoId, destinatarioId): un evento repetido no duplica el aviso.
             procesarEventosExternosUseCase.generarNotificacionDirecta(
-                    donanteId,
+                    destinatarioId,
                     TipoNotificacion.CAMBIO_DONACION,
                     "Fundacion desactivada",
                     mensaje,
@@ -290,6 +300,49 @@ public class NotificacionesEventsListener {
                     payload.eventoId()
             );
         }
+    }
+
+    @RabbitListener(queues = "${application.messaging.queues.foundation-reactivated:styleradar.notificaciones.fundacion-reactivada.q}")
+    public void onFundacionReactivada(FundacionReactivadaEventPayload payload) {
+        if (payload == null || payload.fundacionId() == null
+                || payload.eventoId() == null || payload.eventoId().isBlank()) {
+            throw payloadInvalido("FundacionReactivada", "sin fundacionId o eventoId");
+        }
+        if (payload.representanteId() == null) {
+            log.warn("FundacionReactivada {} sin representanteId, no hay a quien avisar", payload.fundacionId());
+            return;
+        }
+        String fundacion = textoOValorPorDefecto(payload.nombreFundacion(), "una fundacion aliada");
+        String mensaje = "La fundacion " + fundacion + " ha sido reactivada y vuelve a recibir donaciones"
+                + sufijoMotivo(payload.motivo());
+        procesarEventosExternosUseCase.generarNotificacionDirecta(
+                payload.representanteId(),
+                TipoNotificacion.CAMBIO_DONACION,
+                "Fundacion reactivada",
+                mensaje,
+                "/donaciones",
+                null,
+                payload.eventoId()
+        );
+    }
+
+    private EstadoCuenta parsearEstadoCuenta(String estadoCrudo) {
+        String normalizado = estadoCrudo.trim().toUpperCase(Locale.ROOT);
+        return switch (normalizado) {
+            case "ACTIVO", "ACTIVA", "ACTIVE" -> EstadoCuenta.ACTIVO;
+            case "INACTIVO", "INACTIVA", "INACTIVE" -> EstadoCuenta.INACTIVO;
+            case "BLOQUEADO", "BLOQUEADA", "BLOCKED" -> EstadoCuenta.BLOQUEADO;
+            case "SUSPENDIDO", "SUSPENDIDA", "SUSPENDED" -> EstadoCuenta.SUSPENDIDO;
+            default -> throw payloadInvalido("UsuarioEstadoCambiado", "estado desconocido '" + estadoCrudo + "'");
+        };
+    }
+
+    private static String textoOValorPorDefecto(String valor, String defecto) {
+        return (valor != null && !valor.isBlank()) ? valor : defecto;
+    }
+
+    private static String sufijoMotivo(String motivo) {
+        return (motivo != null && !motivo.isBlank()) ? ": " + motivo : "";
     }
 
     private String detalleDeDonacion(String estado, String fundacion, String motivo) {

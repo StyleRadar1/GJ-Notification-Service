@@ -1,13 +1,13 @@
-# Contrato de autenticación JWT — ms-notificaciones (GJ-35)
+# Contrato de autenticación JWT — ms-Notifications (GJ-35)
 
-`ms-notificaciones` no emite tokens: valida el JWT que emite el servicio de autenticación y toma el usuario de él. Este documento fija lo que debe cumplir ese token. Lo que dice aquí es lo que implementa `JwtTokenService` y `JwtAuthenticationFilter`.
+`ms-Notifications` no emite tokens: valida el JWT que emite el servicio de autenticación y toma el usuario de él. Este documento fija lo que debe cumplir ese token. Lo que dice aquí es lo que implementa `JwtTokenService` y `JwtAuthenticationFilter`.
 
 ## Lo que debe cumplir el token
 
 | Aspecto | Valor |
 | :--- | :--- |
 | Algoritmo de firma | `HS256` (HMAC con clave compartida) |
-| Clave | Texto plano, leído como UTF-8, en la variable de entorno `JWT_SECRET`. No es Base64. Debe tener al menos 32 bytes; si es más corta, el servicio la rellena con ceros, así que el emisor debe usar una clave de 32 bytes o más. |
+| Clave | En `JWT_SECRET`: soporta clave Base64 estándar de 256 bits (44 caracteres, estándar `ms-auth` QA/PROD) y clave en texto plano UTF-8 (al menos 32 bytes). |
 | Envío | Cabecera `Authorization: Bearer <token>` |
 | Expiración | Claim `exp`. Un token vencido se rechaza con 401. |
 
@@ -16,9 +16,9 @@
 | Claim | Uso | Si falta |
 | :--- | :--- | :--- |
 | `userId` | Id del usuario (número, o texto numérico). Es el dueño de las alertas y notificaciones. | Se usa `sub` |
-| `sub` | Id del usuario como texto (alternativa a `userId`) | El token no sirve |
-| `email` | Correo del usuario | Se usa `sub` |
-| `role` | Rol (`COMPRADOR` por defecto). Se aceptan los valores con o sin prefijo `ROLE_`. | `COMPRADOR` |
+| `sub` | Id del usuario como texto numérico (estándar actual de `ms-auth`). | El token no sirve |
+| `email` | Correo del usuario (opcional). | Se usa `sub` |
+| `roles` / `role` | Lista `roles` o claim único `role` (`BUYER`, `COMPRADOR`, `STORE_ADMIN`, `FOUNDATION_REPRESENTATIVE`, `STYLERADAR_ADMIN`, `ADMIN_STYLERADAR`, `ADMIN`, con o sin prefijo `ROLE_`). | `COMPRADOR` |
 
 ## Respuestas del servicio
 
@@ -36,5 +36,5 @@ Solo `/actuator/health` y la documentación de Swagger (`/swagger-ui`, `/v3/api-
 
 ## Supuestos sobre el servicio de autenticación
 
-- `ms-auth` firma los tokens con `HS256` y una clave de 32 bytes o más, que comparte con este servicio por variable de entorno (`JWT_SECRET`).
+- `ms-Auth` firma los tokens con `HS256` y una clave de 32 bytes o más, que comparte con este servicio por variable de entorno (`JWT_SECRET`).
 - El token incluye `userId` (o `sub` con el id numérico) y el rol del usuario.

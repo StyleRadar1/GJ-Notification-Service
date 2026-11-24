@@ -53,7 +53,7 @@ public class ProcesarEventosExternosUseCaseImpl implements ProcesarEventosExtern
                         ciclo,
                         TipoNotificacion.REPOSICION_STOCK,
                         "Prenda disponible nuevamente",
-                        "La prenda '" + datosPrenda.nombrePrenda() + "' volvio a tener unidades disponibles.",
+                        "La prenda " + nombreVisible(datosPrenda) + " volvio a tener unidades disponibles.",
                         generadas
                 );
             }
@@ -72,7 +72,7 @@ public class ProcesarEventosExternosUseCaseImpl implements ProcesarEventosExtern
                             ciclo,
                             TipoNotificacion.COINCIDENCIA_BUSQUEDA,
                             "Nueva coincidencia con tu busqueda: " + copia.getNombre(),
-                            "La prenda '" + datosPrenda.nombrePrenda() + "' coincide con los criterios de tu busqueda guardada.",
+                            "La prenda " + nombreVisible(datosPrenda) + " coincide con los criterios de tu busqueda guardada.",
                             generadas
                     );
                 }
@@ -80,6 +80,12 @@ public class ProcesarEventosExternosUseCaseImpl implements ProcesarEventosExtern
         }
 
         return generadas;
+    }
+
+    /** Nombre entre comillas, o un texto neutro si el evento no trae el nombre de la prenda. */
+    private static String nombreVisible(DatosPrendaVO datosPrenda) {
+        String nombre = datosPrenda.nombrePrenda();
+        return nombre == null || nombre.isBlank() ? "que sigues" : "'" + nombre.trim() + "'";
     }
 
     private void generarSiElegible(
