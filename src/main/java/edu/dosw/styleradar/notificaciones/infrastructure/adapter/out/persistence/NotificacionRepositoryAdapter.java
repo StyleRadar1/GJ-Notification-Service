@@ -52,15 +52,15 @@ public class NotificacionRepositoryAdapter implements NotificacionRepositoryPort
     @Override
     @Transactional(readOnly = true)
     public Optional<Notificacion> buscarPorId(Long id) {
-        return repository.findById(id).map(mapper::toDomain);
+        return repository.findByIdAndEliminadaEnIsNull(id).map(mapper::toDomain);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Notificacion> listarPorUsuario(Long usuarioId, Boolean soloNoLeidas) {
         List<NotificacionJpaEntity> entities = Boolean.TRUE.equals(soloNoLeidas)
-                ? repository.findByUsuarioIdAndLeidaOrderByFechaCreacionDesc(usuarioId, false)
-                : repository.findByUsuarioIdOrderByFechaCreacionDesc(usuarioId);
+                ? repository.findByUsuarioIdAndLeidaAndEliminadaEnIsNullOrderByFechaCreacionDesc(usuarioId, false)
+                : repository.findByUsuarioIdAndEliminadaEnIsNullOrderByFechaCreacionDesc(usuarioId);
         return entities.stream().map(mapper::toDomain).toList();
     }
 
@@ -71,8 +71,8 @@ public class NotificacionRepositoryAdapter implements NotificacionRepositoryPort
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Order.desc("fechaCreacion"), Sort.Order.desc("id")));
         Page<NotificacionJpaEntity> resultado = leida == null
-                ? repository.findByUsuarioId(usuarioId, pageable)
-                : repository.findByUsuarioIdAndLeida(usuarioId, leida, pageable);
+                ? repository.findByUsuarioIdAndEliminadaEnIsNull(usuarioId, pageable)
+                : repository.findByUsuarioIdAndLeidaAndEliminadaEnIsNull(usuarioId, leida, pageable);
         return new Pagina<>(
                 resultado.getContent().stream().map(mapper::toDomain).toList(),
                 page,
@@ -83,20 +83,26 @@ public class NotificacionRepositoryAdapter implements NotificacionRepositoryPort
     @Override
     @Transactional(readOnly = true)
     public List<Notificacion> listarPosterioresA(Long usuarioId, Long ultimoId) {
-        return repository.findByUsuarioIdAndIdGreaterThanOrderByIdAsc(usuarioId, ultimoId)
+        return repository.findByUsuarioIdAndIdGreaterThanAndEliminadaEnIsNullOrderByIdAsc(usuarioId, ultimoId)
                 .stream().map(mapper::toDomain).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public long contarNoLeidasPorUsuario(Long usuarioId) {
-        return repository.countByUsuarioIdAndLeidaFalse(usuarioId);
+        return repository.countByUsuarioIdAndLeidaFalseAndEliminadaEnIsNull(usuarioId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int marcarTodasComoLeidasPorUsuario(Long usuarioId) {
         return repository.marcarTodasComoLeidas(usuarioId, LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int eliminarLeidasPorUsuario(Long usuarioId) {
+        return repository.eliminarLeidasPorUsuario(usuarioId, LocalDateTime.now());
     }
 
     @Override

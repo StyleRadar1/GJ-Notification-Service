@@ -27,6 +27,9 @@ public interface NotificacionRepositoryPort {
 
     int marcarTodasComoLeidasPorUsuario(Long usuarioId);
 
+    /** Borrado logico de las notificaciones leidas del usuario. Devuelve cuantas elimino. */
+    int eliminarLeidasPorUsuario(Long usuarioId);
+
     boolean existePorAlertaItemYCiclo(Long alertaId, String itemId, Integer cicloReposicion);
 
     boolean existePorEventoYUsuario(String eventoId, Long usuarioId);

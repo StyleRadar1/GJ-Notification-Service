@@ -88,4 +88,7 @@ public class NotificacionJpaEntity {
 
     @Column(name = "evento_id", length = 64)
     private String eventoId;
+
+    @Column(name = "eliminada_en")
+    private LocalDateTime eliminadaEn;
 }
