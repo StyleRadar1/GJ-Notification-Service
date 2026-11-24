@@ -18,10 +18,11 @@ La comunicación asíncrona entre microservicios se orquesta a través de **Rabb
 | **CONSUME** | `styleradar.catalogo.prenda.publicada` | `styleradar.notificaciones.prenda-publicada.q` | `ms-ItemCatalog` &rarr; `ms-Notifications` | Evalúa en memoria si la prenda nueva coincide con búsquedas guardadas activas (NOT-06, NOT-07). |
 | **CONSUME** | `styleradar.usuarios.busqueda.sincronizada` | `styleradar.notificaciones.busqueda-guardada.q` | `ms-Users` &rarr; `ms-Notifications` | Mantiene copia local de búsquedas guardadas y desactiva alertas si se elimina (NOT-08). |
 | **CONSUME** | `styleradar.usuarios.estado.cambiado` / `user.status.changed` | `styleradar.notificaciones.usuario-estado.q` | `ms-Users` &rarr; `ms-Notifications` | Actualiza copia local del estado de cuenta (`ACTIVO`/`ACTIVA`, `INACTIVO`/`INACTIVA`, `BLOQUEADO`/`BLOQUEADA`, `SUSPENDIDO`) y correo (NOT-09). |
+| **CONSUME** | `styleradar.usuarios.cuenta.eliminada` | `styleradar.notificaciones.cuenta-eliminada.q` | `ms-Users` &rarr; `ms-Notifications` | Borra las notificaciones, alertas, preferencias, correos pendientes y búsquedas del usuario, cierra su campana en tiempo real y deja su cuenta marcada `ELIMINADA` sin correo (SR-RF-107). |
 | **CONSUME** | `styleradar.chat.mensaje.enviado` | `styleradar.notificaciones.mensaje-enviado.q` | `ms-Chat` &rarr; `ms-Notifications` | Genera notificación `MENSAJE_NUEVO` con enlace a `/chat/conversaciones/{id}` y push SSE (NOT-14). |
 | **CONSUME** | `styleradar.donaciones.estado.cambiado` | `styleradar.notificaciones.donacion-cambiada.q` | `ms-Donations` &rarr; `ms-Notifications` | Genera notificación `CAMBIO_DONACION` con enlace a `/donaciones/{id}` (NOT-14). |
 | **CONSUME** | `styleradar.catalogo.moderacion.cambiada` | `styleradar.notificaciones.moderacion-cambiada.q` | `ms-ItemCatalog` &rarr; `ms-Notifications` | Genera notificación `MODERACION_PRENDA` y desactiva alertas si la prenda fue retirada (NOT-08, NOT-14). |
-| **CONSUME** | `styleradar.catalogo.prenda.retirada` | `styleradar.notificaciones.prenda-retirada.q` | `ms-ItemCatalog` &rarr; `ms-Notifications` | Desactiva las alertas activas de la prenda retirada (NOT-08). |
+| **CONSUME** | `styleradar.catalogo.prenda.retirada` | `styleradar.notificaciones.prenda-retirada.q` | `ms-ItemCatalog` &rarr; `ms-Notifications` | Desactiva las alertas activas de la prenda retirada, borra las notificaciones no leídas de reposición y coincidencia y quita el enlace a las leídas (NOT-08, SR-RF-107). |
 | **CONSUME** | `styleradar.donaciones.solicitud.creada` | `styleradar.notificaciones.solicitud-donacion.q` | `ms-Donations` &rarr; `ms-Notifications` | Genera notificación `SOLICITUD_DONACION` para la fundación destinataria (soporta alias `solicitudId` y `representanteId`, SR-RF-106 / GJ-61). |
 | **CONSUME** | `styleradar.segundavida.prenda.vendida` / `styleradar.segunda-mano.prenda.vendida` | `styleradar.notificaciones.prenda-vendida.q` | `ms-Donations` &rarr; `ms-Notifications` | Genera notificación `PRENDA_VENDIDA` para cada interesado, excluyendo al comprador y al vendedor (SR-RF-106 / GJ-65). |
 | **CONSUME** | `styleradar.pagos.pago.confirmado` | `styleradar.notificaciones.pago-confirmado.q` | `ms-Payment` &rarr; `ms-Notifications` | Genera notificación `PAGO_CONFIRMADO`; si el usuario no existe en la copia local, el mensaje va a la DLQ (SR-RF-106 / GJ-65). |
@@ -50,7 +51,7 @@ Resumen de con quién se comunica el servicio y por qué canal. Es la fuente ún
 | Servidor SMTP | SMTP | Sale | Correos opcionales |
 | PostgreSQL | JDBC | Sale | Base propia `notificaciones_db` |
 
-Todos los eventos de entrada usan el exchange `styleradar.exchange` y las 12 colas del servicio. Redis no interviene.
+Todos los eventos de entrada usan el exchange `styleradar.exchange` y las 13 colas del servicio. Redis no interviene.
 
 <details>
 <summary><b>Click para ver Esquema JSON del Evento Publicado (AlertaCreada - NOT-16)</b></summary>

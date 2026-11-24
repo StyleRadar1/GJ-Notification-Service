@@ -27,6 +27,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProcesarEventosExternosUseCaseImpl implements ProcesarEventosExternosUseCase {
 
+    private static final List<TipoNotificacion> TIPOS_DE_DISPONIBILIDAD =
+            List.of(TipoNotificacion.REPOSICION_STOCK, TipoNotificacion.COINCIDENCIA_BUSQUEDA);
+
     private final AlertaRepositoryPort alertaRepositoryPort;
     private final NotificacionRepositoryPort notificacionRepositoryPort;
     private final BusquedaGuardadaCopiaRepositoryPort busquedaGuardadaCopiaRepositoryPort;
@@ -134,6 +137,10 @@ public class ProcesarEventosExternosUseCaseImpl implements ProcesarEventosExtern
     public void desactivarAlertasPorItemEliminado(String itemId) {
         if (itemId != null && !itemId.isBlank()) {
             alertaRepositoryPort.desactivarPorItem(itemId);
+            // Las no leidas de disponibilidad ya no sirven; las leidas quedan como historial pero sin enlace roto.
+            // La notificacion de moderacion del propietario no se toca.
+            notificacionRepositoryPort.eliminarNoLeidasPorItemYTipos(itemId, TIPOS_DE_DISPONIBILIDAD);
+            notificacionRepositoryPort.quitarEnlacePorItemYTipos(itemId, TIPOS_DE_DISPONIBILIDAD);
         }
     }
 

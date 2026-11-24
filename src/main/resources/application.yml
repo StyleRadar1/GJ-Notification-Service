@@ -69,6 +69,7 @@ application:
       donation-changed: styleradar.notificaciones.donacion-cambiada.q
       moderation-changed: styleradar.notificaciones.moderacion-cambiada.q
       garment-deleted: styleradar.notificaciones.prenda-retirada.q
+      account-deleted: styleradar.notificaciones.cuenta-eliminada.q
       donation-requested: styleradar.notificaciones.solicitud-donacion.q
       garment-sold: styleradar.notificaciones.prenda-vendida.q
       payment-confirmed: styleradar.notificaciones.pago-confirmado.q
@@ -79,6 +80,7 @@ application:
       inventory-updated: styleradar.inventario.actualizado
       garment-published: styleradar.catalogo.prenda.publicada
       garment-deleted: styleradar.catalogo.prenda.retirada
+      account-deleted: styleradar.usuarios.cuenta.eliminada
       donation-requested: styleradar.donaciones.solicitud.creada
       garment-sold: styleradar.segundavida.prenda.vendida
       garment-sold-alt: styleradar.segunda-mano.prenda.vendida

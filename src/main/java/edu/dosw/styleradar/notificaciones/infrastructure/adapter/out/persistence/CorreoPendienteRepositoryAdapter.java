@@ -62,4 +62,10 @@ public class CorreoPendienteRepositoryAdapter implements CorreoPendienteReposito
                 entity.getCuerpo(), entity.getIntentos(), entity.getMaxIntentos(), entity.getEstado(),
                 entity.getUltimoError(), entity.getFechaCreacion(), entity.getFechaActualizacion());
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int eliminarPorUsuario(Long usuarioId) {
+        return repository.eliminarPorUsuario(usuarioId);
+    }
 }

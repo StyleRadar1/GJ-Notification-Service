@@ -2,6 +2,8 @@ package edu.dosw.styleradar.notificaciones.domain.port.out;
 
 import edu.dosw.styleradar.notificaciones.domain.model.Notificacion;
 import edu.dosw.styleradar.notificaciones.domain.model.Pagina;
+import edu.dosw.styleradar.notificaciones.domain.model.TipoNotificacion;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,4 +32,13 @@ public interface NotificacionRepositoryPort {
     boolean existePorAlertaItemYCiclo(Long alertaId, String itemId, Integer cicloReposicion);
 
     boolean existePorEventoYUsuario(String eventoId, Long usuarioId);
+
+    /** Borra todas las notificaciones del usuario (cuenta eliminada). Devuelve cuantas borro. */
+    int eliminarPorUsuario(Long usuarioId);
+
+    /** Borra las notificaciones NO leidas de esos tipos para la prenda (ya no sirven). */
+    int eliminarNoLeidasPorItemYTipos(String itemId, Collection<TipoNotificacion> tipos);
+
+    /** Quita el enlace de las notificaciones de esos tipos para la prenda, que ya no esta disponible. */
+    int quitarEnlacePorItemYTipos(String itemId, Collection<TipoNotificacion> tipos);
 }
