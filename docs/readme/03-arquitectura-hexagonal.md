@@ -199,6 +199,10 @@ flowchart LR
   </a>
 </p>
 
+### Verificación automática de la arquitectura
+
+Las reglas del hexágono (el dominio sin frameworks, la aplicación sin infraestructura, puertos como interfaces y adaptadores aislados) se comprueban con ArchUnit en `ArquitecturaHexagonalTest`, que se ejecuta en cada `mvn verify` y en el CI. El detalle de las 12 reglas está en [9. Pruebas y cobertura](./09-pruebas-y-cobertura.md).
+
 ### Estructura Oficial de Paquetes en `src/main/java/`
 
 ```text
