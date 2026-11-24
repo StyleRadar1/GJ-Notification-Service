@@ -51,4 +51,8 @@ public interface SpringDataAlertaRepository extends JpaRepository<AlertaJpaEntit
             @Param("nuevoEstado") EstadoAlerta nuevoEstado,
             @Param("fecha") LocalDateTime fecha
     );
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM AlertaJpaEntity e WHERE e.usuarioId = :usuarioId")
+    int eliminarPorUsuario(@Param("usuarioId") Long usuarioId);
 }

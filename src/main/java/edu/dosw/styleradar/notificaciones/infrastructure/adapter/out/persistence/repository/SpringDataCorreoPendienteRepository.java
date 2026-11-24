@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.repository;
 
+import org.springframework.data.jpa.repository.Modifying;
 import edu.dosw.styleradar.notificaciones.domain.model.EstadoCorreo;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.entity.CorreoPendienteJpaEntity;
 import java.util.List;
@@ -14,4 +15,8 @@ public interface SpringDataCorreoPendienteRepository extends JpaRepository<Corre
 
     @Query("SELECT c FROM CorreoPendienteJpaEntity c WHERE c.estado = :estado AND c.intentos < c.maxIntentos ORDER BY c.id ASC")
     List<CorreoPendienteJpaEntity> buscarReintentables(@Param("estado") EstadoCorreo estado, Pageable pageable);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM CorreoPendienteJpaEntity e WHERE e.usuarioId = :usuarioId")
+    int eliminarPorUsuario(@Param("usuarioId") Long usuarioId);
 }

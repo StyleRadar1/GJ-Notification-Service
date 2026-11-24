@@ -10,4 +10,7 @@ public interface BusquedaGuardadaCopiaRepositoryPort {
     Optional<BusquedaGuardadaCopia> buscarPorId(Long busquedaId);
 
     void eliminar(Long busquedaId);
+
+    /** Borra las busquedas guardadas copiadas del usuario (cuenta eliminada). */
+    int eliminarPorUsuario(Long usuarioId);
 }

@@ -35,7 +35,26 @@ mvn jacoco:report
 | **Pruebas de Integración y Contrato** | Controladores REST, Seguridad JWT, Flyway, Repositorios JPA, Consumidores AMQP, SSE y correo | Spring Boot Test, MockMvc, H2 PostgreSQL Mode, GreenMail | `src/test/java/.../integration/` | ≥ 85% |
 | **Pruebas con RabbitMQ real** | Publicación de `AlertaCreada` y consumo de eventos contra un broker real | Testcontainers (requieren Docker; en un equipo sin Docker se omiten y las corre el CI) | `src/test/java/.../integration/messaging/` | — |
 
-Estado actual (20/11/2026): **253 pruebas, 0 fallos y 0 errores; cobertura de líneas 94,0 %** (instrucciones 94,8 %, ramas 71,5 %). Hay 14 pruebas que necesitan Docker (Testcontainers con RabbitMQ y PostgreSQL reales): en un equipo sin Docker se omiten y las ejecuta el CI.
+Estado actual (24/11/2026): **318 pruebas ejecutadas, 0 fallos y 0 errores; cobertura de líneas 93,7 %** (2.129 líneas medidas, 135 sin cubrir; el mínimo exigido es 85 %). Hay 14 pruebas que necesitan Docker (Testcontainers con RabbitMQ y PostgreSQL reales): en un equipo sin Docker se omiten y las ejecuta el CI.
+
+### Pruebas de Arquitectura Hexagonal (ArchUnit)
+
+La clase `ArquitecturaHexagonalTest` (`src/test/java/.../unit/arquitectura/`) verifica en cada `mvn verify` que el código respeta el hexágono. Si alguien rompe una regla, la compilación falla.
+
+| Regla verificada | Qué garantiza |
+| :--- | :--- |
+| Arquitectura en capas (Dominio, Aplicación, Infraestructura) | Las dependencias apuntan siempre hacia el dominio; nadie depende de infraestructura. |
+| `domain` no depende de `application` ni de `infrastructure` | El dominio es el centro del hexágono. |
+| `domain` libre de Spring, JPA, Hibernate, Servlet y RabbitMQ | El modelo de negocio no conoce ningún framework. |
+| `application` no depende de `infrastructure` | Los casos de uso solo usan puertos del dominio. |
+| `application` sin JPA, Spring Web ni Spring AMQP | Los casos de uso no conocen la tecnología de los adaptadores. |
+| Los puertos `domain.port.in` y `domain.port.out` son interfaces | Un puerto es un contrato, no una implementación. |
+| Los `*UseCaseImpl` implementan un puerto de entrada | Cada caso de uso se expone por un puerto. |
+| Adaptadores de entrada no usan adaptadores de salida (y viceversa) | REST, AMQP y el planificador llaman casos de uso, no adaptadores de salida. |
+| `@Entity` solo en `adapter.out.persistence` | El dominio no lleva anotaciones de JPA. |
+| `@RestController` solo en `adapter.in.rest` y los listeners solo en `adapter.in.amqp` | Cada adaptador vive en su paquete. |
+
+Son 12 reglas, todas en verde.
 
 > [!IMPORTANT]
 > **Criterio de Fallo en CI:** El archivo `pom.xml` contiene la regla `<limit><minimum>0.85</minimum></limit>`. Si la cobertura de líneas consolidada es inferior al 85%, el comando `mvn verify` fallará con error y el pipeline bloqueará el Pull Request.

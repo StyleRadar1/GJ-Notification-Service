@@ -1,5 +1,7 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence;
 
+import edu.dosw.styleradar.notificaciones.domain.model.TipoNotificacion;
+import java.util.Collection;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.mapper.NotificacionEntityMapper;
 import edu.dosw.styleradar.notificaciones.domain.model.Notificacion;
 import edu.dosw.styleradar.notificaciones.domain.model.Pagina;
@@ -115,6 +117,30 @@ public class NotificacionRepositoryAdapter implements NotificacionRepositoryPort
     @Transactional(readOnly = true)
     public boolean existePorEventoYUsuario(String eventoId, Long usuarioId) {
         return repository.existsByEventoIdAndUsuarioId(eventoId, usuarioId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int eliminarPorUsuario(Long usuarioId) {
+        return repository.eliminarPorUsuario(usuarioId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int eliminarNoLeidasPorItemYTipos(String itemId, Collection<TipoNotificacion> tipos) {
+        if (itemId == null || tipos == null || tipos.isEmpty()) {
+            return 0;
+        }
+        return repository.eliminarNoLeidasPorItemYTipos(itemId, tipos);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int quitarEnlacePorItemYTipos(String itemId, Collection<TipoNotificacion> tipos) {
+        if (itemId == null || tipos == null || tipos.isEmpty()) {
+            return 0;
+        }
+        return repository.quitarEnlacePorItemYTipos(itemId, tipos);
     }
 }
 

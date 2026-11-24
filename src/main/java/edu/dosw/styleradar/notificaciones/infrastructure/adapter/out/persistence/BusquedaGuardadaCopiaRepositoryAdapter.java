@@ -36,4 +36,10 @@ public class BusquedaGuardadaCopiaRepositoryAdapter implements BusquedaGuardadaC
     public void eliminar(Long busquedaId) {
         repository.deleteById(busquedaId);
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int eliminarPorUsuario(Long usuarioId) {
+        return repository.eliminarPorUsuario(usuarioId);
+    }
 }

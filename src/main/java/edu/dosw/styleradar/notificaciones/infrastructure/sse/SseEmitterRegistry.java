@@ -86,4 +86,19 @@ public class SseEmitterRegistry {
             }
         }
     }
+
+    /** Completa y olvida todas las conexiones del usuario; se usa cuando su cuenta fue eliminada. */
+    public void cerrarConexiones(Long usuarioId) {
+        List<SseEmitter> userEmitters = emittersByUser.remove(usuarioId);
+        if (userEmitters == null) {
+            return;
+        }
+        for (SseEmitter emitter : userEmitters) {
+            try {
+                emitter.complete();
+            } catch (Exception ex) {
+                log.debug("La conexion SSE del usuario {} ya estaba cerrada", usuarioId);
+            }
+        }
+    }
 }

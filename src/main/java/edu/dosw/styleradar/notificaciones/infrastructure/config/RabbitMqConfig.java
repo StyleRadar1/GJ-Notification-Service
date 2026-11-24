@@ -48,6 +48,9 @@ public class RabbitMqConfig {
     @Value("${application.messaging.queues.moderation-changed:styleradar.notificaciones.moderacion-cambiada.q}")
     private String moderationChangedQueueName;
 
+    @Value("${application.messaging.queues.account-deleted:styleradar.notificaciones.cuenta-eliminada.q}")
+    private String accountDeletedQueueName;
+
     @Value("${application.messaging.queues.garment-deleted:styleradar.notificaciones.prenda-retirada.q}")
     private String garmentDeletedQueueName;
 
@@ -93,6 +96,9 @@ public class RabbitMqConfig {
 
     @Value("${application.messaging.routing-keys.moderation-changed:styleradar.catalogo.moderacion.cambiada}")
     private String moderationChangedKey;
+
+    @Value("${application.messaging.routing-keys.account-deleted:styleradar.usuarios.cuenta.eliminada}")
+    private String accountDeletedKey;
 
     @Value("${application.messaging.routing-keys.garment-deleted:styleradar.catalogo.prenda.retirada}")
     private String garmentDeletedKey;
@@ -180,6 +186,16 @@ public class RabbitMqConfig {
     @Bean
     public Queue moderationChangedQueue() {
         return buildDurableQueueWithDlq(moderationChangedQueueName);
+    }
+
+    @Bean
+    public Queue accountDeletedQueue() {
+        return buildDurableQueueWithDlq(accountDeletedQueueName);
+    }
+
+    @Bean
+    public Binding accountDeletedBinding(Queue accountDeletedQueue, TopicExchange styleradarExchange) {
+        return BindingBuilder.bind(accountDeletedQueue).to(styleradarExchange).with(accountDeletedKey);
     }
 
     @Bean
