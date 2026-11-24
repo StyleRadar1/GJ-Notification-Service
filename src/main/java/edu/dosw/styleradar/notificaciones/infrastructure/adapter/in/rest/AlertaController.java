@@ -30,6 +30,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import edu.dosw.styleradar.notificaciones.application.dto.response.EliminacionNotificacionesResponse;
+import edu.dosw.styleradar.notificaciones.domain.exception.ReglaDeNegocioException;
+import edu.dosw.styleradar.notificaciones.domain.port.in.EliminarNotificacionUseCase;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -54,6 +57,7 @@ public class AlertaController implements AlertaApi {
     private final ConsultarSuscripcionAlertaUseCase consultarSuscripcionAlertaUseCase;
     private final ListarNotificacionesUseCase listarNotificacionesUseCase;
     private final MarcarNotificacionLeidaUseCase marcarNotificacionLeidaUseCase;
+    private final EliminarNotificacionUseCase eliminarNotificacionUseCase;
     private final AlertaDtoMapper alertaDtoMapper;
     private final NotificacionDtoMapper notificacionDtoMapper;
     private final SecurityContextUserExtractor userExtractor;
@@ -194,6 +198,33 @@ public class AlertaController implements AlertaApi {
         marcarNotificacionLeidaUseCase.marcarTodasComoLeidas(targetId);
         long restantes = listarNotificacionesUseCase.contarNoLeidas(targetId);
         return ResponseEntity.ok(new ContadorNoLeidasResponse(targetId, restantes));
+    }
+
+    @Override
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping({"/notifications/{notificationId}", "/notificaciones/{notificationId}"})
+    public ResponseEntity<Void> eliminarNotificacion(
+            @PathVariable("id") String id,
+            @PathVariable("notificationId") Long notificationId
+    ) {
+        Long targetId = userExtractor.validarAccesoUsuario(id);
+        eliminarNotificacionUseCase.eliminar(notificationId, targetId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping({"/notifications", "/notificaciones"})
+    public ResponseEntity<EliminacionNotificacionesResponse> eliminarNotificacionesLeidas(
+            @PathVariable("id") String id,
+            @RequestParam(value = "read", required = false) Boolean read
+    ) {
+        if (!Boolean.TRUE.equals(read)) {
+            throw new ReglaDeNegocioException("Solo se pueden eliminar en bloque las notificaciones leidas: use read=true");
+        }
+        Long targetId = userExtractor.validarAccesoUsuario(id);
+        int eliminadas = eliminarNotificacionUseCase.eliminarLeidas(targetId);
+        return ResponseEntity.ok(new EliminacionNotificacionesResponse(targetId, eliminadas));
     }
 
     @Override

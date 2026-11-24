@@ -19,6 +19,8 @@ public class Notificacion {
     private LocalDateTime fechaLectura;
     /** Evento externo que origino la notificacion; permite descartar entregas repetidas. Puede ser nulo. */
     private String eventoId;
+    /** Cuando el usuario la elimino de su bandeja (borrado logico); nulo si sigue visible. */
+    private LocalDateTime eliminadaEn;
 
     public Notificacion() {
     }
@@ -51,6 +53,16 @@ public class Notificacion {
         this.leida = leida;
         this.fechaCreacion = fechaCreacion != null ? fechaCreacion : LocalDateTime.now();
         this.fechaLectura = fechaLectura;
+    }
+
+    public void marcarComoEliminada() {
+        if (this.eliminadaEn == null) {
+            this.eliminadaEn = LocalDateTime.now();
+        }
+    }
+
+    public boolean estaEliminada() {
+        return eliminadaEn != null;
     }
 
     public void marcarComoLeida() {
@@ -174,5 +186,13 @@ public class Notificacion {
 
     public void setEventoId(String eventoId) {
         this.eventoId = eventoId;
+    }
+
+    public LocalDateTime getEliminadaEn() {
+        return eliminadaEn;
+    }
+
+    public void setEliminadaEn(LocalDateTime eliminadaEn) {
+        this.eliminadaEn = eliminadaEn;
     }
 }
