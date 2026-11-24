@@ -29,4 +29,7 @@ public interface AlertaRepositoryPort {
     int desactivarPorBusquedaGuardada(Long busquedaGuardadaId);
 
     long contarPorEstado(EstadoAlerta estado);
+
+    /** Borra todas las alertas del usuario (cuenta eliminada). */
+    int eliminarPorUsuario(Long usuarioId);
 }

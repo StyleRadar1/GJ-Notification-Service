@@ -68,6 +68,28 @@ class RabbitMqConfigTest {
     }
 
     @Test
+    @DisplayName("La cola de cuentas eliminadas es durable, enruta por cuenta.eliminada y falla hacia la DLQ")
+    void colaDeCuentasEliminadasEstaEnlazadaYConDlq() {
+        RabbitMqConfig config = new RabbitMqConfig();
+        ReflectionTestUtils.setField(config, "exchangeName", "styleradar.exchange");
+        ReflectionTestUtils.setField(config, "dlxName", "styleradar.dlx");
+        ReflectionTestUtils.setField(config, "dlqRoutingKey", "styleradar.notificaciones.error");
+        ReflectionTestUtils.setField(config, "accountDeletedQueueName", "styleradar.notificaciones.cuenta-eliminada.q");
+        ReflectionTestUtils.setField(config, "accountDeletedKey", "styleradar.usuarios.cuenta.eliminada");
+
+        Queue cola = config.accountDeletedQueue();
+        Binding enlace = config.accountDeletedBinding(cola, config.styleradarExchange());
+
+        assertThat(cola.getName()).isEqualTo("styleradar.notificaciones.cuenta-eliminada.q");
+        assertThat(cola.isDurable()).isTrue();
+        assertThat(cola.getArguments())
+                .containsEntry("x-dead-letter-exchange", "styleradar.dlx")
+                .containsEntry("x-dead-letter-routing-key", "styleradar.notificaciones.error");
+        assertThat(enlace.getRoutingKey()).isEqualTo("styleradar.usuarios.cuenta.eliminada");
+        assertThat(enlace.getDestination()).isEqualTo("styleradar.notificaciones.cuenta-eliminada.q");
+    }
+
+    @Test
     @DisplayName("CADCHE v2 - Enlaces alias user.status.changed, foundation.deactivated y cola foundation.reactivated")
     void colasYBindingsV2DeUsuariosYTiendasCadche() {
         RabbitMqConfig config = new RabbitMqConfig();

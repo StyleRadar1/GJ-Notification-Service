@@ -68,9 +68,9 @@ Los diagramas se editan en [Draw.io](https://app.diagrams.net) abriendo el archi
 El diagrama muestra la frontera de `ms-Notifications` (puerto `8300`) y los sistemas con los que se comunica.
 
 1. **Frontend (SPA):** el usuario llega por HTTPS directamente al servicio; el API Gateway ya no se dibuja en los diagramas de ms-Notifications. Las rutas REST de `/api/v1/users/{id}` y la suscripción SSE de la campana exigen un JWT Bearer (el stream también acepta un ticket de 60 s en `?ticket=`).
-2. **Broker de eventos (RabbitMQ, `:5672`):** el servicio consume 12 colas durables sobre el exchange `styleradar.exchange`:
+2. **Broker de eventos (RabbitMQ, `:5672`):** el servicio consume 13 colas durables sobre el exchange `styleradar.exchange`:
    - `ms-Inventory` (`:8200`) publica `InventarioActualizado`.
-   - `ms-Users` (`:8120`) publica el estado de cuenta y las búsquedas guardadas.
+   - `ms-Users` (`:8120`) publica el estado de cuenta, las búsquedas guardadas y la cuenta eliminada.
    - `ms-Chat` (`:8320`) publica `MensajeEnviado`.
    - `ms-Donations` (`:8520`) publica `DonacionEstadoCambiado`.
    - `ms-Donations` (`:8520`) publica además `SolicitudDonacionCreada` y `PrendaVendida` (nombres propuestos, por confirmar).
@@ -103,7 +103,7 @@ El servicio se organiza en puertos y adaptadores, con las dependencias apuntando
 
 1. **Adaptadores de entrada (`infrastructure/adapter/in`):**
    - `AlertaController` implementa `AlertaApi` (documentación Swagger en inglés) y expone 11 endpoints bajo `/api/v1/users/{id}` (incluidos `GET /alerts/check`, `PATCH /alerts/{alertId}/activate`, `GET /notifications` con filtro único `read`, `POST /notifications/stream-ticket` y la suscripción SSE con reconexión por `Last-Event-ID`). `PreferenciaAvisoController` expone 2 más: listar y elegir el canal de cada tipo de aviso (14 endpoints en total junto a `/actuator/health`).
-   - `NotificacionesEventsListener` consume las 12 colas. Un payload inválido va directo a la cola de errores; un fallo transitorio se reintenta 3 veces antes de llegar a ella (`RabbitRetryConfig`).
+   - `NotificacionesEventsListener` consume 12 colas y `CuentaEliminadaEventsListener` la de cuentas eliminadas (13 en total). Un payload inválido va directo a la cola de errores; un fallo transitorio se reintenta 3 veces antes de llegar a ella (`RabbitRetryConfig`).
    - `JwtAuthenticationFilter` y `SecurityConfig` validan el JWT sin estado (y el ticket de 60 s en `?ticket=` únicamente para el stream SSE). Solo `/actuator/health` y la documentación Swagger (en local y QA; apagada en PROD) son públicos.
    - `GlobalExceptionHandler` responde con `ProblemDetail` (RFC 7807) con `type: "about:blank"`, un campo `code` estable (`CodigoError`), `mensaje`, `timestamp` y `errors` por campo en los `400` de validación.
    - `CorreoPendienteRecuperador` (`adapter/in/scheduler`) reintenta los correos pendientes al arrancar el servicio y cada 60 s (GJ-119).

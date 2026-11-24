@@ -46,4 +46,10 @@ public class PreferenciaAvisoRepositoryAdapter implements PreferenciaAvisoReposi
     private PreferenciaAviso toDomain(PreferenciaAvisoJpaEntity entity) {
         return new PreferenciaAviso(entity.getUsuarioId(), entity.getTipo(), entity.getCanal(), entity.getFechaActualizacion());
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int eliminarPorUsuario(Long usuarioId) {
+        return repository.eliminarPorUsuario(usuarioId);
+    }
 }

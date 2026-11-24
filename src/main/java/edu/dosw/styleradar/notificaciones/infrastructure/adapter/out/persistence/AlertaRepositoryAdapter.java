@@ -107,4 +107,10 @@ public class AlertaRepositoryAdapter implements AlertaRepositoryPort {
     public long contarPorEstado(EstadoAlerta estado) {
         return repository.countByEstado(estado);
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int eliminarPorUsuario(Long usuarioId) {
+        return repository.eliminarPorUsuario(usuarioId);
+    }
 }

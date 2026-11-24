@@ -3,6 +3,7 @@ package edu.dosw.styleradar.notificaciones.infrastructure.adapter.in.rest.doc;
 import edu.dosw.styleradar.notificaciones.application.dto.request.CrearAlertaRequest;
 import edu.dosw.styleradar.notificaciones.application.dto.response.AlertaResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.ContadorNoLeidasResponse;
+import edu.dosw.styleradar.notificaciones.application.dto.response.EliminacionNotificacionesResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.NotificacionResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.SuscripcionAlertaResponse;
 import edu.dosw.styleradar.notificaciones.application.dto.response.TicketStreamResponse;
@@ -367,6 +368,58 @@ public interface AlertaApi {
     })
     ResponseEntity<ContadorNoLeidasResponse> marcarTodasComoLeidas(
             @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
+    );
+
+    @Operation(summary = "Delete a notification", description = "Removes one notification from the user's inbox (soft delete). A second call on the same id returns 404")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Notification deleted"),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden: the notification belongs to another user",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Notification not found or already deleted",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            )
+    })
+    ResponseEntity<Void> eliminarNotificacion(
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "notificationId", description = "Notification id", example = "5001") Long notificationId
+    );
+
+    @Operation(summary = "Delete all read notifications", description = "Removes every read notification from the user's inbox (soft delete). Unread ones are kept. Requires read=true")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Read notifications deleted",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = EliminacionNotificacionesResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "Missing or unsupported read parameter: only read=true is allowed",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden",
+                    content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
+            )
+    })
+    ResponseEntity<EliminacionNotificacionesResponse> eliminarNotificacionesLeidas(
+            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(description = "Must be true: only read notifications can be deleted in bulk", example = "true") Boolean read
     );
 
     @Operation(summary = "Get unread notifications count", description = "Returns the total count of unread notifications for the frontend bell badge")

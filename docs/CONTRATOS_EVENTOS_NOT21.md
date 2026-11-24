@@ -166,7 +166,7 @@
 ### 1.6 `PrendaRetirada` (Emisor: `ms-ItemCatalog`)
 - **Routing Key:** `styleradar.catalogo.prenda.retirada`
 - **Cola Destino:** `styleradar.notificaciones.prenda-retirada.q`
-- **Propósito:** Desactivar las alertas activas de una prenda que el catálogo retiró o eliminó, para que no queden alertas sobre un ítem que ya no existe.
+- **Propósito:** Desactivar las alertas activas de una prenda que el catálogo retiró o eliminó. Además se borran las notificaciones no leídas de reposición y coincidencia de esa prenda y se quita el enlace a las ya leídas; la notificación de moderación del propietario no se toca (SR-RF-107).
 
 | Campo | Tipo | Obligatorio | Descripción |
 | :--- | :--- | :---: | :--- |
@@ -322,6 +322,27 @@
 
 ---
 
+### 1.13 `CuentaEliminada` (Emisor: `ms-Users`) — SR-RF-107
+- **Routing Key:** `styleradar.usuarios.cuenta.eliminada`
+- **Cola Destino:** `styleradar.notificaciones.cuenta-eliminada.q` (con su cola de errores)
+- **Propósito:** `ms-Users` borra la cuenta y lo avisa. `ms-Notifications` elimina los datos de ese usuario: notificaciones, alertas, preferencias, correos pendientes y búsquedas guardadas; cierra sus conexiones SSE y deja su cuenta en la copia local con estado `ELIMINADA` y sin correo, para que un evento que llegue tarde no le genere avisos. Es idempotente.
+
+| Campo | Tipo | Obligatorio | Descripción |
+| :--- | :--- | :---: | :--- |
+| `userId` (alias `usuarioId`) | `Long` | Sí | ID del usuario eliminado. Sin él el mensaje va a la cola de errores. |
+| `deletedAt` (alias `fechaEliminacion`) | `Instant (ISO-8601 UTC)` | No | Momento de la eliminación |
+| `eventoId` / `eventId` | `String` | No | Identificador del evento (hoy `ms-Users` no lo envía; no se necesita por ser idempotente) |
+
+**Ejemplo JSON:**
+```json
+{
+  "userId": 42,
+  "deletedAt": "2026-11-24T10:15:30Z"
+}
+```
+
+---
+
 ## 2. Eventos Publicados por `ms-Notifications`
 
 ### 2.1 `AlertaCreada` (Consumidor: `ms-Statistics` — NOT-16)
@@ -380,3 +401,4 @@ Todos los contratos fueron contrastados y verificados contra las Fichas Técnica
 | **`ms-Payment`** | Pago Aprobado Webhook | `pago.confirmado` / `styleradar.pagos.pago.confirmado` | `styleradar.pagos.pago.confirmado` | **Confirmado 100%** |
 | **`ms-Stores` (Tiendas)** | Fundación Desactivada | `foundation.deactivated` / `styleradar.tiendas.fundacion.desactivada` | `styleradar.tiendas.fundacion.desactivada` + `foundation.deactivated` | **Confirmado 100%** |
 | **`ms-Stores` (Tiendas)** | Fundación Reactivada | `foundation.reactivated` / `styleradar.tiendas.fundacion.reactivada` | `styleradar.tiendas.fundacion.reactivada` + `foundation.reactivated` | **Confirmado 100%** |
+| **`ms-Users`** | Cuenta Eliminada | `styleradar.usuarios.cuenta.eliminada` | `styleradar.usuarios.cuenta.eliminada` | **Confirmado 100%** |

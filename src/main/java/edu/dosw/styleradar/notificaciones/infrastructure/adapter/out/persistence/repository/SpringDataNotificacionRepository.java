@@ -1,5 +1,7 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.repository;
 
+import edu.dosw.styleradar.notificaciones.domain.model.TipoNotificacion;
+import java.util.Collection;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.entity.NotificacionJpaEntity;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,17 +16,19 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SpringDataNotificacionRepository extends JpaRepository<NotificacionJpaEntity, Long> {
 
-    List<NotificacionJpaEntity> findByUsuarioIdOrderByFechaCreacionDesc(Long usuarioId);
+    java.util.Optional<NotificacionJpaEntity> findByIdAndEliminadaEnIsNull(Long id);
 
-    List<NotificacionJpaEntity> findByUsuarioIdAndLeidaOrderByFechaCreacionDesc(Long usuarioId, boolean leida);
+    List<NotificacionJpaEntity> findByUsuarioIdAndEliminadaEnIsNullOrderByFechaCreacionDesc(Long usuarioId);
 
-    Page<NotificacionJpaEntity> findByUsuarioId(Long usuarioId, Pageable pageable);
+    List<NotificacionJpaEntity> findByUsuarioIdAndLeidaAndEliminadaEnIsNullOrderByFechaCreacionDesc(Long usuarioId, boolean leida);
 
-    Page<NotificacionJpaEntity> findByUsuarioIdAndLeida(Long usuarioId, boolean leida, Pageable pageable);
+    Page<NotificacionJpaEntity> findByUsuarioIdAndEliminadaEnIsNull(Long usuarioId, Pageable pageable);
 
-    List<NotificacionJpaEntity> findByUsuarioIdAndIdGreaterThanOrderByIdAsc(Long usuarioId, Long id);
+    Page<NotificacionJpaEntity> findByUsuarioIdAndLeidaAndEliminadaEnIsNull(Long usuarioId, boolean leida, Pageable pageable);
 
-    long countByUsuarioIdAndLeidaFalse(Long usuarioId);
+    List<NotificacionJpaEntity> findByUsuarioIdAndIdGreaterThanAndEliminadaEnIsNullOrderByIdAsc(Long usuarioId, Long id);
+
+    long countByUsuarioIdAndLeidaFalseAndEliminadaEnIsNull(Long usuarioId);
 
     boolean existsByAlertaIdAndItemIdAndCicloReposicion(Long alertaId, String itemId, Integer cicloReposicion);
 
@@ -32,9 +36,33 @@ public interface SpringDataNotificacionRepository extends JpaRepository<Notifica
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE NotificacionJpaEntity n SET n.leida = true, n.fechaLectura = :fechaLectura " +
-           "WHERE n.usuarioId = :usuarioId AND n.leida = false")
+           "WHERE n.usuarioId = :usuarioId AND n.leida = false AND n.eliminadaEn IS NULL")
     int marcarTodasComoLeidas(
             @Param("usuarioId") Long usuarioId,
             @Param("fechaLectura") LocalDateTime fechaLectura
+    );
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE NotificacionJpaEntity n SET n.eliminadaEn = :fecha "
+            + "WHERE n.usuarioId = :usuarioId AND n.leida = true AND n.eliminadaEn IS NULL")
+    int eliminarLeidasPorUsuario(@Param("usuarioId") Long usuarioId, @Param("fecha") LocalDateTime fecha);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM NotificacionJpaEntity n WHERE n.usuarioId = :usuarioId")
+    int eliminarPorUsuario(@Param("usuarioId") Long usuarioId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM NotificacionJpaEntity n WHERE n.itemId = :itemId AND n.leida = false AND n.tipo IN :tipos")
+    int eliminarNoLeidasPorItemYTipos(
+            @Param("itemId") String itemId,
+            @Param("tipos") Collection<TipoNotificacion> tipos
+    );
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE NotificacionJpaEntity n SET n.enlace = NULL "
+            + "WHERE n.itemId = :itemId AND n.enlace IS NOT NULL AND n.tipo IN :tipos")
+    int quitarEnlacePorItemYTipos(
+            @Param("itemId") String itemId,
+            @Param("tipos") Collection<TipoNotificacion> tipos
     );
 }

@@ -23,4 +23,11 @@ public class SseRealTimeNotificationAdapter implements RealTimeNotificationPort 
         registro.enviar(usuarioId, "notificacion", String.valueOf(notificacion.getId()),
                 notificacionDtoMapper.toResponse(notificacion));
     }
+
+    @Override
+    public void cerrarConexionesDeUsuario(Long usuarioId) {
+        if (usuarioId != null) {
+            registro.cerrarConexiones(usuarioId);
+        }
+    }
 }
