@@ -13,6 +13,12 @@ spring:
           default:
             connect-timeout: 2000
             read-timeout: 3000
+  # Pool pequeno: el PostgreSQL de Azure es compartido y tiene pocas conexiones simultaneas.
+  datasource:
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:3}
+      minimum-idle: ${DB_POOL_MIN_IDLE:1}
+      idle-timeout: ${DB_POOL_IDLE_TIMEOUT_MS:30000}
   jpa:
     open-in-view: false
     properties:
