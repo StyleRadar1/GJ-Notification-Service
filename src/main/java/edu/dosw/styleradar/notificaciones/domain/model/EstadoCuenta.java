@@ -4,5 +4,6 @@ public enum EstadoCuenta {
     ACTIVO,
     INACTIVO,
     BLOQUEADO,
-    SUSPENDIDO
+    SUSPENDIDO,
+    ELIMINADA
 }

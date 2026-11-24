@@ -35,7 +35,7 @@ mvn jacoco:report
 | **Pruebas de Integración y Contrato** | Controladores REST, Seguridad JWT, Flyway, Repositorios JPA, Consumidores AMQP, SSE y correo | Spring Boot Test, MockMvc, H2 PostgreSQL Mode, GreenMail | `src/test/java/.../integration/` | ≥ 85% |
 | **Pruebas con RabbitMQ real** | Publicación de `AlertaCreada` y consumo de eventos contra un broker real | Testcontainers (requieren Docker; en un equipo sin Docker se omiten y las corre el CI) | `src/test/java/.../integration/messaging/` | — |
 
-Estado actual (20/11/2026): **253 pruebas, 0 fallos y 0 errores; cobertura de líneas 94,0 %** (instrucciones 94,8 %, ramas 71,5 %). Hay 14 pruebas que necesitan Docker (Testcontainers con RabbitMQ y PostgreSQL reales): en un equipo sin Docker se omiten y las ejecuta el CI.
+Estado actual (24/11/2026): **293 pruebas ejecutadas, 0 fallos y 0 errores; cobertura de líneas 93,6 %** (el mínimo exigido es 85 %). Hay 14 pruebas que necesitan Docker (Testcontainers con RabbitMQ y PostgreSQL reales): en un equipo sin Docker se omiten y las ejecuta el CI.
 
 > [!IMPORTANT]
 > **Criterio de Fallo en CI:** El archivo `pom.xml` contiene la regla `<limit><minimum>0.85</minimum></limit>`. Si la cobertura de líneas consolidada es inferior al 85%, el comando `mvn verify` fallará con error y el pipeline bloqueará el Pull Request.

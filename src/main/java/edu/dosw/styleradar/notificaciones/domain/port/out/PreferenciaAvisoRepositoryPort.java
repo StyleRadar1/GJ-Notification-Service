@@ -12,4 +12,7 @@ public interface PreferenciaAvisoRepositoryPort {
     List<PreferenciaAviso> listarPorUsuario(Long usuarioId);
 
     PreferenciaAviso guardar(PreferenciaAviso preferencia);
+
+    /** Borra las preferencias del usuario (cuenta eliminada). */
+    int eliminarPorUsuario(Long usuarioId);
 }

@@ -1,5 +1,7 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.repository;
 
+import edu.dosw.styleradar.notificaciones.domain.model.TipoNotificacion;
+import java.util.Collection;
 import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.persistence.entity.NotificacionJpaEntity;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,5 +38,24 @@ public interface SpringDataNotificacionRepository extends JpaRepository<Notifica
     int marcarTodasComoLeidas(
             @Param("usuarioId") Long usuarioId,
             @Param("fechaLectura") LocalDateTime fechaLectura
+    );
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM NotificacionJpaEntity n WHERE n.usuarioId = :usuarioId")
+    int eliminarPorUsuario(@Param("usuarioId") Long usuarioId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM NotificacionJpaEntity n WHERE n.itemId = :itemId AND n.leida = false AND n.tipo IN :tipos")
+    int eliminarNoLeidasPorItemYTipos(
+            @Param("itemId") String itemId,
+            @Param("tipos") Collection<TipoNotificacion> tipos
+    );
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE NotificacionJpaEntity n SET n.enlace = NULL "
+            + "WHERE n.itemId = :itemId AND n.enlace IS NOT NULL AND n.tipo IN :tipos")
+    int quitarEnlacePorItemYTipos(
+            @Param("itemId") String itemId,
+            @Param("tipos") Collection<TipoNotificacion> tipos
     );
 }
