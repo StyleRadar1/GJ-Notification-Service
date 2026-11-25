@@ -325,6 +325,7 @@ jobs:
                 if npx --yes newman@6.2.1 run postman/styleradar-notificaciones.postman_collection.json \
                   --folder "$carpeta" \
                   --env-var "baseUrl=${BASE_URL}" \
+                  --env-var "catalogUrl=${CATALOG_SERVICE_URL_QA}" \
                   --env-var "jwtToken=$JWT_TOKEN_QA" \
                   --timeout-request 120000 \
                   --reporters cli,json,junit \

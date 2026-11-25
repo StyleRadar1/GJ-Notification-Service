@@ -30,6 +30,16 @@
       "key": "tallaRun",
       "value": "Q0",
       "type": "string"
+    },
+    {
+      "key": "itemRun",
+      "value": "60225941-268e-43ad-ba79-95607298ee75",
+      "type": "string"
+    },
+    {
+      "key": "catalogUrl",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -569,6 +579,19 @@
                 "exec": [
                   "// Talla unica por ejecucion: dos ejecuciones al mismo tiempo (push y pull request) no chocan en QA.",
                   "pm.collectionVariables.set('tallaRun', 'Q' + Date.now().toString(36));",
+                  "// La prenda debe existir en Catalog (sus ids son UUID). Se toma la primera que devuelve Catalog QA y, si no responde, se usa la prenda fija de respaldo.",
+                  "pm.collectionVariables.set('itemRun', '60225941-268e-43ad-ba79-95607298ee75');",
+                  "const catalogo = pm.variables.get('catalogUrl');",
+                  "if (catalogo) {",
+                  "  pm.sendRequest({ url: catalogo + '/api/v1/garments?size=1', method: 'GET' }, function (err, res) {",
+                  "    if (err || !res || res.code !== 200) { return; }",
+                  "    const cuerpo = res.json();",
+                  "    const prendas = Array.isArray(cuerpo) ? cuerpo : ((cuerpo && cuerpo.content) || []);",
+                  "    if (prendas.length > 0 && prendas[0].id) {",
+                  "      pm.collectionVariables.set('itemRun', String(prendas[0].id));",
+                  "    }",
+                  "  });",
+                  "}",
                   "// Deja el escenario limpio: desactiva alertas ACTIVAS previas de la misma prenda y talla,",
                   "// para que la coleccion se pueda ejecutar varias veces contra una base persistente (QA) sin 409.",
                   "const base = pm.variables.get('baseUrl');",
@@ -576,7 +599,7 @@
                   "pm.sendRequest({ url: base + '/api/v1/users/101/alerts', method: 'GET', header: cab }, function (err, res) {",
                   "  if (err || res.code !== 200) { return; }",
                   "  res.json()",
-                  "    .filter(function (a) { return a.estado === 'ACTIVA' && String(a.itemId) === '1045' && a.tallaObjetivo === 'M'; })",
+                  "    .filter(function (a) { return a.estado === 'ACTIVA' && String(a.itemId) === pm.collectionVariables.get('itemRun') && a.tallaObjetivo === 'M'; })",
                   "    .forEach(function (a) {",
                   "      pm.sendRequest({ url: base + '/api/v1/users/101/alerts/' + a.id, method: 'DELETE', header: cab }, function () {});",
                   "    });",
@@ -617,7 +640,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tipoAlerta\": \"ITEM_AGOTADO\",\n  \"itemId\": 1045,\n  \"tallaObjetivo\": \"{{tallaRun}}\",\n  \"canal\": \"IN_APP\"\n}"
+              "raw": "{\n  \"tipoAlerta\": \"ITEM_AGOTADO\",\n  \"itemId\": \"{{itemRun}}\",\n  \"tallaObjetivo\": \"{{tallaRun}}\",\n  \"canal\": \"IN_APP\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/users/101/alerts",
