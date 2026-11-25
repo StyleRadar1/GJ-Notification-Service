@@ -31,7 +31,7 @@ public class CatalogoFeignConfig {
         };
     }
 
-    static String normalizeBaseUrl(String rawUrl) {
+    public static String normalizeBaseUrl(String rawUrl) {
         if (rawUrl == null) {
             return null;
         }
@@ -45,7 +45,7 @@ public class CatalogoFeignConfig {
         return normalized;
     }
 
-    static String collapseDoubleApiPrefix(String path) {
+    public static String collapseDoubleApiPrefix(String path) {
         if (path == null) {
             return null;
         }

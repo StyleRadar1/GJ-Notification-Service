@@ -264,6 +264,9 @@ jobs:
       - name: Verify QA deployment health check (/actuator/health) and run Newman against QA (GJ-52 / GJ-92)
         if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME_QA != ''
         run: |
+          # El secreto puede venir con "/" final o con "/api/v1": se normaliza igual que lo hace la aplicacion.
+          CATALOG_BASE_QA="${CATALOG_SERVICE_URL_QA%/}"
+          CATALOG_BASE_QA="${CATALOG_BASE_QA%/api/v1}"
           BASE_URL="https://${AZURE_WEBAPP_NAME_QA}.azurewebsites.net"
           URL="${BASE_URL}/actuator/health"
           HEALTH_QA=0
@@ -325,7 +328,7 @@ jobs:
                 if npx --yes newman@6.2.1 run postman/styleradar-notificaciones.postman_collection.json \
                   --folder "$carpeta" \
                   --env-var "baseUrl=${BASE_URL}" \
-                  --env-var "catalogUrl=${CATALOG_SERVICE_URL_QA}" \
+                  --env-var "catalogUrl=${CATALOG_BASE_QA}" \
                   --env-var "jwtToken=$JWT_TOKEN_QA" \
                   --timeout-request 120000 \
                   --reporters cli,json,junit \
@@ -348,7 +351,7 @@ jobs:
             # /actuator/health. Se acepta cualquiera de las dos.
             CATALOG_HEALTH_OK=0
             for ruta_salud in /api/v1/health /actuator/health; do
-              if curl -fsS --max-time 10 "${CATALOG_SERVICE_URL_QA}${ruta_salud}" > /dev/null 2>&1; then
+              if curl -fsS --max-time 10 "${CATALOG_BASE_QA}${ruta_salud}" > /dev/null 2>&1; then
                 CATALOG_HEALTH_OK=1
                 break
               fi
@@ -358,15 +361,15 @@ jobs:
               # ms-Notifications consulta la disponibilidad en /api/v1/garments/{id}/availability. Si Catalog responde
               # pero no expone esa familia de rutas, el servicio de QA no puede crear alertas y la prueba fallaria con un
               # 422 poco claro tras varios intentos. Se avisa aqui, de inmediato y con la causa.
-              CODIGO_CATALOGO=$(curl -sS --max-time 20 -o /dev/null -w "%{http_code}" "${CATALOG_SERVICE_URL_QA}/api/v1/garments?size=1" || true)
+              CODIGO_CATALOGO=$(curl -sS --max-time 20 -o /dev/null -w "%{http_code}" "${CATALOG_BASE_QA}/api/v1/garments?size=1" || true)
               CODIGO_CATALOGO="${CODIGO_CATALOGO:-000}"
               if [ "$CODIGO_CATALOGO" != "200" ]; then
-                echo "::error title=Catalog de QA sin /api/v1/garments::CATALOG_SERVICE_URL_QA responde, pero GET /api/v1/garments?size=1 devolvio ${CODIGO_CATALOGO}. ms-Notifications usa /api/v1/garments/{id}/availability, asi que en QA no podra crear alertas. Revisar que CATALOG_SERVICE_URL_QA apunte al ms-item-catalogo vigente, sin /api/v1."
+                echo "::error title=Catalog de QA sin /api/v1/garments::CATALOG_SERVICE_URL_QA responde, pero GET /api/v1/garments?size=1 devolvio ${CODIGO_CATALOGO}. ms-Notifications usa /api/v1/garments/{id}/availability, asi que en QA no podra crear alertas. Revisar que CATALOG_SERVICE_URL_QA apunte al ms-item-catalogo vigente."
                 exit 1
               fi
               echo "ms-item-catalogo respondio en QA y expone /api/v1/garments. Ejecutando pruebas dependientes de catalogo..."
               ejecutar_newman "Pruebas Dependientes ms-item-catalogo" dependientes
             else
-              echo "ms-item-catalogo NO esta disponible en QA (${CATALOG_SERVICE_URL_QA}). Pruebas de catalogo omitidas por dependencia externa."
+              echo "ms-item-catalogo NO esta disponible en QA (${CATALOG_BASE_QA}). Pruebas de catalogo omitidas por dependencia externa."
             fi
           fi

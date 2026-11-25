@@ -51,7 +51,7 @@ Cómo se atienden los derechos del titular hoy:
 | **A06** Componentes vulnerables | Parcial | Dependabot y CodeQL activos. No hay escaneo de la imagen de contenedor. |
 | **A07** Fallos de autenticación | Parcial | Se valida firma y vencimiento; la emisión, el cierre de sesión y la protección de credenciales son de `ms-Auth`. |
 | **A08** Integridad de software y datos | Parcial | Payloads de eventos validados y CI con pruebas obligatorias. Sin firma de artefactos. |
-| **A09** Registro y monitoreo | Parcial | Métricas Prometheus protegidas y registros con ids de usuario y evento (en el código revisado no se registran tokens). No hay auditoría centralizada ni alertas de seguridad. |
+| **A09** Registro y monitoreo | Parcial | Métricas Prometheus protegidas y registros con ids de usuario y evento e identificador de correlación por petición (en el código revisado no se registran tokens). Los registros no son JSON estructurado. No hay auditoría centralizada ni alertas de seguridad. |
 | **A10** SSRF | Implementado | La única llamada HTTP saliente es a `ms-ItemCatalog` con una URL fija de configuración (`CATALOG_SERVICE_URL`); no se acepta ninguna URL del usuario. |
 
 ### 11.4 Riesgos y pendientes

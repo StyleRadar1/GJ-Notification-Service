@@ -42,10 +42,6 @@ public class CatalogoClientAdapter implements CatalogoClientPort {
         } catch (FeignException.NotFound | FeignException.BadRequest ex) {
             log.warn("Error HTTP al consultar disponibilidad de item {} en catalogo: status={}", itemId, ex.status());
             throw new ReglaDeNegocioException("La prenda indicada no existe en el catalogo", CodigoError.ITEM_NOT_FOUND);
-        } catch (FeignException ex) {
-            log.warn("Error HTTP inesperado al consultar disponibilidad de item {} en catalogo: status={}, message={}",
-                    itemId, ex.status(), ex.getMessage());
-            throw new ServicioExternoNoDisponibleException(MENSAJE_NO_DISPONIBLE, ex, CodigoError.CATALOG_UNAVAILABLE);
         } catch (Exception ex) {
             log.warn("No fue posible consultar ms-item-catalogo para el item {}: {}", itemId, ex.getMessage());
             throw new ServicioExternoNoDisponibleException(MENSAJE_NO_DISPONIBLE, ex, CodigoError.CATALOG_UNAVAILABLE);

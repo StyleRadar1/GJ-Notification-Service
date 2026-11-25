@@ -1,7 +1,9 @@
-package edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.external;
+package edu.dosw.styleradar.notificaciones.unit.infrastructure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.external.CatalogoFeignClient;
+import edu.dosw.styleradar.notificaciones.infrastructure.adapter.out.external.CatalogoFeignConfig;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import feign.Target;
