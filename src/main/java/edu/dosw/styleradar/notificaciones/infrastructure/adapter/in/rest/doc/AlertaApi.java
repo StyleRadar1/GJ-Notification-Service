@@ -125,7 +125,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<AlertaResponse> crearAlerta(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Valid CrearAlertaRequest request
     );
 
@@ -155,7 +155,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<List<AlertaResponse>> listarMisAlertas(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id
     );
 
     @Operation(summary = "Deactivate alert by ID (DELETE)", description = "Sets alert status to DESACTIVADA")
@@ -182,7 +182,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<AlertaResponse> desactivarAlerta(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "alertId", description = "ID of the alert to deactivate", example = "501") Long alertId
     );
 
@@ -200,7 +200,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<AlertaResponse> desactivarAlertaPatch(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "alertId", description = "ID of the alert to deactivate", example = "501") Long alertId
     );
 
@@ -223,7 +223,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<SuscripcionAlertaResponse> comprobarSuscripcion(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "itemId", description = "Garment id (UUID or text)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") String itemId,
             @Parameter(name = "tallaObjetivo", description = "Size (optional)", example = "M") String tallaObjetivo
     );
@@ -267,7 +267,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<AlertaResponse> activarAlerta(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "alertId", description = "ID of the alert to reactivate", example = "501") Long alertId
     );
 
@@ -312,7 +312,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<?> listarMisNotificaciones(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(hidden = true) Boolean unreadOnly,
             @Parameter(hidden = true) Boolean soloNoLeidas,
             @Parameter(description = "Single read-status filter: true = read, false = unread. Activates the paginated response", example = "false") Boolean read,
@@ -345,7 +345,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<NotificacionResponse> marcarNotificacionComoLeida(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "notificationId", description = "Notification ID", example = "901") Long notificationId
     );
 
@@ -368,7 +368,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<ContadorNoLeidasResponse> marcarTodasComoLeidas(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id
     );
 
     @Operation(summary = "Delete a notification", description = "Removes one notification from the user's inbox (soft delete). A second call on the same id returns 404")
@@ -391,7 +391,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<Void> eliminarNotificacion(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "notificationId", description = "Notification id", example = "5001") Long notificationId
     );
 
@@ -445,7 +445,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<ContadorNoLeidasResponse> contarNoLeidas(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id
     );
 
     @Operation(summary = "Subscribe to real-time notification stream (SSE)", description = "Opens a Server-Sent Events stream to receive real-time notifications without page refresh")
@@ -467,7 +467,7 @@ public interface AlertaApi {
             )
     })
     SseEmitter suscribirCampanaTiempoReal(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(
                     in = ParameterIn.HEADER,
                     name = "Last-Event-ID",
@@ -506,6 +506,6 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<TicketStreamResponse> emitirTicketStream(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id
     );
 }

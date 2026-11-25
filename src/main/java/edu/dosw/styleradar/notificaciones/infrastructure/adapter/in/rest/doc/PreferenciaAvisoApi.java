@@ -49,7 +49,7 @@ public interface PreferenciaAvisoApi {
             )
     })
     ResponseEntity<List<PreferenciaAvisoResponse>> listarMisPreferencias(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id
     );
 
     @Operation(
@@ -79,7 +79,7 @@ public interface PreferenciaAvisoApi {
             )
     })
     ResponseEntity<PreferenciaAvisoResponse> guardarPreferencia(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "type", description = "Notification type", example = "REPOSICION_STOCK") TipoNotificacion type,
             @Valid PreferenciaAvisoRequest request
     );
