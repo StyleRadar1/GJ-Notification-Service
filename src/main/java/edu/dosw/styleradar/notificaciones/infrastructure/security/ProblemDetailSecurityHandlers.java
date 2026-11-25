@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.security;
 
+import org.slf4j.MDC;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.dosw.styleradar.notificaciones.domain.exception.CodigoError;
 import jakarta.servlet.http.HttpServletRequest;
@@ -62,6 +63,10 @@ public class ProblemDetailSecurityHandlers {
         problema.setProperty("timestamp", Instant.now().toString());
         problema.setProperty("code", codigo.name());
         problema.setProperty("mensaje", detalle);
+        String correlationId = MDC.get(CorrelationIdFilter.MDC_KEY);
+        if (correlationId != null) {
+            problema.setProperty("correlationId", correlationId);
+        }
         response.setStatus(estado.value());
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");

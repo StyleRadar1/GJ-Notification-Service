@@ -1,5 +1,7 @@
 package edu.dosw.styleradar.notificaciones.infrastructure.config;
 
+import edu.dosw.styleradar.notificaciones.infrastructure.security.CorrelationIdFilter;
+import org.slf4j.MDC;
 import edu.dosw.styleradar.notificaciones.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.notificaciones.domain.exception.CodigoError;
 import edu.dosw.styleradar.notificaciones.domain.exception.ConflictoException;
@@ -209,6 +211,10 @@ public class GlobalExceptionHandler {
             Map<String, String> errores
     ) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
+        String correlationId = MDC.get(CorrelationIdFilter.MDC_KEY);
+        if (correlationId != null) {
+            problem.setProperty("correlationId", correlationId);
+        }
         problem.setTitle(title);
         problem.setInstance(URI.create(request.getRequestURI()));
         problem.setProperty("timestamp", Instant.now().toString());

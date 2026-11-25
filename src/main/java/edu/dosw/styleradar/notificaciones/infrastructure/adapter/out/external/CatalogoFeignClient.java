@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(
         name = "ms-item-catalogo",
-        url = "${application.clients.catalog-url:http://localhost:8220}"
+        url = "${application.clients.catalog-url:http://localhost:8220}",
+        configuration = CatalogoFeignConfig.class
 )
 public interface CatalogoFeignClient {
 
