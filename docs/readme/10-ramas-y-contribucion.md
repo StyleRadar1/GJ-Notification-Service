@@ -1,7 +1,7 @@
 [← Volver al índice](../../README.md) · [Todos los README](./)
 
 
-## <img src="https://img.shields.io/badge/11-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 11. RAMAS Y CÓMO CONTRIBUIR
+## <img src="https://img.shields.io/badge/10-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 10. RAMAS Y CÓMO CONTRIBUIR
 
 El equipo sigue el modelo de trabajo **GitFlow adaptado para microservicios**. Las ramas `main` y `develop` están protegidas: no admiten *force-push* y solo reciben cambios mediante Pull Requests con al menos una aprobación y el CI en verde.
 

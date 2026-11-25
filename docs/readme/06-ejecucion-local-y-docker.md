@@ -1,12 +1,12 @@
 [← Volver al índice](../../README.md) · [Todos los README](./)
 
 
-## <img src="https://img.shields.io/badge/07-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 7. CÓMO EJECUTAR LOCAL Y CON DOCKER
+## <img src="https://img.shields.io/badge/06-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 6. CÓMO EJECUTAR LOCAL Y CON DOCKER
 
 ### Prerrequisitos de Entorno
 
-* **Java Development Kit (JDK):** Versión 21 LTS instalada (`java -version`).
-* **Apache Maven:** Versión 3.9+ instalada (`mvn -version`).
+* **Java Development Kit (JDK):** Versión 21 LTS instalada (`java -version`). Es la misma versión del `pom.xml`, de los workflows y de la imagen Docker.
+* **Apache Maven:** Versión 3.9+ instalada (`mvn -version`). El repositorio no incluye Maven Wrapper (`mvnw`), así que todos los comandos usan `mvn`.
 * **Docker Engine & Docker Compose:** Versión 24+ en ejecución (`docker --version`).
 
 ### Ejecución Local con Maven (Perfil Dev)
@@ -55,7 +55,7 @@ curl -s http://localhost:8300/actuator/health
 # Esperado: {"status":"UP"}
 ```
 
-Una vez arriba, Swagger UI queda en `http://localhost:8300/swagger-ui/index.html` y las pruebas se corren como se explica en la [sección 9](09-pruebas-y-cobertura.md).
+Una vez arriba, Swagger UI queda en `http://localhost:8300/swagger-ui/index.html` y las pruebas se corren como se explica en la [sección 8](08-pruebas-y-cobertura.md).
 
 ### Comprobación de salud en QA
 

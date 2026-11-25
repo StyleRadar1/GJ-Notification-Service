@@ -63,7 +63,7 @@ class ContratoSwaggerAlineadoTest {
         contrato.get("paths").fields().forEachRemaining(ruta -> ruta.getValue().fieldNames()
                 .forEachRemaining(metodo -> swagger.add(metodo.toUpperCase() + " " + ruta.getKey())));
 
-        String readme = Files.readString(Path.of("docs/readme/04-endpoints-y-swagger.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(Path.of("docs/readme/03-endpoints-y-swagger.md"), StandardCharsets.UTF_8);
         Set<String> documentadas = new HashSet<>();
         Matcher fila = FILA_README.matcher(readme);
         while (fila.find()) {
@@ -76,7 +76,7 @@ class ContratoSwaggerAlineadoTest {
     @Test
     @DisplayName("Los codigos HTTP de cada ruta del README son los del Swagger")
     void codigosDelReadmeIgualesALosDelSwagger() throws Exception {
-        String readme = Files.readString(Path.of("docs/readme/04-endpoints-y-swagger.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(Path.of("docs/readme/03-endpoints-y-swagger.md"), StandardCharsets.UTF_8);
         Pattern fila = Pattern.compile("\\|\\s*`(GET|POST|PUT|PATCH|DELETE)`\\s*\\|\\s*`(/api/v1/users/[^`]+)`[^\\r\\n]*\\|\\s*((?:`\\d{3}`(?:,\\s*)?)+)\\s*\\|");
         Matcher m = fila.matcher(readme);
         int comprobadas = 0;

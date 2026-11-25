@@ -1,7 +1,7 @@
 [← Volver al índice](../../README.md) · [Todos los README](./)
 
 
-## <img src="https://img.shields.io/badge/03-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 3. ARQUITECTURA HEXAGONAL CON SU DIAGRAMA
+## <img src="https://img.shields.io/badge/02-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 2. ARQUITECTURA HEXAGONAL CON SUS DIAGRAMAS
 
 El microservicio implementa **Arquitectura Hexagonal (Puertos y Adaptadores)** combinada con **Domain-Driven Design (DDD)**. El núcleo de negocio permanece 100% puro y aislado de frameworks, bases de datos o brokers de mensajería.
 
@@ -201,7 +201,7 @@ flowchart LR
 
 ### Verificación automática de la arquitectura
 
-Las reglas del hexágono (el dominio sin frameworks, la aplicación sin infraestructura, puertos como interfaces y adaptadores aislados) se comprueban con ArchUnit en `ArquitecturaHexagonalTest`, que se ejecuta en cada `mvn verify` y en el CI. El detalle de las 12 reglas está en [9. Pruebas y cobertura](./09-pruebas-y-cobertura.md).
+Las reglas del hexágono (el dominio sin frameworks, la aplicación sin infraestructura, puertos como interfaces y adaptadores aislados) se comprueban con ArchUnit en `ArquitecturaHexagonalTest`, que se ejecuta en cada `mvn verify` y en el CI. El detalle de las 12 reglas está en [8. Pruebas y cobertura](./08-pruebas-y-cobertura.md).
 
 ### Estructura Oficial de Paquetes en `src/main/java/`
 
