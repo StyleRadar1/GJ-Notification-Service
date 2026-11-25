@@ -55,7 +55,7 @@ Tablas principales gestionadas por el servicio:
    ```
    que el usuario reciba **exactamente una notificación por ciclo de reposición**, eliminando cualquier riesgo de spam o duplicidad por concurrencia.
 2. **Índice para la campana en tiempo real:**
-   La consulta más frecuente de la interfaz de usuario es `GET /api/v1/users/me/notifications/unread/count`. La migración `V2__add_indexes.sql` crea un índice compuesto:
+   La consulta más frecuente de la interfaz de usuario es `GET /api/v1/users/{id}/notifications/unread/count`. La migración `V2__add_indexes.sql` crea un índice compuesto:
    ```sql
    CREATE INDEX idx_notificaciones_usuario_leida
    ON notificaciones (usuario_id, leida, fecha_creacion DESC);
