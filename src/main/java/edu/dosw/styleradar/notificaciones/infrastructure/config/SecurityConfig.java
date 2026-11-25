@@ -39,7 +39,9 @@ public class SecurityConfig {
                 .filter(origen -> !origen.isEmpty())
                 .toList();
 
-        http.csrf(AbstractHttpConfigurer::disable);
+        // API sin estado: el JWT viaja en la cabecera Authorization, sin cookies ni sesion, por lo que no hay
+        // CSRF posible. Se exime solo la API; el filtro CSRF sigue activo para cualquier otra ruta.
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
         if (origenesLimpios.isEmpty()) {
             // Detras del API Gateway no emitimos cabeceras CORS para evitar Access-Control-Allow-Origin duplicada
             http.cors(AbstractHttpConfigurer::disable);
