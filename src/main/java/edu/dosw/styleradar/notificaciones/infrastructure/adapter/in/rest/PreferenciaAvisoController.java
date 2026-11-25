@@ -20,13 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping({
-        "/users/{id}/notification-preferences",
-        "/users/{id}/preferencias-avisos",
-        "/api/v1/users/{id}/notification-preferences",
-        "/api/v1/users/{id}/preferencias-avisos",
-        "/api/v1/usuarios/{id}/preferencias-avisos"
-})
+@RequestMapping("/api/v1/users/{id}/notification-preferences")
 @RequiredArgsConstructor
 public class PreferenciaAvisoController implements PreferenciaAvisoApi {
 

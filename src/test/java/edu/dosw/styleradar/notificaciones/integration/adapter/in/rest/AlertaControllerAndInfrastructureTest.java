@@ -115,11 +115,11 @@ class AlertaControllerAndInfrastructureTest {
         );
 
         // Act & Assert 1: Sin token retorna 401
-        mockMvc.perform(get("/api/v1/usuarios/me/alertas"))
+        mockMvc.perform(get("/api/v1/users/501/alerts"))
                 .andExpect(status().isUnauthorized());
 
         // Act & Assert 2: Crear alerta retorna 201
-        String responseJson = mockMvc.perform(post("/api/v1/usuarios/me/alertas")
+        String responseJson = mockMvc.perform(post("/api/v1/users/501/alerts")
                         .header("Authorization", "Bearer " + tokenUsuario)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(crearRequest)))
@@ -134,20 +134,20 @@ class AlertaControllerAndInfrastructureTest {
         Long alertaId = objectMapper.readTree(responseJson).get("id").asLong();
 
         // Act & Assert 3: Crear duplicada retorna 409 Conflict
-        mockMvc.perform(post("/api/v1/usuarios/me/alertas")
+        mockMvc.perform(post("/api/v1/users/501/alerts")
                         .header("Authorization", "Bearer " + tokenUsuario)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(crearRequest)))
                 .andExpect(status().isConflict());
 
         // Act & Assert 4: Listar mis alertas
-        mockMvc.perform(get("/api/v1/usuarios/me/alertas")
+        mockMvc.perform(get("/api/v1/users/501/alerts")
                         .header("Authorization", "Bearer " + tokenUsuario))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(alertaId));
 
         // Act & Assert 5: Otro usuario intentando desactivar recibe 403 Forbidden
-        mockMvc.perform(delete("/api/v1/usuarios/me/alertas/{id}", alertaId)
+        mockMvc.perform(delete("/api/v1/users/999/alerts/{id}", alertaId)
                         .header("Authorization", "Bearer " + tokenOtroUsuario))
                 .andExpect(status().isForbidden());
 
@@ -158,12 +158,12 @@ class AlertaControllerAndInfrastructureTest {
         ));
 
         // Act & Assert 7: Verificar contador de no leidas y listado
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones/no-leidas/contador")
+        mockMvc.perform(get("/api/v1/users/501/notifications/unread/count")
                         .header("Authorization", "Bearer " + tokenUsuario))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cantidadNoLeidas").value(1));
 
-        String notifListJson = mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?soloNoLeidas=true")
+        String notifListJson = mockMvc.perform(get("/api/v1/users/501/notifications?unreadOnly=true")
                         .header("Authorization", "Bearer " + tokenUsuario))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].itemId").value("1045"))
@@ -174,24 +174,24 @@ class AlertaControllerAndInfrastructureTest {
         Long notifId = objectMapper.readTree(notifListJson).get(0).get("id").asLong();
 
         // Act & Assert 8: Marcar notificacion como leida y marcar todas
-        mockMvc.perform(patch("/api/v1/usuarios/me/notificaciones/{id}/leer", notifId)
+        mockMvc.perform(patch("/api/v1/users/501/notifications/{id}/read", notifId)
                         .header("Authorization", "Bearer " + tokenUsuario))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.leida").value(true));
 
-        mockMvc.perform(patch("/api/v1/usuarios/me/notificaciones/leer-todas")
+        mockMvc.perform(patch("/api/v1/users/501/notifications/read-all")
                         .header("Authorization", "Bearer " + tokenUsuario))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cantidadNoLeidas").value(0));
 
         // Act & Assert 9: Desactivar alerta con PATCH y DELETE
-        mockMvc.perform(patch("/api/v1/usuarios/me/alertas/{id}/desactivar", alertaId)
+        mockMvc.perform(patch("/api/v1/users/501/alerts/{id}/deactivate", alertaId)
                         .header("Authorization", "Bearer " + tokenUsuario))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("DESACTIVADA"));
 
         // Act & Assert 10: Suscripcion SSE
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones/stream")
+        mockMvc.perform(get("/api/v1/users/501/notifications/stream")
                         .header("Authorization", "Bearer " + tokenUsuario))
                 .andExpect(status().isOk());
     }
@@ -202,14 +202,14 @@ class AlertaControllerAndInfrastructureTest {
         String token = jwtTokenService.generateToken(505L, "aura@styleradar.co", "ROLE_COMPRADOR");
 
         // 400 por JSON malformado
-        mockMvc.perform(post("/api/v1/usuarios/me/alertas")
+        mockMvc.perform(post("/api/v1/users/505/alerts")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{malformed-json"))
                 .andExpect(status().isBadRequest());
 
         // 400 por @Valid (tipoAlerta nulo)
-        mockMvc.perform(post("/api/v1/usuarios/me/alertas")
+        mockMvc.perform(post("/api/v1/users/505/alerts")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"itemId\": 10}"))
@@ -222,14 +222,14 @@ class AlertaControllerAndInfrastructureTest {
         CrearAlertaRequest conStock = new CrearAlertaRequest(
                 TipoAlerta.ITEM_AGOTADO, "2000", "M", null, CanalNotificacion.IN_APP
         );
-        mockMvc.perform(post("/api/v1/usuarios/me/alertas")
+        mockMvc.perform(post("/api/v1/users/505/alerts")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(conStock)))
                 .andExpect(status().isUnprocessableEntity());
 
         // 404 al desactivar alerta inexistente
-        mockMvc.perform(delete("/api/v1/usuarios/me/alertas/999999")
+        mockMvc.perform(delete("/api/v1/users/505/alerts/999999")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
     }
@@ -378,7 +378,7 @@ class AlertaControllerAndInfrastructureTest {
         sembrarDoceNotificaciones();
         String token = jwtTokenService.generateToken(USUARIO_PAGINAS, "pag@styleradar.co", "COMPRADOR");
 
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=0&size=5")
+        mockMvc.perform(get("/api/v1/users/7801/notifications?page=0&size=5")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(5))
@@ -391,7 +391,7 @@ class AlertaControllerAndInfrastructureTest {
                 .andExpect(jsonPath("$.hasNext").value(true))
                 .andExpect(jsonPath("$.hasPrevious").value(false));
 
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=2&size=5")
+        mockMvc.perform(get("/api/v1/users/7801/notifications?page=2&size=5")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(2))
@@ -399,7 +399,7 @@ class AlertaControllerAndInfrastructureTest {
                 .andExpect(jsonPath("$.hasNext").value(false))
                 .andExpect(jsonPath("$.hasPrevious").value(true));
 
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=9&size=5")
+        mockMvc.perform(get("/api/v1/users/7801/notifications?page=9&size=5")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(0))
@@ -407,7 +407,7 @@ class AlertaControllerAndInfrastructureTest {
                 .andExpect(jsonPath("$.hasNext").value(false));
 
         // Con solo page, el tamano por defecto es 20
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=0")
+        mockMvc.perform(get("/api/v1/users/7801/notifications?page=0")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size").value(20))
@@ -421,32 +421,32 @@ class AlertaControllerAndInfrastructureTest {
         sembrarDoceNotificaciones();
         String token = jwtTokenService.generateToken(USUARIO_PAGINAS, "pag@styleradar.co", "COMPRADOR");
 
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?leida=false&size=5")
+        mockMvc.perform(get("/api/v1/users/7801/notifications?read=false&size=5")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(8))
                 .andExpect(jsonPath("$.totalPages").value(2))
                 .andExpect(jsonPath("$.content[0].leida").value(false));
 
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?leida=true")
+        mockMvc.perform(get("/api/v1/users/7801/notifications?read=true")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(4))
                 .andExpect(jsonPath("$.content[0].leida").value(true));
 
-        // soloNoLeidas=true con paginacion equivale a leida=false
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?soloNoLeidas=true&page=0&size=20")
+        // unreadOnly=true con paginacion equivale a read=false
+        mockMvc.perform(get("/api/v1/users/7801/notifications?unreadOnly=true&page=0&size=20")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(8));
 
-        // Sin page, size ni leida: la lista completa de siempre (un arreglo), solo del usuario
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones")
+        // Sin page, size ni read: la lista completa de siempre (un arreglo), solo del usuario
+        mockMvc.perform(get("/api/v1/users/7801/notifications")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(12));
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?soloNoLeidas=true")
+        mockMvc.perform(get("/api/v1/users/7801/notifications?unreadOnly=true")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(8));
@@ -457,33 +457,33 @@ class AlertaControllerAndInfrastructureTest {
     void bandejaRechazaParametrosDePaginaInvalidos() throws Exception {
         String token = jwtTokenService.generateToken(USUARIO_PAGINAS, "pag@styleradar.co", "COMPRADOR");
 
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?size=101")
+        mockMvc.perform(get("/api/v1/users/7801/notifications?size=101")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.detail").value("size no puede superar 100"));
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?size=0")
+        mockMvc.perform(get("/api/v1/users/7801/notifications?size=0")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("size debe ser al menos 1"));
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=-1")
+        mockMvc.perform(get("/api/v1/users/7801/notifications?page=-1")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("page debe ser 0 o mayor"));
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=abc")
+        mockMvc.perform(get("/api/v1/users/7801/notifications?page=abc")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest());
         // El limite exacto es valido
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?size=100")
+        mockMvc.perform(get("/api/v1/users/7801/notifications?size=100")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size").value(100));
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones?page=0&size=5"))
+        mockMvc.perform(get("/api/v1/users/7801/notifications?page=0&size=5"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Path con /users/{id} explicito: responde 200 cuando coincide con el token JWT y 403 cuando no coincide (en ingles y espanol)")
+    @DisplayName("Path con /api/v1/users/{id} explicito: responde 200 cuando coincide con el token JWT, 403 cuando no coincide o usa /me, y 404 en rutas legacy")
     void accesoConUsuarioIdExplicitoValidaAutenticacion() throws Exception {
         String token101 = jwtTokenService.generateToken(101L, "user101@styleradar.co", "COMPRADOR");
 
@@ -504,63 +504,54 @@ class AlertaControllerAndInfrastructureTest {
                         .header("Authorization", "Bearer " + token101))
                 .andExpect(status().isOk());
 
-        // 1.1 Rutas alias directas /users/{id} -> 200 OK
-        mockMvc.perform(get("/users/101/notifications")
+        // 2. El alias /me esta prohibido -> 403 Forbidden
+        mockMvc.perform(get("/api/v1/users/me/notifications")
                         .header("Authorization", "Bearer " + token101))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
 
-        mockMvc.perform(get("/users/101/alerts")
+        mockMvc.perform(get("/api/v1/users/me/alerts")
                         .header("Authorization", "Bearer " + token101))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
 
-        mockMvc.perform(get("/users/101/notification-preferences")
+        mockMvc.perform(get("/api/v1/users/me/notification-preferences")
                         .header("Authorization", "Bearer " + token101))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get("/users/101/notifications/unread/count")
-                        .header("Authorization", "Bearer " + token101))
-                .andExpect(status().isOk());
-
-        // 2. Compatibilidad con endpoints en espanol con ID propio 101 -> 200 OK
-        mockMvc.perform(get("/users/101/notificaciones")
-                        .header("Authorization", "Bearer " + token101))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get("/api/v1/users/101/alertas")
-                        .header("Authorization", "Bearer " + token101))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get("/users/101/preferencias-avisos")
-                        .header("Authorization", "Bearer " + token101))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
 
         // 3. Intento de acceder a endpoints en ingles de otro usuario (202) -> 403 Forbidden
-        mockMvc.perform(get("/users/202/notifications")
+        mockMvc.perform(get("/api/v1/users/202/notifications")
                         .header("Authorization", "Bearer " + token101))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))
                 .andExpect(jsonPath("$.detail").value("No tienes autorizacion para acceder o modificar los recursos de otro usuario"));
 
-        mockMvc.perform(get("/users/202/alerts")
+        mockMvc.perform(get("/api/v1/users/202/alerts")
                         .header("Authorization", "Bearer " + token101))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403));
 
-        mockMvc.perform(get("/users/202/notification-preferences")
+        mockMvc.perform(get("/api/v1/users/202/notification-preferences")
                         .header("Authorization", "Bearer " + token101))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403));
 
-        // 4. Intento de acceder a /users/{id}/notificaciones de otro usuario (202) -> 403 Forbidden
-        mockMvc.perform(get("/users/202/notificaciones")
+        // 4. Rutas legacy en espanol o sin /api/v1 ya no existen -> 404 Not Found
+        mockMvc.perform(get("/users/101/notifications")
                         .header("Authorization", "Bearer " + token101))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.status").value(403));
+                .andExpect(status().isNotFound());
 
-        // 5. Intento de acceder a /api/v1/users/{id}/alertas de otro usuario (202) -> 403 Forbidden
-        mockMvc.perform(get("/api/v1/users/202/alertas")
+        mockMvc.perform(get("/api/v1/usuarios/101/notificaciones")
                         .header("Authorization", "Bearer " + token101))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.status").value(403));
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/v1/users/101/alertas")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/v1/users/101/preferencias-avisos")
+                        .header("Authorization", "Bearer " + token101))
+                .andExpect(status().isNotFound());
     }
 }

@@ -75,7 +75,7 @@ class PreferenciasAvisosCorreoGreenMailTest {
         assertThat(correo.getFrom()[0].toString()).isEqualTo("no-reply@styleradar.co");
         assertThat(correo.getSubject()).isEqualTo("StyleRadar: Mensaje nuevo de Ana");
         assertThat(GreenMailUtil.getBody(correo)).contains("Hola, como estas");
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones").header("Authorization", bearer(usuario)))
+        mockMvc.perform(get("/api/v1/users/" + usuario + "/notifications").header("Authorization", bearer(usuario)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].titulo").value("Mensaje nuevo de Ana"));
     }
@@ -91,7 +91,7 @@ class PreferenciasAvisosCorreoGreenMailTest {
                 usuario, TipoNotificacion.MENSAJE_NUEVO, "Solo campana", "Texto", "/chat/2", null);
 
         assertThat(greenMail.waitForIncomingEmail(1500, 1)).isFalse();
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones").header("Authorization", bearer(usuario)))
+        mockMvc.perform(get("/api/v1/users/" + usuario + "/notifications").header("Authorization", bearer(usuario)))
                 .andExpect(jsonPath("$[0].titulo").value("Solo campana"));
     }
 
@@ -126,7 +126,7 @@ class PreferenciasAvisosCorreoGreenMailTest {
         long usuario = 6_405L;
         elegir(usuario, "REPOSICION_STOCK", "CORREO_Y_PLATAFORMA");
 
-        mockMvc.perform(get("/api/v1/usuarios/me/preferencias-avisos").header("Authorization", bearer(usuario)))
+        mockMvc.perform(get("/api/v1/users/" + usuario + "/notification-preferences").header("Authorization", bearer(usuario)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(TipoNotificacion.values().length))
                 .andExpect(jsonPath("$[?(@.tipo=='REPOSICION_STOCK')].canal").value("CORREO_Y_PLATAFORMA"))
@@ -140,7 +140,7 @@ class PreferenciasAvisosCorreoGreenMailTest {
         elegir(usuario, "SISTEMA", "CORREO_Y_PLATAFORMA");
         elegir(usuario, "SISTEMA", "SOLO_PLATAFORMA");
 
-        mockMvc.perform(get("/api/v1/usuarios/me/preferencias-avisos").header("Authorization", bearer(usuario)))
+        mockMvc.perform(get("/api/v1/users/" + usuario + "/notification-preferences").header("Authorization", bearer(usuario)))
                 .andExpect(jsonPath("$.length()").value(TipoNotificacion.values().length))
                 .andExpect(jsonPath("$[?(@.tipo=='SISTEMA')].canal").value("SOLO_PLATAFORMA"));
     }
@@ -149,22 +149,22 @@ class PreferenciasAvisosCorreoGreenMailTest {
     @DisplayName("Un canal o un tipo invalido responde 400 y sin JWT responde 401")
     void validacionesYSeguridad() throws Exception {
         long usuario = 6_407L;
-        mockMvc.perform(put("/api/v1/usuarios/me/preferencias-avisos/MENSAJE_NUEVO")
+        mockMvc.perform(put("/api/v1/users/" + usuario + "/notification-preferences/MENSAJE_NUEVO")
                         .header("Authorization", bearer(usuario))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"canal\":\"PALOMA_MENSAJERA\"}"))
                 .andExpect(status().isBadRequest());
-        mockMvc.perform(put("/api/v1/usuarios/me/preferencias-avisos/MENSAJE_NUEVO")
+        mockMvc.perform(put("/api/v1/users/" + usuario + "/notification-preferences/MENSAJE_NUEVO")
                         .header("Authorization", bearer(usuario))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest());
-        mockMvc.perform(put("/api/v1/usuarios/me/preferencias-avisos/NO_EXISTE")
+        mockMvc.perform(put("/api/v1/users/" + usuario + "/notification-preferences/NO_EXISTE")
                         .header("Authorization", bearer(usuario))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"canal\":\"SOLO_PLATAFORMA\"}"))
                 .andExpect(status().isBadRequest());
-        mockMvc.perform(get("/api/v1/usuarios/me/preferencias-avisos")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/users/" + usuario + "/notification-preferences")).andExpect(status().isUnauthorized());
     }
 
     private void registrar(long usuarioId, String email) {
@@ -172,7 +172,7 @@ class PreferenciasAvisosCorreoGreenMailTest {
     }
 
     private void elegir(long usuarioId, String tipo, String canal) throws Exception {
-        mockMvc.perform(put("/api/v1/usuarios/me/preferencias-avisos/" + tipo)
+        mockMvc.perform(put("/api/v1/users/" + usuarioId + "/notification-preferences/" + tipo)
                         .header("Authorization", bearer(usuarioId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"canal\":\"" + canal + "\"}"))

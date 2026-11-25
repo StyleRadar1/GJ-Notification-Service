@@ -196,7 +196,7 @@ class ContratoSwaggerAlineadoTest {
         String token = "Bearer " + jwtTokenService.generateToken(9_701L, "contrato@styleradar.co", "COMPRADOR");
 
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .post("/api/v1/users/me/alerts").header("Authorization", token)
+                        .post("/api/v1/users/9701/alerts").header("Authorization", token)
                         .contentType("application/json").content("{\"canal\":\"IN_APP\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type").value("about:blank"))
@@ -204,11 +204,11 @@ class ContratoSwaggerAlineadoTest {
                 .andExpect(jsonPath("$.errors.tipoAlerta").value("El tipo de alerta es obligatorio"))
                 .andExpect(jsonPath("$.mensaje").value("El tipo de alerta es obligatorio"));
 
-        mockMvc.perform(get("/api/v1/users/me/notifications").param("size", "500").header("Authorization", token))
+        mockMvc.perform(get("/api/v1/users/9701/notifications").param("size", "500").header("Authorization", token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.size").value("size no puede superar 100"));
 
-        mockMvc.perform(get("/api/v1/users/me/alerts"))
+        mockMvc.perform(get("/api/v1/users/9701/alerts"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.type").value("about:blank"))
                 .andExpect(jsonPath("$.title").value("No autenticado"))

@@ -36,8 +36,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles("test")
 class SeguridadJwtHttpTest {
 
-    private static final String ALERTAS = "/api/v1/usuarios/me/alertas";
-    private static final String NOTIFICACIONES = "/api/v1/usuarios/me/notificaciones";
+    private static final String ALERTAS_601 = "/api/v1/users/601/alerts";
+    private static final String NOTIFICACIONES_601 = "/api/v1/users/601/notifications";
 
     @Autowired
     private MockMvc mockMvc;
@@ -60,8 +60,8 @@ class SeguridadJwtHttpTest {
     @Test
     @DisplayName("NOT-22 - Sin token responde 401")
     void sinTokenResponde401() throws Exception {
-        mockMvc.perform(get(ALERTAS)).andExpect(status().isUnauthorized());
-        mockMvc.perform(get(NOTIFICACIONES)).andExpect(status().isUnauthorized());
+        mockMvc.perform(get(ALERTAS_601)).andExpect(status().isUnauthorized());
+        mockMvc.perform(get(NOTIFICACIONES_601)).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -69,7 +69,7 @@ class SeguridadJwtHttpTest {
     void tokenVencidoResponde401() throws Exception {
         String vencido = firmar(secretoDelServicio, 601L, new Date(System.currentTimeMillis() - 60_000));
 
-        mockMvc.perform(get(ALERTAS).header("Authorization", "Bearer " + vencido))
+        mockMvc.perform(get(ALERTAS_601).header("Authorization", "Bearer " + vencido))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -79,7 +79,7 @@ class SeguridadJwtHttpTest {
         String ajeno = firmar("otra_clave_distinta_de_al_menos_treinta_y_dos_bytes_1234", 601L,
                 new Date(System.currentTimeMillis() + 60_000));
 
-        mockMvc.perform(get(ALERTAS).header("Authorization", "Bearer " + ajeno))
+        mockMvc.perform(get(ALERTAS_601).header("Authorization", "Bearer " + ajeno))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -89,9 +89,9 @@ class SeguridadJwtHttpTest {
         String valido = jwtTokenService.generateToken(601L, "usuario@styleradar.co", "COMPRADOR");
         String manipulado = valido.substring(0, valido.length() - 4) + "abcd";
 
-        mockMvc.perform(get(ALERTAS).header("Authorization", "Bearer " + manipulado))
+        mockMvc.perform(get(ALERTAS_601).header("Authorization", "Bearer " + manipulado))
                 .andExpect(status().isUnauthorized());
-        mockMvc.perform(get(ALERTAS).header("Authorization", "Bearer no-es-un-jwt"))
+        mockMvc.perform(get(ALERTAS_601).header("Authorization", "Bearer no-es-un-jwt"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -103,7 +103,7 @@ class SeguridadJwtHttpTest {
         when(catalogoFeignClient.consultarDisponibilidad("6001"))
                 .thenReturn(new CatalogoDisponibilidadItemResponse("6001", 0, List.of()));
 
-        String alertaJson = mockMvc.perform(post(ALERTAS)
+        String alertaJson = mockMvc.perform(post("/api/v1/users/602/alerts")
                         .header("Authorization", "Bearer " + propietario)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"6001\",\"canal\":\"IN_APP\"}"))
@@ -111,20 +111,20 @@ class SeguridadJwtHttpTest {
                 .andReturn().getResponse().getContentAsString();
         long alertaId = objectMapper.readTree(alertaJson).get("id").asLong();
 
-        mockMvc.perform(delete(ALERTAS + "/" + alertaId).header("Authorization", "Bearer " + intruso))
+        mockMvc.perform(delete("/api/v1/users/603/alerts/" + alertaId).header("Authorization", "Bearer " + intruso))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(get(ALERTAS).header("Authorization", "Bearer " + intruso))
+        mockMvc.perform(get("/api/v1/users/603/alerts").header("Authorization", "Bearer " + intruso))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
 
         procesarEventosExternosUseCase.generarNotificacionDirecta(
                 602L, TipoNotificacion.MENSAJE_NUEVO, "Mensaje", "Hola", "/chat/conversaciones/1", null);
-        String notificacionesJson = mockMvc.perform(get(NOTIFICACIONES).header("Authorization", "Bearer " + propietario))
+        String notificacionesJson = mockMvc.perform(get("/api/v1/users/602/notifications").header("Authorization", "Bearer " + propietario))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         long notificacionId = objectMapper.readTree(notificacionesJson).get(0).get("id").asLong();
 
-        mockMvc.perform(patch(NOTIFICACIONES + "/" + notificacionId + "/leer")
+        mockMvc.perform(patch("/api/v1/users/603/notifications/" + notificacionId + "/read")
                         .header("Authorization", "Bearer " + intruso))
                 .andExpect(status().isForbidden());
     }

@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @DisplayName("Ticket de vida corta para el stream SSE")
 class TicketStreamHttpTest {
 
-    private static final String BASE = "/api/v1/users/me/notifications";
+    private static final String BASE = "/api/v1/users/9201/notifications";
     private static final String TICKET = BASE + "/stream-ticket";
     private static final String STREAM = BASE + "/stream";
 
@@ -99,10 +99,10 @@ class TicketStreamHttpTest {
     @DisplayName("El ticket no abre ningun otro endpoint")
     void elTicketSoloAbreElStream() throws Exception {
         String ticket = pedirTicket();
-        mockMvc.perform(get("/api/v1/users/me/notifications").param("ticket", ticket))
+        mockMvc.perform(get("/api/v1/users/9201/notifications").param("ticket", ticket))
                 .andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/v1/users/me/alerts").param("ticket", ticket)).andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/v1/users/me/notification-preferences").param("ticket", ticket))
+        mockMvc.perform(get("/api/v1/users/9201/alerts").param("ticket", ticket)).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/users/9201/notification-preferences").param("ticket", ticket))
                 .andExpect(status().isUnauthorized());
     }
 

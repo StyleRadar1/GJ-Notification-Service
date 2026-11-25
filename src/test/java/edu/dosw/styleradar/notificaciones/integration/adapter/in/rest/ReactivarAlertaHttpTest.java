@@ -32,7 +32,7 @@ class ReactivarAlertaHttpTest {
 
     private static final long USUARIO = 9_601L;
     private static final long BUSQUEDA = 7_601L;
-    private static final String BASE = "/api/v1/users/me/alerts";
+    private static final String BASE = "/api/v1/users/" + USUARIO + "/alerts";
 
     @Autowired
     private MockMvc mockMvc;
@@ -84,11 +84,11 @@ class ReactivarAlertaHttpTest {
     }
 
     @Test
-    @DisplayName("El alias en espanol tambien funciona y activar una alerta activa no cambia nada")
-    void aliasEnEspanolEIdempotencia() throws Exception {
+    @DisplayName("Activar una alerta ya activa es idempotente y no cambia nada")
+    void idempotenciaAlReactivar() throws Exception {
         long id = crearAlerta();
 
-        mockMvc.perform(patch("/api/v1/usuarios/me/alertas/" + id + "/activar").header("Authorization", token))
+        mockMvc.perform(patch(BASE + "/" + id + "/activate").header("Authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("ACTIVA"));
     }
@@ -123,7 +123,7 @@ class ReactivarAlertaHttpTest {
         long id = crearAlerta();
         String otro = "Bearer " + jwtTokenService.generateToken(9_602L, "otro@styleradar.co", "COMPRADOR");
 
-        mockMvc.perform(patch(BASE + "/" + id + "/activate").header("Authorization", otro))
+        mockMvc.perform(patch("/api/v1/users/9602/alerts/" + id + "/activate").header("Authorization", otro))
                 .andExpect(status().isForbidden());
         mockMvc.perform(patch(BASE + "/987654/activate").header("Authorization", token))
                 .andExpect(status().isNotFound())

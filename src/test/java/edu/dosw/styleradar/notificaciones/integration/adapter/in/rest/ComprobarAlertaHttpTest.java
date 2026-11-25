@@ -34,7 +34,7 @@ class ComprobarAlertaHttpTest {
 
     private static final long USUARIO = 9_801L;
     private static final String ITEM = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-    private static final String BASE = "/api/v1/users/me/alerts";
+    private static final String BASE = "/api/v1/users/" + USUARIO + "/alerts";
 
     @Autowired
     private MockMvc mockMvc;
@@ -97,7 +97,7 @@ class ComprobarAlertaHttpTest {
     void soloLasPropias() throws Exception {
         String otro = "Bearer " + jwtTokenService.generateToken(9_802L, "otro@styleradar.co", "COMPRADOR");
 
-        mockMvc.perform(get(BASE + "/check").param("itemId", ITEM).param("tallaObjetivo", "M").header("Authorization", otro))
+        mockMvc.perform(get("/api/v1/users/9802/alerts/check").param("itemId", ITEM).param("tallaObjetivo", "M").header("Authorization", otro))
                 .andExpect(jsonPath("$.suscrita").value(false));
     }
 

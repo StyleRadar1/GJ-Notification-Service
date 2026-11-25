@@ -25,8 +25,13 @@ import org.springframework.test.web.servlet.MockMvc;
 @DisplayName("Eliminar notificaciones de la bandeja")
 class EliminarNotificacionesHttpTest {
 
-    private static final String NOTIFICACIONES = "/api/v1/users/me/notifications";
-    private static final String CONTADOR = NOTIFICACIONES + "/unread/count";
+    private static String notificacionesUrl(long usuarioId) {
+        return "/api/v1/users/" + usuarioId + "/notifications";
+    }
+
+    private static String contadorUrl(long usuarioId) {
+        return notificacionesUrl(usuarioId) + "/unread/count";
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,13 +52,13 @@ class EliminarNotificacionesHttpTest {
         crearNotificaciones(usuarioId, 3);
         long notificacionId = primeraNotificacion(usuarioId);
 
-        mockMvc.perform(delete(NOTIFICACIONES + "/" + notificacionId).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(delete(notificacionesUrl(usuarioId) + "/" + notificacionId).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(get(notificacionesUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
-        mockMvc.perform(get(CONTADOR).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(get(contadorUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(jsonPath("$.cantidadNoLeidas").value(2));
     }
 
@@ -64,9 +69,9 @@ class EliminarNotificacionesHttpTest {
         crearNotificaciones(usuarioId, 1);
         long notificacionId = primeraNotificacion(usuarioId);
 
-        mockMvc.perform(delete(NOTIFICACIONES + "/" + notificacionId).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(delete(notificacionesUrl(usuarioId) + "/" + notificacionId).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isNoContent());
-        mockMvc.perform(delete(NOTIFICACIONES + "/" + notificacionId).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(delete(notificacionesUrl(usuarioId) + "/" + notificacionId).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isNotFound());
     }
 
@@ -76,10 +81,10 @@ class EliminarNotificacionesHttpTest {
         long usuarioId = 71_003L;
         crearNotificaciones(usuarioId, 1);
         long notificacionId = primeraNotificacion(usuarioId);
-        mockMvc.perform(delete(NOTIFICACIONES + "/" + notificacionId).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(delete(notificacionesUrl(usuarioId) + "/" + notificacionId).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(patch(NOTIFICACIONES + "/" + notificacionId + "/read")
+        mockMvc.perform(patch(notificacionesUrl(usuarioId) + "/" + notificacionId + "/read")
                         .header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isNotFound());
     }
@@ -92,10 +97,10 @@ class EliminarNotificacionesHttpTest {
         crearNotificaciones(propietario, 1);
         long notificacionId = primeraNotificacion(propietario);
 
-        mockMvc.perform(delete(NOTIFICACIONES + "/" + notificacionId).header("Authorization", bearer(intruso)))
+        mockMvc.perform(delete(notificacionesUrl(intruso) + "/" + notificacionId).header("Authorization", bearer(intruso)))
                 .andExpect(status().isForbidden());
 
-        mockMvc.perform(get(CONTADOR).header("Authorization", bearer(propietario)))
+        mockMvc.perform(get(contadorUrl(propietario)).header("Authorization", bearer(propietario)))
                 .andExpect(jsonPath("$.cantidadNoLeidas").value(1));
     }
 
@@ -105,15 +110,15 @@ class EliminarNotificacionesHttpTest {
         long usuarioId = 71_006L;
         crearNotificaciones(usuarioId, 3);
         long notificacionId = primeraNotificacion(usuarioId);
-        mockMvc.perform(patch(NOTIFICACIONES + "/" + notificacionId + "/read")
+        mockMvc.perform(patch(notificacionesUrl(usuarioId) + "/" + notificacionId + "/read")
                         .header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(delete(NOTIFICACIONES).param("read", "true").header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(delete(notificacionesUrl(usuarioId)).param("read", "true").header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cantidadEliminadas").value(1));
 
-        mockMvc.perform(get(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(get(notificacionesUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(jsonPath("$.length()").value(2));
     }
 
@@ -123,12 +128,12 @@ class EliminarNotificacionesHttpTest {
         long usuarioId = 71_007L;
         crearNotificaciones(usuarioId, 2);
 
-        mockMvc.perform(delete(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(delete(notificacionesUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isUnprocessableEntity());
-        mockMvc.perform(delete(NOTIFICACIONES).param("read", "false").header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(delete(notificacionesUrl(usuarioId)).param("read", "false").header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isUnprocessableEntity());
 
-        mockMvc.perform(get(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(get(notificacionesUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(jsonPath("$.length()").value(2));
     }
 
@@ -139,13 +144,13 @@ class EliminarNotificacionesHttpTest {
         crearNotificaciones(usuarioId, 4);
         String ids = idsDeLasPrimeras(usuarioId, 2);
 
-        mockMvc.perform(delete(NOTIFICACIONES).param("ids", ids).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(delete(notificacionesUrl(usuarioId)).param("ids", ids).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cantidadEliminadas").value(2));
 
-        mockMvc.perform(get(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(get(notificacionesUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(jsonPath("$.length()").value(2));
-        mockMvc.perform(get(CONTADOR).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(get(contadorUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(jsonPath("$.cantidadNoLeidas").value(2));
     }
 
@@ -159,15 +164,15 @@ class EliminarNotificacionesHttpTest {
         long ajena = primeraNotificacion(propietario);
         long propia = primeraNotificacion(usuarioId);
 
-        mockMvc.perform(delete(NOTIFICACIONES).param("ids", ajena + "," + propia + ",999999999")
+        mockMvc.perform(delete(notificacionesUrl(usuarioId)).param("ids", ajena + "," + propia + ",999999999")
                         .header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cantidadEliminadas").value(1));
-        mockMvc.perform(delete(NOTIFICACIONES).param("ids", ajena + "," + propia)
+        mockMvc.perform(delete(notificacionesUrl(usuarioId)).param("ids", ajena + "," + propia)
                         .header("Authorization", bearer(usuarioId)))
                 .andExpect(jsonPath("$.cantidadEliminadas").value(0));
 
-        mockMvc.perform(get(CONTADOR).header("Authorization", bearer(propietario)))
+        mockMvc.perform(get(contadorUrl(propietario)).header("Authorization", bearer(propietario)))
                 .andExpect(jsonPath("$.cantidadNoLeidas").value(1));
     }
 
@@ -178,10 +183,10 @@ class EliminarNotificacionesHttpTest {
         crearNotificaciones(usuarioId, 3);
         String[] ids = idsDeLasPrimeras(usuarioId, 3).split(",");
 
-        mockMvc.perform(delete(NOTIFICACIONES).param("ids", ids[0]).param("ids", ids[1])
+        mockMvc.perform(delete(notificacionesUrl(usuarioId)).param("ids", ids[0]).param("ids", ids[1])
                         .header("Authorization", bearer(usuarioId)))
                 .andExpect(jsonPath("$.cantidadEliminadas").value(2));
-        mockMvc.perform(delete(NOTIFICACIONES).param("ids", ids[2]).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(delete(notificacionesUrl(usuarioId)).param("ids", ids[2]).header("Authorization", bearer(usuarioId)))
                 .andExpect(jsonPath("$.cantidadEliminadas").value(1));
     }
 
@@ -193,43 +198,31 @@ class EliminarNotificacionesHttpTest {
         String cienUno = java.util.stream.LongStream.rangeClosed(1, 101)
                 .mapToObj(String::valueOf).collect(java.util.stream.Collectors.joining(","));
 
-        mockMvc.perform(delete(NOTIFICACIONES).param("ids", "1").param("read", "true")
+        mockMvc.perform(delete(notificacionesUrl(usuarioId)).param("ids", "1").param("read", "true")
                         .header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isUnprocessableEntity());
-        mockMvc.perform(delete(NOTIFICACIONES).param("ids", "").header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(delete(notificacionesUrl(usuarioId)).param("ids", "").header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isUnprocessableEntity());
-        mockMvc.perform(delete(NOTIFICACIONES).param("ids", cienUno).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(delete(notificacionesUrl(usuarioId)).param("ids", cienUno).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isUnprocessableEntity());
-        mockMvc.perform(delete(NOTIFICACIONES).param("ids", "0,5").header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(delete(notificacionesUrl(usuarioId)).param("ids", "0,5").header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isUnprocessableEntity());
 
-        mockMvc.perform(get(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(get(notificacionesUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(jsonPath("$.length()").value(1));
     }
 
     @Test
     @DisplayName("Un id que no es numero responde 400")
     void idNoNumericoResponde400() throws Exception {
-        mockMvc.perform(delete(NOTIFICACIONES).param("ids", "abc").header("Authorization", bearer(71_015L)))
+        mockMvc.perform(delete(notificacionesUrl(71_015L)).param("ids", "abc").header("Authorization", bearer(71_015L)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("Sin token responde 401")
     void sinTokenResponde401() throws Exception {
-        mockMvc.perform(delete(NOTIFICACIONES + "/1")).andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("Tambien funciona con las rutas en espanol")
-    void rutasEnEspanol() throws Exception {
-        long usuarioId = 71_008L;
-        crearNotificaciones(usuarioId, 1);
-        long notificacionId = primeraNotificacion(usuarioId);
-
-        mockMvc.perform(delete("/api/v1/usuarios/me/notificaciones/" + notificacionId)
-                        .header("Authorization", bearer(usuarioId)))
-                .andExpect(status().isNoContent());
+        mockMvc.perform(delete(notificacionesUrl(71_001L) + "/1")).andExpect(status().isUnauthorized());
     }
 
     private void crearNotificaciones(long usuarioId, int cantidad) {
@@ -241,14 +234,14 @@ class EliminarNotificacionesHttpTest {
     }
 
     private long primeraNotificacion(long usuarioId) throws Exception {
-        String json = mockMvc.perform(get(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+        String json = mockMvc.perform(get(notificacionesUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(json).get(0).get("id").asLong();
     }
 
     private String idsDeLasPrimeras(long usuarioId, int cantidad) throws Exception {
-        String json = mockMvc.perform(get(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+        String json = mockMvc.perform(get(notificacionesUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         java.util.List<String> ids = new java.util.ArrayList<>();

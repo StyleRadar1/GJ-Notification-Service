@@ -314,9 +314,7 @@ public interface AlertaApi {
     ResponseEntity<?> listarMisNotificaciones(
             @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(hidden = true) Boolean unreadOnly,
-            @Parameter(hidden = true) Boolean soloNoLeidas,
             @Parameter(description = "Single read-status filter: true = read, false = unread. Activates the paginated response", example = "false") Boolean read,
-            @Parameter(hidden = true) Boolean leida,
             @Parameter(description = "Page number (zero-indexed, >= 0)", example = "0") @Min(value = 0, message = "page debe ser 0 o mayor") Integer page,
             @Parameter(description = "Page size (1 to 100)", example = "20") @Min(value = 1, message = "size debe ser al menos 1") @Max(value = 100, message = "size no puede superar 100") Integer size
     );

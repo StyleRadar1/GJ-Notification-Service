@@ -39,7 +39,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 >
 > **Formato de errores:** todos los errores son `application/problem+json` con `type: "about:blank"`, `title`, `status`, `detail`, `instance`, `mensaje`, `timestamp` y un `code` estable (por ejemplo `ALERT_NOT_FOUND`, `ALERT_ALREADY_ACTIVE`, `ITEM_HAS_STOCK`, `SAVED_SEARCH_NOT_AVAILABLE`, `ACCOUNT_NOT_ALLOWED`, `RATE_LIMITED`). El front elige su mensaje a partir de `code`, no del texto de `detail`. En los 400 de validación, `errors` trae un mensaje por campo. La lista completa de códigos está en el Swagger (esquema `ProblemDetail`).
 >
-> *Nota de compatibilidad:* Por interoperabilidad con las pruebas existentes y clientes previos, el servicio también responde de forma transparente a las rutas alias en español (`/alertas`, `/notificaciones`, `/preferencias-avisos`), sin prefijo `/users/{id}/...` y `/api/v1/usuarios/{id}/...`, y con el alias `/me`.
+> **Cumplimiento estricto del estándar REST (`/api/v1` + 100% inglés + cero `/me`):** El servicio expone únicamente rutas canónicas en inglés bajo `/api/v1/users/{id}/...` con identificador numérico explícito `{id}` validado contra el JWT. No se exponen rutas en español, rutas sin `/api/v1` ni el alias `/me`.
 
 |  Método  | Endpoint Canónico (Inglés) | Descripción | Rol Requerido | Códigos HTTP |
 | :--------: | :---------------------------- | :----------------------------------------- | :-------------------- | :-----------------------: |

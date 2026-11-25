@@ -85,29 +85,4 @@ public class OpenApiConfig {
                 .content(new Content().addMediaType("application/problem+json",
                         new MediaType().schema(new Schema<>().$ref("#/components/schemas/ProblemDetail")))));
     }
-
-    @Bean
-    public OpenApiCustomizer canonicalEnglishOpenApiCustomizer() {
-        return openApi -> {
-            if (openApi.getPaths() != null) {
-                Paths filtered = new Paths();
-                openApi.getPaths().forEach((path, pathItem) -> {
-                    // Only display clean canonical English endpoints under /api/v1/users/{id}/ in Swagger UI
-                    if (path.startsWith("/api/v1/users/{id}/")
-                            && !path.contains("alertas")
-                            && !path.contains("notificaciones")
-                            && !path.contains("preferencias-avisos")
-                            && !path.contains("leer")
-                            && !path.contains("desactivar")
-                            && !path.contains("conteo")
-                            && !path.contains("contador")
-                            && !path.contains("unread-count")
-                            && !path.startsWith("/api/v1/users/{id}/preferences")) {
-                        filtered.addPathItem(path, pathItem);
-                    }
-                });
-                openApi.setPaths(filtered);
-            }
-        };
-    }
 }

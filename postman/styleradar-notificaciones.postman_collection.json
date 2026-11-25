@@ -67,7 +67,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/notifications",
+              "raw": "{{baseUrl}}/api/v1/users/101/notifications",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -75,7 +75,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "notifications"
               ]
             }
@@ -110,7 +110,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/notifications/unread/count",
+              "raw": "{{baseUrl}}/api/v1/users/101/notifications/unread/count",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -118,7 +118,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "notifications",
                 "unread",
                 "count"
@@ -154,7 +154,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/notifications/{{notificacionId}}/read",
+              "raw": "{{baseUrl}}/api/v1/users/101/notifications/{{notificacionId}}/read",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -162,7 +162,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "notifications",
                 "{{notificacionId}}",
                 "read"
@@ -198,7 +198,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/notifications/read-all",
+              "raw": "{{baseUrl}}/api/v1/users/101/notifications/read-all",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -206,7 +206,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "notifications",
                 "read-all"
               ]
@@ -243,7 +243,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/notifications/stream",
+              "raw": "{{baseUrl}}/api/v1/users/101/notifications/stream",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -251,7 +251,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "notifications",
                 "stream"
               ]
@@ -289,7 +289,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/notification-preferences",
+              "raw": "{{baseUrl}}/api/v1/users/101/notification-preferences",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -297,7 +297,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "notification-preferences"
               ]
             }
@@ -340,7 +340,7 @@
               "raw": "{\n  \"canal\": \"CORREO_Y_PLATAFORMA\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/notification-preferences/MENSAJE_NUEVO",
+              "raw": "{{baseUrl}}/api/v1/users/101/notification-preferences/MENSAJE_NUEVO",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -348,7 +348,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "notification-preferences",
                 "MENSAJE_NUEVO"
               ]
@@ -392,7 +392,7 @@
               "raw": "{\n  \"canal\": \"CORREO_Y_PLATAFORMA\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/notification-preferences/TIPO_INVALIDO",
+              "raw": "{{baseUrl}}/api/v1/users/101/notification-preferences/TIPO_INVALIDO",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -400,7 +400,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "notification-preferences",
                 "TIPO_INVALIDO"
               ]
@@ -432,7 +432,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/notifications",
+              "raw": "{{baseUrl}}/api/v1/users/101/notifications",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -440,7 +440,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "notifications"
               ]
             }
@@ -481,7 +481,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/notifications?page=0&size=5",
+              "raw": "{{baseUrl}}/api/v1/users/101/notifications?page=0&size=5",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -489,7 +489,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "notifications"
               ],
               "query": [
@@ -534,7 +534,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/notifications?size=101",
+              "raw": "{{baseUrl}}/api/v1/users/101/notifications?size=101",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -542,7 +542,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "notifications"
               ],
               "query": [
@@ -573,12 +573,12 @@
                   "// para que la coleccion se pueda ejecutar varias veces contra una base persistente (QA) sin 409.",
                   "const base = pm.variables.get('baseUrl');",
                   "const cab = { Authorization: 'Bearer ' + pm.variables.get('jwtToken') };",
-                  "pm.sendRequest({ url: base + '/api/v1/users/me/alerts', method: 'GET', header: cab }, function (err, res) {",
+                  "pm.sendRequest({ url: base + '/api/v1/users/101/alerts', method: 'GET', header: cab }, function (err, res) {",
                   "  if (err || res.code !== 200) { return; }",
                   "  res.json()",
                   "    .filter(function (a) { return a.estado === 'ACTIVA' && String(a.itemId) === '1045' && a.tallaObjetivo === 'M'; })",
                   "    .forEach(function (a) {",
-                  "      pm.sendRequest({ url: base + '/api/v1/users/me/alerts/' + a.id, method: 'DELETE', header: cab }, function () {});",
+                  "      pm.sendRequest({ url: base + '/api/v1/users/101/alerts/' + a.id, method: 'DELETE', header: cab }, function () {});",
                   "    });",
                   "});"
                 ]
@@ -620,7 +620,7 @@
               "raw": "{\n  \"tipoAlerta\": \"ITEM_AGOTADO\",\n  \"itemId\": 1045,\n  \"tallaObjetivo\": \"{{tallaRun}}\",\n  \"canal\": \"IN_APP\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/alerts",
+              "raw": "{{baseUrl}}/api/v1/users/101/alerts",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -628,7 +628,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "alerts"
               ]
             }
@@ -669,7 +669,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/alerts",
+              "raw": "{{baseUrl}}/api/v1/users/101/alerts",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -677,7 +677,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "alerts"
               ]
             }
@@ -711,7 +711,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/users/me/alerts/{{alertaId}}",
+              "raw": "{{baseUrl}}/api/v1/users/101/alerts/{{alertaId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -719,7 +719,7 @@
                 "api",
                 "v1",
                 "users",
-                "me",
+                "101",
                 "alerts",
                 "{{alertaId}}"
               ]
