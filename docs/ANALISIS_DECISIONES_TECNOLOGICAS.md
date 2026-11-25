@@ -115,7 +115,7 @@ Consumir eventos asíncronos emitidos por los microservicios de StyleRadar:
 3. **Ecosistema Spring Boot 3.5 Integrado:**
    * **Spring Web MVC:** Controladores REST limpios desacoplados mediante interfaces de documentación (`AlertaApi`).
    * **Spring Data JPA & Hibernate 6:** Gestión de transacciones declarativas (`@Transactional`), mapeo entidad-relacional y prevención del problema N+1.
-   * **Spring Cloud OpenFeign:** Cliente HTTP declarativo para consultar la disponibilidad de stock en `ms-ItemCatalog` (`GET /api/v1/catalogo/items/{id}/disponibilidad`) con timeout configurable.
+   * **Spring Cloud OpenFeign:** Cliente HTTP declarativo para consultar la disponibilidad de stock en `ms-ItemCatalog` (`GET /api/v1/garments/{id}/availability`) con timeout configurable.
    * **Spring Security 6:** Filtro stateless que valida la firma criptográfica HS256 del token JWT en cada petición sin consultar bases de datos externas.
    * **Springdoc OpenAPI 2.5:** Generación automática de contratos OpenAPI 3.0 en `/v3/api-docs` e interfaz Swagger en `/swagger-ui/index.html`.
 
