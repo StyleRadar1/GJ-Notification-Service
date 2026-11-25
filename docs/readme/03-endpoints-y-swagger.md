@@ -1,7 +1,7 @@
 [← Volver al índice](../../README.md) · [Todos los README](./)
 
 
-## <img src="https://img.shields.io/badge/04-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 4. ENDPOINTS Y ENLACE A SWAGGER
+## <img src="https://img.shields.io/badge/03-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 3. ENDPOINTS Y ENLACE A SWAGGER
 
 La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encuentran desplegados y clasificados por entorno:
 

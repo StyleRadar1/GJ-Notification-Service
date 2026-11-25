@@ -10,8 +10,8 @@ Esta tabla reemplaza a la de equivalencia: lista **todas las pruebas que tiene h
 
 | Dato | Valor |
 | :--- | :--- |
-| Pruebas | 67 (33 unitarias y 34 de integración) |
-| Cobertura de líneas (JaCoCo) | 91,6 %, con un mínimo exigido de 85 % en `mvn verify` |
+| Pruebas listadas en esta tabla | 67 (33 unitarias y 34 de integración) al cerrar GJ-36 y GJ-51; el total vigente del servicio está en la [sección 8 del README](readme/08-pruebas-y-cobertura.md) |
+| Cobertura de líneas (JaCoCo) | Mínimo exigido de 85 % en `mvn verify`; la cifra vigente y su captura están en la [sección 8 del README](readme/08-pruebas-y-cobertura.md) |
 | Pruebas con RabbitMQ real (Testcontainers) | 9; se omiten sin Docker y las ejecuta el CI |
 
 Ruta de las pruebas: `src/test/java/edu/dosw/styleradar/notificaciones/`.

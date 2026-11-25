@@ -1,7 +1,7 @@
 [← Volver al índice](../../README.md) · [Todos los README](./)
 
 
-## <img src="https://img.shields.io/badge/09-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 9. PRUEBAS Y COBERTURA (≥ 85%)
+## <img src="https://img.shields.io/badge/08-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 8. PRUEBAS Y COBERTURA (≥ 85%)
 
 El proyecto exige una cobertura de líneas mínima del **85%** verificada automáticamente mediante el plugin de **JaCoCo** durante `mvn verify`.
 
@@ -22,7 +22,7 @@ mvn jacoco:report
 </p>
 
 <p align="center">
-  <sub>Reporte real de JaCoCo 0.8.16 (<code>target/site/jacoco/index.html</code>) generado con <code>mvn clean verify</code> el 20/11/2026: 94 % de instrucciones, 71 % de ramas y 1.905 líneas medidas, de las que 115 quedan sin cubrir (94,0 % de líneas).</sub>
+  <sub>Reporte real de JaCoCo 0.8.16 (<code>target/site/jacoco/index.html</code>) generado con <code>mvn verify</code> el 25/11/2026 sobre <code>develop</code> (commit <code>bb48f1c</code>): 94 % de instrucciones, 73 % de ramas y 2.129 líneas medidas, de las que 136 quedan sin cubrir (93,6 % de líneas).</sub>
 </p>
 
 
@@ -35,7 +35,7 @@ mvn jacoco:report
 | **Pruebas de Integración y Contrato** | Controladores REST, Seguridad JWT, Flyway, Repositorios JPA, Consumidores AMQP, SSE y correo | Spring Boot Test, MockMvc, H2 PostgreSQL Mode, GreenMail | `src/test/java/.../integration/` | ≥ 85% |
 | **Pruebas con RabbitMQ real** | Publicación de `AlertaCreada` y consumo de eventos contra un broker real | Testcontainers (requieren Docker; en un equipo sin Docker se omiten y las corre el CI) | `src/test/java/.../integration/messaging/` | — |
 
-Estado actual (24/11/2026): **324 pruebas ejecutadas, 0 fallos y 0 errores; cobertura de líneas 93,6 %** (2.123 líneas medidas, 136 sin cubrir; el mínimo exigido es 85 %). Hay 14 pruebas que necesitan Docker (Testcontainers con RabbitMQ y PostgreSQL reales): en un equipo sin Docker se omiten y las ejecuta el CI.
+Estado actual (25/11/2026, la misma ejecución de la captura): **325 pruebas, 0 fallos y 0 errores; cobertura de líneas 93,6 %** (2.129 líneas medidas, 136 sin cubrir; el mínimo exigido es 85 %). Hay 14 pruebas que necesitan Docker (Testcontainers con RabbitMQ y PostgreSQL reales): en un equipo sin Docker se omiten y las ejecuta el CI.
 
 ### Pruebas de Arquitectura Hexagonal (ArchUnit)
 
