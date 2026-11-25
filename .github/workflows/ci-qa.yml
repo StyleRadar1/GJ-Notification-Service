@@ -165,7 +165,7 @@ jobs:
             --reporter-json-export target/newman/newman-report-local.json \
             --reporter-junit-export target/newman/newman-report-local.xml
 
-          SSE_OUT=$(curl -fsSN --max-time 3 -H "Authorization: Bearer $JWT_TOKEN" http://localhost:8300/api/v1/usuarios/me/notificaciones/stream || true)
+          SSE_OUT=$(curl -fsSN --max-time 3 -H "Authorization: Bearer $JWT_TOKEN" http://localhost:8300/api/v1/users/101/notifications/stream || true)
           echo "$SSE_OUT" | grep -q "event:connected"
 
           kill $MOCK_PID || true

@@ -37,11 +37,11 @@ class LimiteDeSolicitudesHttpTest {
     void laCuartaSolicitudResponde429() throws Exception {
         String token = jwtTokenService.generateToken(9_301L, "limite@styleradar.co", "COMPRADOR");
         for (int i = 0; i < 3; i++) {
-            mockMvc.perform(get("/api/v1/users/me/notifications/unread/count").header("Authorization", "Bearer " + token))
+            mockMvc.perform(get("/api/v1/users/9301/notifications/unread/count").header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
 
-        mockMvc.perform(get("/api/v1/users/me/notifications/unread/count").header("Authorization", "Bearer " + token))
+        mockMvc.perform(get("/api/v1/users/9301/notifications/unread/count").header("Authorization", "Bearer " + token))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(header().exists("Retry-After"))
                 .andExpect(jsonPath("$.title").value("Demasiadas solicitudes"))

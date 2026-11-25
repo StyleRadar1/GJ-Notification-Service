@@ -30,8 +30,13 @@ import org.springframework.test.web.servlet.MvcResult;
 @DisplayName("GJ-62 - Campana en tiempo real con SSE")
 class CampanaSseHttpTest {
 
-    private static final String STREAM = "/api/v1/usuarios/me/notificaciones/stream";
-    private static final String NOTIFICACIONES = "/api/v1/usuarios/me/notificaciones";
+    private static String streamUrl(long usuarioId) {
+        return "/api/v1/users/" + usuarioId + "/notifications/stream";
+    }
+
+    private static String notificacionesUrl(long usuarioId) {
+        return "/api/v1/users/" + usuarioId + "/notifications";
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -48,8 +53,8 @@ class CampanaSseHttpTest {
     @Test
     @DisplayName("Sin JWT o con un token invalido no se puede suscribir: 401")
     void sinJwtValidoResponde401() throws Exception {
-        mockMvc.perform(get(STREAM)).andExpect(status().isUnauthorized());
-        mockMvc.perform(get(STREAM).header("Authorization", "Bearer esto.no.es.un.jwt"))
+        mockMvc.perform(get(streamUrl(62_101L))).andExpect(status().isUnauthorized());
+        mockMvc.perform(get(streamUrl(62_101L)).header("Authorization", "Bearer esto.no.es.un.jwt"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -119,7 +124,7 @@ class CampanaSseHttpTest {
     }
 
     private MvcResult abrir(long usuarioId, String ultimoEventoId) throws Exception {
-        var peticion = get(STREAM).header("Authorization", bearer(usuarioId));
+        var peticion = get(streamUrl(usuarioId)).header("Authorization", bearer(usuarioId));
         if (ultimoEventoId != null) {
             peticion = peticion.header("Last-Event-ID", ultimoEventoId);
         }
@@ -128,7 +133,7 @@ class CampanaSseHttpTest {
 
     /** Ids de las notificaciones del usuario, de la mas antigua a la mas reciente. */
     private List<Long> ids(long usuarioId) throws Exception {
-        String json = mockMvc.perform(get(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+        String json = mockMvc.perform(get(notificacionesUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         List<Long> ids = new ArrayList<>();

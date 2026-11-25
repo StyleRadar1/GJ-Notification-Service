@@ -30,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 @DisplayName("Codigos de error estables")
 class CodigosDeErrorHttpTest {
 
-    private static final String BASE = "/api/v1/users/me/alerts";
+    private static final String BASE = "/api/v1/users/9901/alerts";
 
     @Autowired
     private MockMvc mockMvc;
@@ -54,7 +54,7 @@ class CodigosDeErrorHttpTest {
         mockMvc.perform(patch(BASE + "/987654/deactivate").header("Authorization", token))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("ALERT_NOT_FOUND"));
-        mockMvc.perform(patch("/api/v1/users/me/notifications/987654/read").header("Authorization", token))
+        mockMvc.perform(patch("/api/v1/users/9901/notifications/987654/read").header("Authorization", token))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("NOTIFICATION_NOT_FOUND"));
         mockMvc.perform(get("/api/v1/ruta/que/no/existe").header("Authorization", token))
@@ -96,16 +96,16 @@ class CodigosDeErrorHttpTest {
     }
 
     @Test
-    @DisplayName("El filtro read activa la respuesta paginada y el alias leida sigue funcionando")
+    @DisplayName("El filtro read activa la respuesta paginada")
     void filtroRead() throws Exception {
-        mockMvc.perform(get("/api/v1/users/me/notifications").param("read", "false").header("Authorization", token))
+        mockMvc.perform(get("/api/v1/users/9901/notifications").param("read", "false").header("Authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.page").value(0));
-        mockMvc.perform(get("/api/v1/users/me/notifications").param("leida", "false").header("Authorization", token))
+        mockMvc.perform(get("/api/v1/users/9901/notifications").param("read", "true").header("Authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
-        mockMvc.perform(get("/api/v1/users/me/notifications").header("Authorization", token))
+        mockMvc.perform(get("/api/v1/users/9901/notifications").header("Authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }

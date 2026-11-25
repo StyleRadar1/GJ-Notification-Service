@@ -46,7 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
-@RequestMapping({"/users/{id}", "/api/v1/users/{id}", "/api/v1/usuarios/{id}"})
+@RequestMapping("/api/v1/users/{id}")
 @RequiredArgsConstructor
 public class AlertaController implements AlertaApi {
 
@@ -69,7 +69,7 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @PostMapping({"/alerts", "/alertas"})
+    @PostMapping("/alerts")
     public ResponseEntity<AlertaResponse> crearAlerta(
             @PathVariable("id") String id,
             @Valid @RequestBody CrearAlertaRequest request
@@ -82,7 +82,7 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @GetMapping({"/alerts", "/alertas"})
+    @GetMapping("/alerts")
     public ResponseEntity<List<AlertaResponse>> listarMisAlertas(
             @PathVariable("id") String id
     ) {
@@ -96,7 +96,7 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @GetMapping({"/alerts/check", "/alertas/check"})
+    @GetMapping("/alerts/check")
     public ResponseEntity<SuscripcionAlertaResponse> comprobarSuscripcion(
             @PathVariable("id") String id,
             @RequestParam("itemId") String itemId,
@@ -111,7 +111,7 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @DeleteMapping({"/alerts/{alertId}", "/alertas/{alertId}"})
+    @DeleteMapping("/alerts/{alertId}")
     public ResponseEntity<AlertaResponse> desactivarAlerta(
             @PathVariable("id") String id,
             @PathVariable("alertId") Long alertId
@@ -122,7 +122,7 @@ public class AlertaController implements AlertaApi {
     }
 
     @Override
-    @PatchMapping({"/alerts/{alertId}/deactivate", "/alertas/{alertId}/desactivar"})
+    @PatchMapping("/alerts/{alertId}/deactivate")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AlertaResponse> desactivarAlertaPatch(
             @PathVariable("id") String id,
@@ -133,7 +133,7 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @PatchMapping({"/alerts/{alertId}/activate", "/alertas/{alertId}/activar"})
+    @PatchMapping("/alerts/{alertId}/activate")
     public ResponseEntity<AlertaResponse> activarAlerta(
             @PathVariable("id") String id,
             @PathVariable("alertId") Long alertId
@@ -145,29 +145,25 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @GetMapping({"/notifications", "/notificaciones"})
+    @GetMapping("/notifications")
     public ResponseEntity<?> listarMisNotificaciones(
             @PathVariable("id") String id,
             @RequestParam(value = "unreadOnly", required = false) Boolean unreadOnly,
-            @RequestParam(value = "soloNoLeidas", required = false) Boolean soloNoLeidas,
             @RequestParam(value = "read", required = false) Boolean read,
-            @RequestParam(value = "leida", required = false) Boolean leida,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size
     ) {
         Long targetId = userExtractor.validarAccesoUsuario(id);
-        Boolean soloNoLeidasEfectivo = unreadOnly != null ? unreadOnly : soloNoLeidas;
-        Boolean leidaEfectivo = read != null ? read : leida;
-        boolean paginada = page != null || size != null || leidaEfectivo != null;
+        boolean paginada = page != null || size != null || read != null;
         if (!paginada) {
             List<NotificacionResponse> respuestas = listarNotificacionesUseCase
-                    .listarNotificacionesPorUsuario(targetId, soloNoLeidasEfectivo)
+                    .listarNotificacionesPorUsuario(targetId, unreadOnly)
                     .stream()
                     .map(notificacionDtoMapper::toResponse)
                     .toList();
             return ResponseEntity.ok(respuestas);
         }
-        Boolean filtroLeida = leidaEfectivo != null ? leidaEfectivo : (Boolean.TRUE.equals(soloNoLeidasEfectivo) ? Boolean.FALSE : null);
+        Boolean filtroLeida = read != null ? read : (Boolean.TRUE.equals(unreadOnly) ? Boolean.FALSE : null);
         var pagina = listarNotificacionesUseCase.listarNotificacionesPaginadas(
                 targetId,
                 filtroLeida,
@@ -178,7 +174,7 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @PatchMapping({"/notifications/{notificationId}/read", "/notificaciones/{notificationId}/leer"})
+    @PatchMapping("/notifications/{notificationId}/read")
     public ResponseEntity<NotificacionResponse> marcarNotificacionComoLeida(
             @PathVariable("id") String id,
             @PathVariable("notificationId") Long notificationId
@@ -190,7 +186,7 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @PatchMapping({"/notifications/read-all", "/notificaciones/leer-todas"})
+    @PatchMapping("/notifications/read-all")
     public ResponseEntity<ContadorNoLeidasResponse> marcarTodasComoLeidas(
             @PathVariable("id") String id
     ) {
@@ -202,7 +198,7 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @DeleteMapping({"/notifications/{notificationId}", "/notificaciones/{notificationId}"})
+    @DeleteMapping("/notifications/{notificationId}")
     public ResponseEntity<Void> eliminarNotificacion(
             @PathVariable("id") String id,
             @PathVariable("notificationId") Long notificationId
@@ -214,7 +210,7 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @DeleteMapping({"/notifications", "/notificaciones"})
+    @DeleteMapping("/notifications")
     public ResponseEntity<EliminacionNotificacionesResponse> eliminarNotificaciones(
             @PathVariable("id") String id,
             @RequestParam(value = "read", required = false) Boolean read,
@@ -235,7 +231,7 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @GetMapping({"/notifications/unread/count", "/notifications/unread-count", "/notificaciones/no-leidas/contador", "/notificaciones/no-leidas/conteo"})
+    @GetMapping("/notifications/unread/count")
     public ResponseEntity<ContadorNoLeidasResponse> contarNoLeidas(
             @PathVariable("id") String id
     ) {
@@ -246,7 +242,7 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = {"/notifications/stream", "/notificaciones/stream"}, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/notifications/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter suscribirCampanaTiempoReal(
             @PathVariable("id") String id,
             @RequestHeader(value = "Last-Event-ID", required = false) String ultimoEventoId
@@ -269,7 +265,7 @@ public class AlertaController implements AlertaApi {
 
     @Override
     @PreAuthorize("isAuthenticated()")
-    @PostMapping({"/notifications/stream-ticket", "/notificaciones/stream-ticket"})
+    @PostMapping("/notifications/stream-ticket")
     public ResponseEntity<TicketStreamResponse> emitirTicketStream(@PathVariable("id") String id) {
         userExtractor.validarAccesoUsuario(id);
         AuthenticatedUserPrincipal principal = userExtractor.obtenerPrincipal();

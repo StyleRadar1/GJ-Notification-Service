@@ -11,6 +11,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 )
 public interface CatalogoFeignClient {
 
-    @GetMapping("/api/v1/catalogo/items/{itemId}/disponibilidad")
+    @GetMapping("/api/v1/garments/{itemId}/availability")
     CatalogoDisponibilidadItemResponse consultarDisponibilidad(@PathVariable("itemId") String itemId);
 }

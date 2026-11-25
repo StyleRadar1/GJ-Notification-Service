@@ -40,14 +40,14 @@ class CatalogoNoDisponibleHttpTest {
         when(catalogoFeignClient.consultarDisponibilidad("3001"))
                 .thenThrow(new IllegalStateException("catalogo caido"));
 
-        mockMvc.perform(post("/api/v1/usuarios/me/alertas")
+        mockMvc.perform(post("/api/v1/users/7001/alerts")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"3001\",\"canal\":\"IN_APP\"}"))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.title").value("Servicio externo no disponible"));
 
-        mockMvc.perform(get("/api/v1/usuarios/me/alertas")
+        mockMvc.perform(get("/api/v1/users/7001/alerts")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));

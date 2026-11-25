@@ -21,7 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @DisplayName("CORS para el frontend")
 class CorsHttpTest {
 
-    private static final String RUTA = "/api/v1/usuarios/me/notificaciones";
+    private static final String RUTA = "/api/v1/users/6601/notifications";
 
     @Autowired
     private MockMvc mockMvc;

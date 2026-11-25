@@ -54,11 +54,16 @@ class SecurityContextUserExtractorTest {
     }
 
     @Test
-    void validarAccesoUsuarioPermiteAliasMeYIdCoincidente() {
+    void validarAccesoUsuarioPermiteIdCoincidenteYRechazaAliasMe() {
         autenticar(new AuthenticatedUserPrincipal(101L, "ana@styleradar.co", "COMPRADOR"));
 
-        assertThat(extractor.validarAccesoUsuario("me")).isEqualTo(101L);
         assertThat(extractor.validarAccesoUsuario("101")).isEqualTo(101L);
+        assertThatThrownBy(() -> extractor.validarAccesoUsuario("me"))
+                .isInstanceOf(AccesoDenegadoException.class)
+                .hasMessageContaining("Identificador de usuario invalido");
+        assertThatThrownBy(() -> extractor.validarAccesoUsuario(" "))
+                .isInstanceOf(AccesoDenegadoException.class)
+                .hasMessageContaining("Identificador de usuario invalido");
     }
 
     @Test
