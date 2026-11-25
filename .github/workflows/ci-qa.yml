@@ -344,13 +344,27 @@ jobs:
             echo "Ejecutando carpeta de pruebas independientes..."
             ejecutar_newman "Pruebas Independientes ms-notificaciones" independientes
 
+            # ms-item-catalogo publica su salud en /api/v1/health; algunos despliegues antiguos solo tienen
+            # /actuator/health. Se acepta cualquiera de las dos.
             CATALOG_HEALTH_OK=0
-            if curl -fsS --max-time 5 "${CATALOG_SERVICE_URL_QA}/actuator/health" > /dev/null 2>&1; then
-              CATALOG_HEALTH_OK=1
-            fi
+            for ruta_salud in /api/v1/health /actuator/health; do
+              if curl -fsS --max-time 10 "${CATALOG_SERVICE_URL_QA}${ruta_salud}" > /dev/null 2>&1; then
+                CATALOG_HEALTH_OK=1
+                break
+              fi
+            done
 
             if [ "$CATALOG_HEALTH_OK" -eq 1 ]; then
-              echo "ms-item-catalogo respondio en QA (${CATALOG_SERVICE_URL_QA}). Ejecutando pruebas dependientes de catalogo..."
+              # ms-Notifications consulta la disponibilidad en /api/v1/garments/{id}/availability. Si Catalog responde
+              # pero no expone esa familia de rutas, el servicio de QA no puede crear alertas y la prueba fallaria con un
+              # 422 poco claro tras varios intentos. Se avisa aqui, de inmediato y con la causa.
+              CODIGO_CATALOGO=$(curl -sS --max-time 20 -o /dev/null -w "%{http_code}" "${CATALOG_SERVICE_URL_QA}/api/v1/garments?size=1" || true)
+              CODIGO_CATALOGO="${CODIGO_CATALOGO:-000}"
+              if [ "$CODIGO_CATALOGO" != "200" ]; then
+                echo "::error title=Catalog de QA sin /api/v1/garments::CATALOG_SERVICE_URL_QA responde, pero GET /api/v1/garments?size=1 devolvio ${CODIGO_CATALOGO}. ms-Notifications usa /api/v1/garments/{id}/availability, asi que en QA no podra crear alertas. Revisar que CATALOG_SERVICE_URL_QA apunte al ms-item-catalogo vigente, sin /api/v1."
+                exit 1
+              fi
+              echo "ms-item-catalogo respondio en QA y expone /api/v1/garments. Ejecutando pruebas dependientes de catalogo..."
               ejecutar_newman "Pruebas Dependientes ms-item-catalogo" dependientes
             else
               echo "ms-item-catalogo NO esta disponible en QA (${CATALOG_SERVICE_URL_QA}). Pruebas de catalogo omitidas por dependencia externa."
