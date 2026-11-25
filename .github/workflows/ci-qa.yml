@@ -345,7 +345,9 @@ jobs:
             ejecutar_newman "Pruebas Independientes ms-notificaciones" independientes
 
             CATALOG_HEALTH_OK=0
-            if curl -fsS --max-time 5 "${CATALOG_SERVICE_URL_QA}/actuator/health" > /dev/null 2>&1; then
+            CATALOG_BASE_URL_QA="${CATALOG_SERVICE_URL_QA%/}"
+            CATALOG_BASE_URL_QA="${CATALOG_BASE_URL_QA%/api/v1}"
+            if curl -fsS --max-time 5 "${CATALOG_BASE_URL_QA}/api/v1/actuator/health" > /dev/null 2>&1; then
               CATALOG_HEALTH_OK=1
             fi
 
