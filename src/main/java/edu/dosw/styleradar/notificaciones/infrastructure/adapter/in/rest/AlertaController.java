@@ -215,15 +215,21 @@ public class AlertaController implements AlertaApi {
     @Override
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping({"/notifications", "/notificaciones"})
-    public ResponseEntity<EliminacionNotificacionesResponse> eliminarNotificacionesLeidas(
+    public ResponseEntity<EliminacionNotificacionesResponse> eliminarNotificaciones(
             @PathVariable("id") String id,
-            @RequestParam(value = "read", required = false) Boolean read
+            @RequestParam(value = "read", required = false) Boolean read,
+            @RequestParam(value = "ids", required = false) List<Long> ids
     ) {
-        if (!Boolean.TRUE.equals(read)) {
-            throw new ReglaDeNegocioException("Solo se pueden eliminar en bloque las notificaciones leidas: use read=true");
+        boolean porIds = ids != null && !ids.isEmpty();
+        boolean porLeidas = read != null;
+        if (porIds == porLeidas || (porLeidas && !read)) {
+            throw new ReglaDeNegocioException(
+                    "Indique exactamente uno: read=true (las leidas) o ids con las notificaciones a eliminar");
         }
         Long targetId = userExtractor.validarAccesoUsuario(id);
-        int eliminadas = eliminarNotificacionUseCase.eliminarLeidas(targetId);
+        int eliminadas = porIds
+                ? eliminarNotificacionUseCase.eliminarSeleccionadas(targetId, ids)
+                : eliminarNotificacionUseCase.eliminarLeidas(targetId);
         return ResponseEntity.ok(new EliminacionNotificacionesResponse(targetId, eliminadas));
     }
 

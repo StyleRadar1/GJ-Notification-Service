@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -394,16 +395,16 @@ public interface AlertaApi {
             @Parameter(name = "notificationId", description = "Notification id", example = "5001") Long notificationId
     );
 
-    @Operation(summary = "Delete all read notifications", description = "Removes every read notification from the user's inbox (soft delete). Unread ones are kept. Requires read=true")
+    @Operation(summary = "Delete notifications in bulk", description = "Removes several notifications from the user's inbox (soft delete). Send exactly one of: read=true (every read notification; unread ones are kept) or ids (1 to 100 comma-separated notification ids, read or unread). Ids that do not exist, belong to another user or were already deleted are ignored, so repeating the call returns 0")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Read notifications deleted",
+                    description = "Notifications deleted; cantidadEliminadas is how many were actually removed",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = EliminacionNotificacionesResponse.class))
             ),
             @ApiResponse(
                     responseCode = "422",
-                    description = "Missing or unsupported read parameter: only read=true is allowed",
+                    description = "Send exactly one of read=true or ids; ids must be positive numbers, at most 100 distinct",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
@@ -417,9 +418,12 @@ public interface AlertaApi {
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
-    ResponseEntity<EliminacionNotificacionesResponse> eliminarNotificacionesLeidas(
+    ResponseEntity<EliminacionNotificacionesResponse> eliminarNotificaciones(
             @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
-            @Parameter(description = "Must be true: only read notifications can be deleted in bulk", example = "true") Boolean read
+            @Parameter(description = "Must be true: deletes every read notification. Do not combine with ids", example = "true") Boolean read,
+            @Parameter(description = "Comma-separated ids of the notifications to delete (1 to 100 distinct, read or unread). Do not combine with read",
+                    example = "5001,5002,5003", explode = Explode.FALSE,
+                    array = @ArraySchema(schema = @Schema(type = "integer", format = "int64"))) List<Long> ids
     );
 
     @Operation(summary = "Get unread notifications count", description = "Returns the total count of unread notifications for the frontend bell badge")

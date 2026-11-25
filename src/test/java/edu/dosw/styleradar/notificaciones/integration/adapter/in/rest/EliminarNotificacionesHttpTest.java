@@ -133,6 +133,88 @@ class EliminarNotificacionesHttpTest {
     }
 
     @Test
+    @DisplayName("Eliminar por ids borra solo las indicadas, leidas o no, y responde cuantas elimino")
+    void eliminarPorIds() throws Exception {
+        long usuarioId = 71_010L;
+        crearNotificaciones(usuarioId, 4);
+        String ids = idsDeLasPrimeras(usuarioId, 2);
+
+        mockMvc.perform(delete(NOTIFICACIONES).param("ids", ids).header("Authorization", bearer(usuarioId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cantidadEliminadas").value(2));
+
+        mockMvc.perform(get(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+                .andExpect(jsonPath("$.length()").value(2));
+        mockMvc.perform(get(CONTADOR).header("Authorization", bearer(usuarioId)))
+                .andExpect(jsonPath("$.cantidadNoLeidas").value(2));
+    }
+
+    @Test
+    @DisplayName("Los ids de otro usuario, inexistentes o ya eliminados se ignoran sin error ni filtracion")
+    void eliminarPorIdsIgnoraLosAjenos() throws Exception {
+        long propietario = 71_011L;
+        long usuarioId = 71_012L;
+        crearNotificaciones(propietario, 1);
+        crearNotificaciones(usuarioId, 1);
+        long ajena = primeraNotificacion(propietario);
+        long propia = primeraNotificacion(usuarioId);
+
+        mockMvc.perform(delete(NOTIFICACIONES).param("ids", ajena + "," + propia + ",999999999")
+                        .header("Authorization", bearer(usuarioId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cantidadEliminadas").value(1));
+        mockMvc.perform(delete(NOTIFICACIONES).param("ids", ajena + "," + propia)
+                        .header("Authorization", bearer(usuarioId)))
+                .andExpect(jsonPath("$.cantidadEliminadas").value(0));
+
+        mockMvc.perform(get(CONTADOR).header("Authorization", bearer(propietario)))
+                .andExpect(jsonPath("$.cantidadNoLeidas").value(1));
+    }
+
+    @Test
+    @DisplayName("Eliminar por ids acepta tambien el parametro repetido y un solo id")
+    void eliminarPorIdsParametroRepetido() throws Exception {
+        long usuarioId = 71_013L;
+        crearNotificaciones(usuarioId, 3);
+        String[] ids = idsDeLasPrimeras(usuarioId, 3).split(",");
+
+        mockMvc.perform(delete(NOTIFICACIONES).param("ids", ids[0]).param("ids", ids[1])
+                        .header("Authorization", bearer(usuarioId)))
+                .andExpect(jsonPath("$.cantidadEliminadas").value(2));
+        mockMvc.perform(delete(NOTIFICACIONES).param("ids", ids[2]).header("Authorization", bearer(usuarioId)))
+                .andExpect(jsonPath("$.cantidadEliminadas").value(1));
+    }
+
+    @Test
+    @DisplayName("Combinar ids y read, no mandar nada, mas de 100 ids o ids no positivos responde 422")
+    void idsInvalidosResponden422() throws Exception {
+        long usuarioId = 71_014L;
+        crearNotificaciones(usuarioId, 1);
+        String cienUno = java.util.stream.LongStream.rangeClosed(1, 101)
+                .mapToObj(String::valueOf).collect(java.util.stream.Collectors.joining(","));
+
+        mockMvc.perform(delete(NOTIFICACIONES).param("ids", "1").param("read", "true")
+                        .header("Authorization", bearer(usuarioId)))
+                .andExpect(status().isUnprocessableEntity());
+        mockMvc.perform(delete(NOTIFICACIONES).param("ids", "").header("Authorization", bearer(usuarioId)))
+                .andExpect(status().isUnprocessableEntity());
+        mockMvc.perform(delete(NOTIFICACIONES).param("ids", cienUno).header("Authorization", bearer(usuarioId)))
+                .andExpect(status().isUnprocessableEntity());
+        mockMvc.perform(delete(NOTIFICACIONES).param("ids", "0,5").header("Authorization", bearer(usuarioId)))
+                .andExpect(status().isUnprocessableEntity());
+
+        mockMvc.perform(get(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    @DisplayName("Un id que no es numero responde 400")
+    void idNoNumericoResponde400() throws Exception {
+        mockMvc.perform(delete(NOTIFICACIONES).param("ids", "abc").header("Authorization", bearer(71_015L)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("Sin token responde 401")
     void sinTokenResponde401() throws Exception {
         mockMvc.perform(delete(NOTIFICACIONES + "/1")).andExpect(status().isUnauthorized());
@@ -163,6 +245,17 @@ class EliminarNotificacionesHttpTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(json).get(0).get("id").asLong();
+    }
+
+    private String idsDeLasPrimeras(long usuarioId, int cantidad) throws Exception {
+        String json = mockMvc.perform(get(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        java.util.List<String> ids = new java.util.ArrayList<>();
+        for (int i = 0; i < cantidad; i++) {
+            ids.add(objectMapper.readTree(json).get(i).get("id").asText());
+        }
+        return String.join(",", ids);
     }
 
     private String bearer(long usuarioId) {

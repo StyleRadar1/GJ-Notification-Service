@@ -35,7 +35,7 @@ mvn jacoco:report
 | **Pruebas de Integración y Contrato** | Controladores REST, Seguridad JWT, Flyway, Repositorios JPA, Consumidores AMQP, SSE y correo | Spring Boot Test, MockMvc, H2 PostgreSQL Mode, GreenMail | `src/test/java/.../integration/` | ≥ 85% |
 | **Pruebas con RabbitMQ real** | Publicación de `AlertaCreada` y consumo de eventos contra un broker real | Testcontainers (requieren Docker; en un equipo sin Docker se omiten y las corre el CI) | `src/test/java/.../integration/messaging/` | — |
 
-Estado actual (24/11/2026): **318 pruebas ejecutadas, 0 fallos y 0 errores; cobertura de líneas 93,7 %** (2.129 líneas medidas, 135 sin cubrir; el mínimo exigido es 85 %). Hay 14 pruebas que necesitan Docker (Testcontainers con RabbitMQ y PostgreSQL reales): en un equipo sin Docker se omiten y las ejecuta el CI.
+Estado actual (24/11/2026): **325 pruebas ejecutadas, 0 fallos y 0 errores; cobertura de líneas 93,7 %** (2.144 líneas medidas, 136 sin cubrir; el mínimo exigido es 85 %). Hay 14 pruebas que necesitan Docker (Testcontainers con RabbitMQ y PostgreSQL reales): en un equipo sin Docker se omiten y las ejecuta el CI.
 
 ### Pruebas de Arquitectura Hexagonal (ArchUnit)
 
