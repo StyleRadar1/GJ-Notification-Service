@@ -12,12 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-/** El navegador del frontend en localhost:5173 puede llamar al servicio; otros origenes no. */
+/** Cuando CORS_ALLOWED_ORIGINS esta configurado (ej. desarrollo local directo), permite ese origen y rechaza otros. */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@TestPropertySource(properties = "application.cors.allowed-origins=http://localhost:5173")
 @DisplayName("CORS para el frontend")
 class CorsHttpTest {
 

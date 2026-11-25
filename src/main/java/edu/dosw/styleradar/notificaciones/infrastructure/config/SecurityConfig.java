@@ -8,7 +8,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -31,10 +30,24 @@ public class SecurityConfig {
     private final RateLimitFilter rateLimitFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            @Value("${application.cors.allowed-origins:}") List<String> origenesPermitidos
+    ) throws Exception {
+        List<String> origenesLimpios = origenesPermitidos.stream()
+                .map(String::trim)
+                .filter(origen -> !origen.isEmpty())
+                .toList();
+
+        http.csrf(AbstractHttpConfigurer::disable);
+        if (origenesLimpios.isEmpty()) {
+            // Detras del API Gateway no emitimos cabeceras CORS para evitar Access-Control-Allow-Origin duplicada
+            http.cors(AbstractHttpConfigurer::disable);
+        } else {
+            http.cors(cors -> cors.configurationSource(construirFuenteCors(origenesLimpios)));
+        }
+
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(securityHandlers.authenticationEntryPoint())
@@ -60,13 +73,10 @@ public class SecurityConfig {
     }
 
     /**
-     * CORS para que el frontend (por ejemplo, Vite en localhost:5173) pueda llamar al servicio desde el
-     * navegador. Los origenes permitidos se configuran con CORS_ALLOWED_ORIGINS, separados por comas.
+     * CORS opcional para desarrollo local directo sin API Gateway. Cuando CORS_ALLOWED_ORIGINS esta vacio
+     * (QA y PROD), el API Gateway es el unico responsable de emitir las cabeceras CORS.
      */
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource(
-            @Value("${application.cors.allowed-origins:http://localhost:5173}") List<String> origenesPermitidos
-    ) {
+    private CorsConfigurationSource construirFuenteCors(List<String> origenesPermitidos) {
         CorsConfiguration configuracion = new CorsConfiguration();
         configuracion.setAllowedOrigins(origenesPermitidos);
         configuracion.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
