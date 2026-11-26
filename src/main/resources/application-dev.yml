@@ -19,6 +19,8 @@ spring:
     password: ${RABBITMQ_PASSWORD:guest}
 
 application:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   security:
     jwt:
       secret-key: ${JWT_SECRET:solo_desarrollo_local_no_usar_en_produccion_styleradar_2026}

@@ -21,7 +21,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     /** Parametro de consulta con el ticket de vida corta del stream SSE (ver {@code JwtTokenService}). */
     static final String PARAMETRO_TICKET = "ticket";
 
-    private static final List<String> RUTAS_STREAM = List.of("/notificaciones/stream", "/notifications/stream");
+    private static final String RUTA_STREAM = "/notifications/stream";
 
     private final JwtTokenService jwtTokenService;
 
@@ -80,6 +80,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean esStream(String uri) {
-        return uri != null && RUTAS_STREAM.stream().anyMatch(uri::endsWith);
+        return uri != null && uri.endsWith(RUTA_STREAM);
     }
 }

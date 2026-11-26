@@ -1,13 +1,14 @@
 [← Volver al índice](../../README.md) · [Todos los README](./)
 
 
-## <img src="https://img.shields.io/badge/06-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 6. TECNOLOGÍAS Y DEPENDENCIAS
+## <img src="https://img.shields.io/badge/05-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 5. TECNOLOGÍAS Y DEPENDENCIAS
 
 El stack del microservicio cumple con el estándar unificado de arquitectura de StyleRadar:
 
 | Capa / Componente | Tecnología | Versión | Justificación Técnica |
 | :--- | :--- | :--- | :--- |
 | **Lenguaje Core** | Java LTS | `21` | Records inmutables, Pattern Matching y alto rendimiento en procesamiento de eventos. |
+| **Construcción** | Apache Maven | `3.9+` | Compila, prueba y empaqueta (`mvn verify`). El repositorio no incluye Maven Wrapper (`mvnw`): se usa el `mvn` instalado, el mismo que usan CI, CD y el Dockerfile (imagen `maven:3.9-eclipse-temurin-21`). |
 | **Framework Empresarial** | Spring Boot | `3.5.16` | Gestión declarativa de configuración, ecosistema nativo Spring Web, Security, Data JPA y AMQP. |
 | **Cliente HTTP Declarativo** | Spring Cloud OpenFeign | `2025.0.3` (Spring Cloud) | Validación síncrona de prenda agotada contra `ms-ItemCatalog` (NOT-10). |
 | **Base de Datos** | PostgreSQL | `16` | Integridad transaccional ACID y restricción única `(alerta_id, item_id, ciclo_reposicion)`. |

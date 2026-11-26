@@ -1,7 +1,23 @@
 [← Volver al índice](../../README.md) · [Todos los README](./)
 
 
-## <img src="https://img.shields.io/badge/12-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 12. ENLACE A LA ÉPICA EN JIRA
+## <img src="https://img.shields.io/badge/12-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 12. EQUIPO, RESPONSABLES Y ENLACE A LA ÉPICA EN JIRA
+
+### Equipo y responsables
+
+Desarrollado y mantenido por el **Squad `Paquete 3 · Notificaciones y Chat`** para la asignatura DOSW 2026.
+
+<div align="center">
+
+| Rol | Nombre Completo |
+| :---: | :---: |
+| **Líder de Squad** | `Paula Diaz` |
+| **Líder de Backend** | `Jose Martinez` |
+| **Desarrollo Microservicio Notificaciones** | `Oscar Lasso` |
+
+</div>
+
+### Enlace a la épica en Jira
 
 El seguimiento de requerimientos, evidencias y artefactos de entrega se centraliza en los siguientes enlaces oficiales:
 
@@ -42,4 +58,6 @@ Los actores son los cuatro oficiales y se muestran en el [diagrama de casos de u
 | `SR-RF-104` | Consultar la bandeja de notificaciones | Usuario comprador, administrador de almacén y representante de fundación aliada | Permite listar con paginación (`page`, `size`) y filtro único `read` (`true` leídas, `false` no leídas), contar no leídas, marcar como leída (individual/todas) y abrir el stream SSE mediante ticket de 60 s (`POST /stream-ticket`) con reconexión `Last-Event-ID` (NOT-12, NOT-13, NOT-15, GJ-62, GJ-118). |
 | `SR-RF-105` | Elegir el canal de cada tipo de aviso | Usuario comprador, administrador de almacén y representante de fundación aliada | Permite consultar y elegir por cada uno de los 9 valores de `TipoNotificacion` entre `SOLO_PLATAFORMA` (por defecto) y `CORREO_Y_PLATAFORMA` (GJ-64). |
 | `SR-RF-106` | Avisar la actividad de otros módulos | Usuario comprador, administrador de almacén y representante de fundación aliada (lo origina también el administrador StyleRadar) | Genera notificaciones idempotentes por `(evento_id, usuario_id)` al recibir eventos de `ms-Chat`, `ms-Donations`, `ms-ItemCatalog`, `ms-Payment` y `ms-Stores` (fundación desactivada), excluyendo cuentas en estado `INACTIVO`, `BLOQUEADO` o `SUSPENDIDO` (NOT-09, NOT-14, GJ-61, GJ-65, GJ-117). |
+| `SR-RF-107` | Limpiar las notificaciones al eliminar una cuenta o retirar una prenda | Usuario comprador (lo originan `ms-Users` y `ms-ItemCatalog`) | Al llegar `styleradar.usuarios.cuenta.eliminada` se borran las notificaciones, alertas, preferencias, correos pendientes y búsquedas del usuario, se cierra su campana y su cuenta queda `ELIMINADA` sin correo. Al retirar una prenda se desactivan sus alertas, se borran las notificaciones no leídas de reposición y coincidencia y se quita el enlace a las leídas. Ambos procesos son idempotentes. |
+| `SR-RF-108` | Eliminar notificaciones de la bandeja | Usuario comprador, administrador de almacén y representante de fundación aliada | Elimina una notificación (`DELETE .../notifications/{notificationId}`, `204`), varias (`?ids=1,2,3`, hasta 100) o todas las leídas (`?read=true`). Borrado lógico: deja de aparecer en la lista, el contador y el stream. Una segunda eliminación responde `404` y la de otro usuario `403`. |
 | `SR-RNF-15` | Resiliencia e idempotencia en consumidores de eventos | No aplica (requerimiento no funcional) | 3 entregas totales con backoff ante fallos transitorios, rechazo inmediato sin reencolar hacia `styleradar.notificaciones.dlq` ante payloads inválidos, restricciones únicas en PostgreSQL 16 y errores HTTP con campo `code` estable (`CodigoError`). |

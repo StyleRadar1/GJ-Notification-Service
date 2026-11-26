@@ -26,20 +26,20 @@ class ErroresDeSeguridadHttpTest {
     @Test
     @DisplayName("Sin token: 401 con titulo, detalle, mensaje, instancia y fecha")
     void sinTokenTraeProblemDetail() throws Exception {
-        mockMvc.perform(get("/api/v1/usuarios/me/alertas"))
+        mockMvc.perform(get("/api/v1/users/101/alerts"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.title").value("No autenticado"))
                 .andExpect(jsonPath("$.mensaje").value("Token JWT ausente, invalido o expirado"))
-                .andExpect(jsonPath("$.instance").value("/api/v1/usuarios/me/alertas"))
+                .andExpect(jsonPath("$.instance").value("/api/v1/users/101/alerts"))
                 .andExpect(jsonPath("$.timestamp").exists());
     }
 
     @Test
     @DisplayName("Con un token invalido: el mismo 401 con cuerpo")
     void tokenInvalidoTraeProblemDetail() throws Exception {
-        mockMvc.perform(get("/api/v1/usuarios/me/notificaciones").header("Authorization", "Bearer basura"))
+        mockMvc.perform(get("/api/v1/users/101/notifications").header("Authorization", "Bearer basura"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.title").value("No autenticado"));
     }

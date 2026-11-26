@@ -1,7 +1,7 @@
 [← Volver al índice](../../README.md) · [Todos los README](./)
 
 
-## <img src="https://img.shields.io/badge/08-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 8. VARIABLES DE ENTORNO
+## <img src="https://img.shields.io/badge/07-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 7. VARIABLES DE ENTORNO
 
 Todas las configuraciones sensibles y dependientes de entorno se externalizan mediante variables de sistema conformes al estándar **Twelve-Factor App**.
 
@@ -22,7 +22,7 @@ Todas las configuraciones sensibles y dependientes de entorno se externalizan me
 | `RABBITMQ_SSL_ENABLED` | Activa TLS hacia el broker; con TLS se usa el puerto `5671` (solo perfil `prod`, donde viene encendido) | `true` en PROD | No |
 | `RABBITMQ_SSL_VERIFY_HOSTNAME` | Verifica que el certificado del broker coincida con el host (solo perfil `prod`) | `true` | No |
 | `REDIS_HOST` / `REDIS_PORT` | Hostname y puerto de Redis. El servicio no lo usa; QA y PROD lo desactivan | `localhost` / `6379` | No |
-| `CATALOG_SERVICE_URL` | URL base de `ms-ItemCatalog` para OpenFeign | `http://localhost:8220` | Sí |
+| `CATALOG_SERVICE_URL` | URL base de `ms-ItemCatalog` para OpenFeign, sin `/api/v1` (si llega con ese sufijo, el servicio y el CI lo quitan) | `http://localhost:8220` | Sí |
 | `JWT_SECRET` | Clave secreta HMAC-SHA256 (mínimo 256 bits) para validar JWT; se comparte con `ms-Auth` y no se guarda en el repositorio | solo en `dev` (ver `application-dev.yml`) | Sí |
 | `JWT_EXPIRATION_MS` | Vida de los tokens que firma el servicio en pruebas | `86400000` | No |
 | `RABBITMQ_EXCHANGE` / `RABBITMQ_DLX` | Exchange de dominio y exchange de errores | `styleradar.exchange` / `styleradar.dlx` | No |

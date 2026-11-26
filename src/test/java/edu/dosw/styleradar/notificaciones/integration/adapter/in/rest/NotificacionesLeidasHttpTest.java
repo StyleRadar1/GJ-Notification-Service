@@ -24,8 +24,13 @@ import org.springframework.test.web.servlet.MockMvc;
 @DisplayName("GJ-60 - Marcar como leidas y contador de no leidas")
 class NotificacionesLeidasHttpTest {
 
-    private static final String NOTIFICACIONES = "/api/v1/usuarios/me/notificaciones";
-    private static final String CONTADOR = NOTIFICACIONES + "/no-leidas/contador";
+    private static String notificacionesUrl(long usuarioId) {
+        return "/api/v1/users/" + usuarioId + "/notifications";
+    }
+
+    private static String contadorUrl(long usuarioId) {
+        return notificacionesUrl(usuarioId) + "/unread/count";
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,7 +50,7 @@ class NotificacionesLeidasHttpTest {
         long usuarioId = 60_101L;
         crearNotificaciones(usuarioId, 3);
 
-        mockMvc.perform(get(CONTADOR).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(get(contadorUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cantidadNoLeidas").value(3));
     }
@@ -57,12 +62,12 @@ class NotificacionesLeidasHttpTest {
         crearNotificaciones(usuarioId, 3);
         long notificacionId = primeraNotificacion(usuarioId);
 
-        mockMvc.perform(patch(NOTIFICACIONES + "/" + notificacionId + "/leer")
+        mockMvc.perform(patch(notificacionesUrl(usuarioId) + "/" + notificacionId + "/read")
                         .header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.leida").value(true));
 
-        mockMvc.perform(get(CONTADOR).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(get(contadorUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(jsonPath("$.cantidadNoLeidas").value(2));
     }
 
@@ -72,11 +77,11 @@ class NotificacionesLeidasHttpTest {
         long usuarioId = 60_103L;
         crearNotificaciones(usuarioId, 4);
 
-        mockMvc.perform(patch(NOTIFICACIONES + "/leer-todas").header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(patch(notificacionesUrl(usuarioId) + "/read-all").header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cantidadNoLeidas").value(0));
 
-        mockMvc.perform(get(CONTADOR).header("Authorization", bearer(usuarioId)))
+        mockMvc.perform(get(contadorUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(jsonPath("$.cantidadNoLeidas").value(0));
     }
 
@@ -88,11 +93,11 @@ class NotificacionesLeidasHttpTest {
         crearNotificaciones(propietario, 1);
         long notificacionId = primeraNotificacion(propietario);
 
-        mockMvc.perform(patch(NOTIFICACIONES + "/" + notificacionId + "/leer")
+        mockMvc.perform(patch(notificacionesUrl(intruso) + "/" + notificacionId + "/read")
                         .header("Authorization", bearer(intruso)))
                 .andExpect(status().isForbidden());
 
-        mockMvc.perform(get(CONTADOR).header("Authorization", bearer(propietario)))
+        mockMvc.perform(get(contadorUrl(propietario)).header("Authorization", bearer(propietario)))
                 .andExpect(jsonPath("$.cantidadNoLeidas").value(1));
     }
 
@@ -105,7 +110,7 @@ class NotificacionesLeidasHttpTest {
     }
 
     private long primeraNotificacion(long usuarioId) throws Exception {
-        String json = mockMvc.perform(get(NOTIFICACIONES).header("Authorization", bearer(usuarioId)))
+        String json = mockMvc.perform(get(notificacionesUrl(usuarioId)).header("Authorization", bearer(usuarioId)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(json).get(0).get("id").asLong();

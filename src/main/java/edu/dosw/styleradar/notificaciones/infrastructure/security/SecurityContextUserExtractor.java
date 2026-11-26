@@ -45,8 +45,8 @@ public class SecurityContextUserExtractor {
 
     public Long validarAccesoUsuario(String usuarioId) {
         Long usuarioAutenticadoId = obtenerUsuarioAutenticadoId();
-        if (usuarioId == null || usuarioId.isBlank() || "me".equalsIgnoreCase(usuarioId)) {
-            return usuarioAutenticadoId;
+        if (usuarioId == null || usuarioId.isBlank()) {
+            throw new AccesoDenegadoException("Identificador de usuario invalido en la ruta");
         }
         Long idSolicitado;
         try {

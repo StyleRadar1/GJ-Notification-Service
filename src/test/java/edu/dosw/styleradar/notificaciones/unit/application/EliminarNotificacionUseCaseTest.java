@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import edu.dosw.styleradar.notificaciones.application.usecase.EliminarNotificacionUseCaseImpl;
 import edu.dosw.styleradar.notificaciones.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.notificaciones.domain.exception.RecursoNoEncontradoException;
+import edu.dosw.styleradar.notificaciones.domain.exception.ReglaDeNegocioException;
 import edu.dosw.styleradar.notificaciones.domain.model.CanalNotificacion;
 import edu.dosw.styleradar.notificaciones.domain.model.Notificacion;
 import edu.dosw.styleradar.notificaciones.domain.model.TipoNotificacion;
@@ -76,6 +77,30 @@ class EliminarNotificacionUseCaseTest {
         when(repositorio.eliminarLeidasPorUsuario(42L)).thenReturn(4);
 
         assertThat(useCase.eliminarLeidas(42L)).isEqualTo(4);
+    }
+
+    @Test
+    @DisplayName("Eliminar seleccionadas quita los ids repetidos y devuelve lo que borro el repositorio")
+    void eliminaSeleccionadas() {
+        when(repositorio.eliminarSeleccionadasPorUsuario(42L, java.util.Set.of(5L, 6L))).thenReturn(2);
+
+        assertThat(useCase.eliminarSeleccionadas(42L, java.util.List.of(5L, 6L, 5L))).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Eliminar seleccionadas rechaza una lista vacia, ids no positivos y mas de 100")
+    void rechazaSeleccionesInvalidas() {
+        java.util.List<Long> cienUno = java.util.stream.LongStream.rangeClosed(1, 101).boxed().toList();
+
+        assertThatThrownBy(() -> useCase.eliminarSeleccionadas(42L, java.util.List.of()))
+                .isInstanceOf(ReglaDeNegocioException.class);
+        assertThatThrownBy(() -> useCase.eliminarSeleccionadas(42L, null))
+                .isInstanceOf(ReglaDeNegocioException.class);
+        assertThatThrownBy(() -> useCase.eliminarSeleccionadas(42L, java.util.List.of(0L)))
+                .isInstanceOf(ReglaDeNegocioException.class);
+        assertThatThrownBy(() -> useCase.eliminarSeleccionadas(42L, cienUno))
+                .isInstanceOf(ReglaDeNegocioException.class);
+        verify(repositorio, never()).eliminarSeleccionadasPorUsuario(any(), any());
     }
 
     @Test

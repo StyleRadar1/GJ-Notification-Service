@@ -63,7 +63,7 @@ class ContratoSwaggerAlineadoTest {
         contrato.get("paths").fields().forEachRemaining(ruta -> ruta.getValue().fieldNames()
                 .forEachRemaining(metodo -> swagger.add(metodo.toUpperCase() + " " + ruta.getKey())));
 
-        String readme = Files.readString(Path.of("docs/readme/04-endpoints-y-swagger.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(Path.of("docs/readme/03-endpoints-y-swagger.md"), StandardCharsets.UTF_8);
         Set<String> documentadas = new HashSet<>();
         Matcher fila = FILA_README.matcher(readme);
         while (fila.find()) {
@@ -76,7 +76,7 @@ class ContratoSwaggerAlineadoTest {
     @Test
     @DisplayName("Los codigos HTTP de cada ruta del README son los del Swagger")
     void codigosDelReadmeIgualesALosDelSwagger() throws Exception {
-        String readme = Files.readString(Path.of("docs/readme/04-endpoints-y-swagger.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(Path.of("docs/readme/03-endpoints-y-swagger.md"), StandardCharsets.UTF_8);
         Pattern fila = Pattern.compile("\\|\\s*`(GET|POST|PUT|PATCH|DELETE)`\\s*\\|\\s*`(/api/v1/users/[^`]+)`[^\\r\\n]*\\|\\s*((?:`\\d{3}`(?:,\\s*)?)+)\\s*\\|");
         Matcher m = fila.matcher(readme);
         int comprobadas = 0;
@@ -196,7 +196,7 @@ class ContratoSwaggerAlineadoTest {
         String token = "Bearer " + jwtTokenService.generateToken(9_701L, "contrato@styleradar.co", "COMPRADOR");
 
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .post("/api/v1/users/me/alerts").header("Authorization", token)
+                        .post("/api/v1/users/9701/alerts").header("Authorization", token)
                         .contentType("application/json").content("{\"canal\":\"IN_APP\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type").value("about:blank"))
@@ -204,11 +204,11 @@ class ContratoSwaggerAlineadoTest {
                 .andExpect(jsonPath("$.errors.tipoAlerta").value("El tipo de alerta es obligatorio"))
                 .andExpect(jsonPath("$.mensaje").value("El tipo de alerta es obligatorio"));
 
-        mockMvc.perform(get("/api/v1/users/me/notifications").param("size", "500").header("Authorization", token))
+        mockMvc.perform(get("/api/v1/users/9701/notifications").param("size", "500").header("Authorization", token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.size").value("size no puede superar 100"));
 
-        mockMvc.perform(get("/api/v1/users/me/alerts"))
+        mockMvc.perform(get("/api/v1/users/9701/alerts"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.type").value("about:blank"))
                 .andExpect(jsonPath("$.title").value("No autenticado"))

@@ -45,7 +45,7 @@ public class OpenApiConfig {
     /**
      * Todas las rutas exigen JWT y estan sujetas al limite por minuto, asi que cada operacion documenta 401, 403 y
      * 429 aunque el controlador no las liste, y el esquema del error trae los campos que el servicio realmente
-     * devuelve (mensaje, timestamp y errors).
+     * devuelve (mensaje, timestamp, correlationId y errors).
      */
     @Bean
     public OpenApiCustomizer erroresComunesOpenApiCustomizer() {
@@ -61,6 +61,8 @@ public class OpenApiConfig {
                             .description("Copy of detail, ready to show on screen"));
                     problema.addProperty("timestamp", new Schema<String>().type("string").format("date-time")
                             .description("Time of the error (UTC)"));
+                    problema.addProperty("correlationId", new Schema<String>().type("string")
+                            .description("Request correlation id; same value as the X-Correlation-Id response header"));
                     problema.addProperty("errors", new Schema<Object>().type("object")
                             .additionalProperties(new Schema<String>().type("string"))
                             .description("Only on validation 400s: one message per field"));
@@ -84,30 +86,5 @@ public class OpenApiConfig {
         operacion.getResponses().addApiResponse(codigo, new ApiResponse().description(descripcion)
                 .content(new Content().addMediaType("application/problem+json",
                         new MediaType().schema(new Schema<>().$ref("#/components/schemas/ProblemDetail")))));
-    }
-
-    @Bean
-    public OpenApiCustomizer canonicalEnglishOpenApiCustomizer() {
-        return openApi -> {
-            if (openApi.getPaths() != null) {
-                Paths filtered = new Paths();
-                openApi.getPaths().forEach((path, pathItem) -> {
-                    // Only display clean canonical English endpoints under /api/v1/users/{id}/ in Swagger UI
-                    if (path.startsWith("/api/v1/users/{id}/")
-                            && !path.contains("alertas")
-                            && !path.contains("notificaciones")
-                            && !path.contains("preferencias-avisos")
-                            && !path.contains("leer")
-                            && !path.contains("desactivar")
-                            && !path.contains("conteo")
-                            && !path.contains("contador")
-                            && !path.contains("unread-count")
-                            && !path.startsWith("/api/v1/users/{id}/preferences")) {
-                        filtered.addPathItem(path, pathItem);
-                    }
-                });
-                openApi.setPaths(filtered);
-            }
-        };
     }
 }

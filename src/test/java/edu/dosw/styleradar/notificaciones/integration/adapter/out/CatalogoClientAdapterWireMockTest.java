@@ -25,7 +25,7 @@ import org.springframework.test.context.DynamicPropertySource;
 @ActiveProfiles("test")
 class CatalogoClientAdapterWireMockTest {
 
-    private static final String RUTA_ITEM = "/api/v1/catalogo/items/1045/disponibilidad";
+    private static final String RUTA_ITEM = "/api/v1/garments/1045/availability";
 
     @RegisterExtension
     static WireMockExtension catalogo = WireMockExtension.newInstance()
@@ -64,7 +64,7 @@ class CatalogoClientAdapterWireMockTest {
     @DisplayName("NOT-10 - Debe soportar identificador UUID al consultar Catalogo")
     void debeSoportarIdentificadorUuid() {
         String uuid = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-        catalogo.stubFor(get(urlEqualTo("/api/v1/catalogo/items/" + uuid + "/disponibilidad")).willReturn(json(
+        catalogo.stubFor(get(urlEqualTo("/api/v1/garments/" + uuid + "/availability")).willReturn(json(
                 "{\"itemId\":\"" + uuid + "\",\"stockTotal\":0,\"tallasConStock\":[]}")));
 
         assertThat(catalogoClientPort.verificarItemAgotado(uuid, null)).isTrue();

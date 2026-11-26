@@ -112,7 +112,7 @@ class AlertaCreadaPublicacionIntegrationTest {
                 .thenReturn(new CatalogoDisponibilidadItemResponse(ITEM_ID, 0, List.of()));
         String token = jwtTokenService.generateToken(USUARIO_ID, "estadisticas@styleradar.co", "COMPRADOR");
 
-        String respuesta = mockMvc.perform(post("/api/v1/usuarios/me/alertas")
+        String respuesta = mockMvc.perform(post("/api/v1/users/" + USUARIO_ID + "/alerts")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"" + ITEM_ID + "\",\"canal\":\"IN_APP\"}"))
@@ -141,7 +141,7 @@ class AlertaCreadaPublicacionIntegrationTest {
                 .thenReturn(new CatalogoDisponibilidadItemResponse(ITEM_ID, 7, List.of("M")));
         String token = jwtTokenService.generateToken(USUARIO_ID, "estadisticas@styleradar.co", "COMPRADOR");
 
-        mockMvc.perform(post("/api/v1/usuarios/me/alertas")
+        mockMvc.perform(post("/api/v1/users/" + USUARIO_ID + "/alerts")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"tipoAlerta\":\"ITEM_AGOTADO\",\"itemId\":\"" + ITEM_ID + "\",\"canal\":\"IN_APP\"}"))

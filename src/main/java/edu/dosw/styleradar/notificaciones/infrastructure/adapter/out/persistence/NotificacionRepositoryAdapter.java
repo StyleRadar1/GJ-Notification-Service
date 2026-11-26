@@ -108,6 +108,15 @@ public class NotificacionRepositoryAdapter implements NotificacionRepositoryPort
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int eliminarSeleccionadasPorUsuario(Long usuarioId, Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+        return repository.eliminarSeleccionadasPorUsuario(usuarioId, ids, LocalDateTime.now());
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public boolean existePorAlertaItemYCiclo(Long alertaId, String itemId, Integer cicloReposicion) {
         return repository.existsByAlertaIdAndItemIdAndCicloReposicion(alertaId, itemId, cicloReposicion);

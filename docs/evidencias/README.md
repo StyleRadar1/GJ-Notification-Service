@@ -28,7 +28,7 @@ Las imágenes de esta carpeta que respaldan el README principal son capturas o r
 | Archivo | Qué muestra | Origen |
 | :--- | :--- | :--- |
 | `swagger-ui.png` | Los 14 endpoints agrupados en «Notification Preferences» y «Alerts & Notifications» | Swagger UI de `ms-Notifications` |
-| `cobertura-jacoco.png` | Reporte HTML de JaCoCo con 94 % de instrucciones y 94,0 % de líneas | `target/site/jacoco/index.html` tras `mvn clean verify` (20/11/2026) |
+| `cobertura-jacoco.png` | Reporte HTML de JaCoCo con 94 % de instrucciones y 93,7 % de líneas | `target/site/jacoco/index.html` tras `mvn clean verify` (25/11/2026) |
 | `pipeline-ci-cd.png` | Ejecución en verde del pipeline CI / QA sobre `develop` (`build-and-verify` y `docker-verify-qa`) | Página pública de GitHub Actions (20/11/2026) |
 | `codeql-analysis.png` | Ejecución en verde del análisis CodeQL sobre `develop` | Página pública de GitHub Actions (20/11/2026) |
 | `health-qa.png` | Respuesta de `/actuator/health` del servicio desplegado en QA | `https://styleradar-notificaciones-qa.azurewebsites.net/actuator/health` (20/11/2026) |

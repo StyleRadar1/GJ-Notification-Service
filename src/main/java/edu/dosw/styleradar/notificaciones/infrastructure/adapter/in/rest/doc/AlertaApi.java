@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -124,7 +125,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<AlertaResponse> crearAlerta(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Valid CrearAlertaRequest request
     );
 
@@ -154,7 +155,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<List<AlertaResponse>> listarMisAlertas(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id
     );
 
     @Operation(summary = "Deactivate alert by ID (DELETE)", description = "Sets alert status to DESACTIVADA")
@@ -181,7 +182,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<AlertaResponse> desactivarAlerta(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "alertId", description = "ID of the alert to deactivate", example = "501") Long alertId
     );
 
@@ -199,7 +200,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<AlertaResponse> desactivarAlertaPatch(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "alertId", description = "ID of the alert to deactivate", example = "501") Long alertId
     );
 
@@ -222,7 +223,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<SuscripcionAlertaResponse> comprobarSuscripcion(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "itemId", description = "Garment id (UUID or text)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") String itemId,
             @Parameter(name = "tallaObjetivo", description = "Size (optional)", example = "M") String tallaObjetivo
     );
@@ -266,7 +267,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<AlertaResponse> activarAlerta(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "alertId", description = "ID of the alert to reactivate", example = "501") Long alertId
     );
 
@@ -311,11 +312,9 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<?> listarMisNotificaciones(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(hidden = true) Boolean unreadOnly,
-            @Parameter(hidden = true) Boolean soloNoLeidas,
             @Parameter(description = "Single read-status filter: true = read, false = unread. Activates the paginated response", example = "false") Boolean read,
-            @Parameter(hidden = true) Boolean leida,
             @Parameter(description = "Page number (zero-indexed, >= 0)", example = "0") @Min(value = 0, message = "page debe ser 0 o mayor") Integer page,
             @Parameter(description = "Page size (1 to 100)", example = "20") @Min(value = 1, message = "size debe ser al menos 1") @Max(value = 100, message = "size no puede superar 100") Integer size
     );
@@ -344,7 +343,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<NotificacionResponse> marcarNotificacionComoLeida(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "notificationId", description = "Notification ID", example = "901") Long notificationId
     );
 
@@ -367,7 +366,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<ContadorNoLeidasResponse> marcarTodasComoLeidas(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id
     );
 
     @Operation(summary = "Delete a notification", description = "Removes one notification from the user's inbox (soft delete). A second call on the same id returns 404")
@@ -390,20 +389,20 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<Void> eliminarNotificacion(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(name = "notificationId", description = "Notification id", example = "5001") Long notificationId
     );
 
-    @Operation(summary = "Delete all read notifications", description = "Removes every read notification from the user's inbox (soft delete). Unread ones are kept. Requires read=true")
+    @Operation(summary = "Delete notifications in bulk", description = "Removes several notifications from the user's inbox (soft delete). Send exactly one of: read=true (every read notification; unread ones are kept) or ids (1 to 100 comma-separated notification ids, read or unread). Ids that do not exist, belong to another user or were already deleted are ignored, so repeating the call returns 0")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Read notifications deleted",
+                    description = "Notifications deleted; cantidadEliminadas is how many were actually removed",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = EliminacionNotificacionesResponse.class))
             ),
             @ApiResponse(
                     responseCode = "422",
-                    description = "Missing or unsupported read parameter: only read=true is allowed",
+                    description = "Send exactly one of read=true or ids; ids must be positive numbers, at most 100 distinct",
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             ),
             @ApiResponse(
@@ -417,9 +416,12 @@ public interface AlertaApi {
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class))
             )
     })
-    ResponseEntity<EliminacionNotificacionesResponse> eliminarNotificacionesLeidas(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
-            @Parameter(description = "Must be true: only read notifications can be deleted in bulk", example = "true") Boolean read
+    ResponseEntity<EliminacionNotificacionesResponse> eliminarNotificaciones(
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
+            @Parameter(description = "Must be true: deletes every read notification. Do not combine with ids", example = "true") Boolean read,
+            @Parameter(description = "Comma-separated ids of the notifications to delete (1 to 100 distinct, read or unread). Do not combine with read",
+                    example = "5001,5002,5003", explode = Explode.FALSE,
+                    array = @ArraySchema(schema = @Schema(type = "integer", format = "int64"))) List<Long> ids
     );
 
     @Operation(summary = "Get unread notifications count", description = "Returns the total count of unread notifications for the frontend bell badge")
@@ -441,7 +443,7 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<ContadorNoLeidasResponse> contarNoLeidas(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id
     );
 
     @Operation(summary = "Subscribe to real-time notification stream (SSE)", description = "Opens a Server-Sent Events stream to receive real-time notifications without page refresh")
@@ -463,7 +465,7 @@ public interface AlertaApi {
             )
     })
     SseEmitter suscribirCampanaTiempoReal(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id,
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id,
             @Parameter(
                     in = ParameterIn.HEADER,
                     name = "Last-Event-ID",
@@ -502,6 +504,6 @@ public interface AlertaApi {
             )
     })
     ResponseEntity<TicketStreamResponse> emitirTicketStream(
-            @Parameter(name = "id", description = "User ID resource owner (or alias 'me')", example = "101") String id
+            @Parameter(name = "id", description = "User ID resource owner", example = "101") String id
     );
 }

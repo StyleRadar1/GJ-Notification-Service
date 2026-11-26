@@ -1,7 +1,7 @@
 [← Volver al índice](../../README.md) · [Todos los README](./)
 
 
-## <img src="https://img.shields.io/badge/04-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 4. ENDPOINTS Y ENLACE A SWAGGER
+## <img src="https://img.shields.io/badge/03-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 3. ENDPOINTS Y ENLACE A SWAGGER
 
 La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encuentran desplegados y clasificados por entorno:
 
@@ -37,9 +37,11 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 > **Seguridad y Validación de Autorización:**  
 > La seguridad del backend extrae el usuario autenticado del token JWT (`sub` o `userId`) y valida que coincida exactamente con el `{id}` de la ruta (o que cuente con privilegios de administrador). Si un usuario intenta consultar o manipular los recursos de otro usuario (por ejemplo un token de usuario 101 solicitando `/api/v1/users/202/...`), el backend rechaza la petición inmediatamente retornando **`HTTP 403 Forbidden`** bajo el estándar RFC 7807 (Problem Details).
 >
-> **Formato de errores:** todos los errores son `application/problem+json` con `type: "about:blank"`, `title`, `status`, `detail`, `instance`, `mensaje`, `timestamp` y un `code` estable (por ejemplo `ALERT_NOT_FOUND`, `ALERT_ALREADY_ACTIVE`, `ITEM_HAS_STOCK`, `SAVED_SEARCH_NOT_AVAILABLE`, `ACCOUNT_NOT_ALLOWED`, `RATE_LIMITED`). El front elige su mensaje a partir de `code`, no del texto de `detail`. En los 400 de validación, `errors` trae un mensaje por campo. La lista completa de códigos está en el Swagger (esquema `ProblemDetail`).
+> **Formato de errores:** todos los errores son `application/problem+json` con `type: "about:blank"`, `title`, `status`, `detail`, `instance`, `mensaje`, `timestamp`, `correlationId` y un `code` estable (por ejemplo `ALERT_NOT_FOUND`, `ALERT_ALREADY_ACTIVE`, `ITEM_HAS_STOCK`, `SAVED_SEARCH_NOT_AVAILABLE`, `ACCOUNT_NOT_ALLOWED`, `RATE_LIMITED`). El front elige su mensaje a partir de `code`, no del texto de `detail`. En los 400 de validación, `errors` trae un mensaje por campo. La lista completa de códigos está en el Swagger (esquema `ProblemDetail`).
 >
-> *Nota de compatibilidad:* Por interoperabilidad con las pruebas existentes y clientes previos, el servicio también responde de forma transparente a las rutas alias en español (`/alertas`, `/notificaciones`, `/preferencias-avisos`), sin prefijo `/users/{id}/...` y `/api/v1/usuarios/{id}/...`, y con el alias `/me`.
+> **Correlación:** cada respuesta lleva `X-Correlation-Id` y `X-Request-Id`. Si la petición ya trae uno (máximo 128 caracteres, sin caracteres de control) se reutiliza; si no, se genera. El mismo valor aparece en cada línea de log y en `correlationId` de los errores.
+>
+> **Cumplimiento estricto del estándar REST (`/api/v1` + 100% inglés + cero `/me`):** El servicio expone únicamente rutas canónicas en inglés bajo `/api/v1/users/{id}/...` con identificador numérico explícito `{id}` validado contra el JWT. No se exponen rutas en español, rutas sin `/api/v1` ni el alias `/me`.
 
 |  Método  | Endpoint Canónico (Inglés) | Descripción | Rol Requerido | Códigos HTTP |
 | :--------: | :---------------------------- | :----------------------------------------- | :-------------------- | :-----------------------: |
@@ -54,7 +56,7 @@ La documentación interactiva OpenAPI 3.0 y los contratos de ejecución se encue
 | `PATCH` | `/api/v1/users/{id}/notifications/{notificationId}/read` | Marca una notificación específica como leída (NOT-13) | Propietario (`JWT`) | `200`, `401`, `403`, `404`, `429` |
 | `PATCH` | `/api/v1/users/{id}/notifications/read-all` | Marca todas las notificaciones del usuario como leídas (NOT-13) | Autenticado (`JWT`) | `200`, `401`, `403`, `429` |
 | `DELETE` | `/api/v1/users/{id}/notifications/{notificationId}` | Elimina una notificación de la bandeja del usuario (borrado lógico). Una segunda llamada sobre la misma responde 404 (SR-RF-108) | Propietario (`JWT`) | `204`, `401`, `403`, `404`, `429` |
-| `DELETE` | `/api/v1/users/{id}/notifications` | Elimina todas las notificaciones leídas del usuario con `?read=true` (las no leídas se conservan); sin `read=true` responde 422 (SR-RF-108) | Autenticado (`JWT`) | `200`, `401`, `403`, `422`, `429` |
+| `DELETE` | `/api/v1/users/{id}/notifications` | Elimina notificaciones en bloque (borrado lógico). Se envía exactamente uno de: `?read=true` (todas las leídas; las no leídas se conservan) o `?ids=1,2,3` (de 1 a 100 ids distintos, leídas o no). Los ids que no existen, son de otro usuario o ya se eliminaron se ignoran y la respuesta trae cuántas se eliminaron de verdad. Sin ninguno, con ambos, con más de 100 ids o con ids no positivos responde 422 (SR-RF-108) | Autenticado (`JWT`) | `200`, `401`, `403`, `422`, `429` |
 |  `GET`  | `/api/v1/users/{id}/notifications/unread/count` | Obtiene el contador de notificaciones sin leer para la campana (NOT-13) | Autenticado (`JWT`) | `200`, `401`, `403`, `429` |
 |  `GET`  | `/api/v1/users/{id}/notifications/stream` | Suscripción Server-Sent Events (`text/event-stream`) para campana en tiempo real con soporte `Last-Event-ID` (NOT-15, GJ-62). El navegador no puede enviar la cabecera con `EventSource`: se abre con `?ticket=<ticket>` (ver la fila siguiente) | Autenticado (`JWT` en la cabecera o ticket en `?ticket=`) | `200`, `401`, `403`, `429` |
 |  `POST`  | `/api/v1/users/{id}/notifications/stream-ticket` | Entrega un ticket de vida corta (60 s) que solo sirve para abrir el stream. El JWT de sesión nunca viaja en la URL: un JWT en `?ticket=` o `?access_token=` se rechaza y el ticket no abre ningún otro endpoint | Autenticado (`JWT`) | `200`, `401`, `403`, `429` |
